@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: #f2f4f8;
+  --color-text: #0b0c0f;
+  --color-primary: #5471c4;
+  --color-secondary: #89a2e7;
+  --color-accent: #567ff0;
+}
+
+@layer theme {
+  :root, :host {
+    @variant dark {
+      --color-background: #07090d;
+      --color-text: #f0f1f4;
+      --color-primary: #3b59ab;
+      --color-secondary: #183177;
+      --color-accent: #0f38a9;
+    }
+  }
+}
