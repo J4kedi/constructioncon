@@ -1,31 +1,88 @@
+// components/SideNav.tsx
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+// Imports para 'next/link' e 'next/navigation' foram removidos para compatibilidade.
+// Em seu projeto Next.js, você pode reintroduzi-los para ter navegação no lado do cliente e estado ativo.
 import clsx from 'clsx';
-import { Building2, ChevronLeft, ChevronRight, LogOut, UserCircle } from 'lucide-react';
-import NavLinks, { settingsLink } from './nav-links';
+import { 
+    Building2, 
+    ChevronLeft, 
+    ChevronRight, 
+    LogOut, 
+    UserCircle,
+    BarChart3,
+    Wallet,
+    Users,
+    Warehouse,
+    FileText,
+    Settings2
+} from 'lucide-react';
+// A importação para 'signOut' foi removida. A ação de logout deve ser implementada com Server Actions no seu projeto.
 
+// --- Componente NavLinks foi mesclado aqui para simplicidade ---
+
+const navLinks = [
+  { href: '/dashboard/acompanhamento', name: 'Acompanhamento', icon: BarChart3 },
+  { href: '/dashboard/financeiro', name: 'Financeiro', icon: Wallet },
+  { href: '/dashboard/users', name: 'Usuários', icon: Users },
+  { href: '/dashboard/estoque', name: 'Estoque', icon: Warehouse },
+  { href: '/dashboard/relatorios', name: 'Relatórios', icon: FileText },
+];
+
+const settingsLink = {
+    href: '/dashboard/settings',
+    name: 'Personalização',
+    icon: Settings2,
+};
+
+function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
+  // A lógica 'usePathname' foi removida. O estado ativo do link não será exibido neste preview.
+  return (
+    <ul>
+      {navLinks.map((link) => {
+        const LinkIcon = link.icon;
+
+        return (
+          <li key={link.name} className="px-4 py-1">
+            <a
+              href={link.href}
+              className={clsx(
+                'flex items-center py-2.5 px-4 rounded-lg transition-colors text-text/70 hover:bg-secondary/20 hover:text-text'
+              )}
+            >
+              <LinkIcon className="h-5 w-5 flex-shrink-0" />
+              {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">{link.name}</span>}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// --- Fim do conteúdo de NavLinks ---
+
+
+// Componente do Logo
 const ConstructionconLogo = ({ isCollapsed }: { isCollapsed: boolean }) => (
-    <Link href="/dashboard" className="flex items-center justify-center h-16 px-4">
+    <a href="/dashboard" className="flex items-center justify-center h-16 px-4">
         <Building2 className="h-8 w-8 text-primary flex-shrink-0" />
         {!isCollapsed && (
         <span className="ml-2 text-xl font-bold text-text whitespace-nowrap">
             Construction<span className="text-primary">Con</span>
         </span>
         )}
-    </Link>
+    </a>
 );
 
 export default function SideNav() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const pathname = usePathname();
 
   return (
     <aside
       className={clsx(
-        'bg-background dark:bg-gradient-to-br dark:from-secondary/30 dark:to-background border-r border-secondary/20 flex flex-col h-screen sticky top-0 transition-all duration-300 ease-in-out',
+        'bg-background border-r border-secondary/20 flex flex-col h-screen sticky top-0 transition-all duration-300 ease-in-out',
         isCollapsed ? 'w-20' : 'w-64',
       )}
     >
@@ -42,29 +99,22 @@ export default function SideNav() {
         <ConstructionconLogo isCollapsed={isCollapsed} />
       </div>
 
-      {/* Navegação Principal */}
       <nav className="flex-grow mt-4">
-        <NavLinks isCollapsed={isCollapsed} />
+        <NavLinksContent isCollapsed={isCollapsed} />
       </nav>
 
-      {/* Seção Inferior (Configurações e Usuário) */}
+      {/* Seção Inferior */}
       <div className="flex-shrink-0 p-4 border-t border-secondary/20">
-        {/* Link de Personalização */}
-        <Link
+        <a
           href={settingsLink.href}
           className={clsx(
-            'flex items-center py-2.5 px-4 rounded-lg transition-colors mb-4',
-            {
-              'bg-primary text-white shadow-md': pathname === settingsLink.href,
-              'text-text/70 hover:bg-secondary/20 hover:text-text': pathname !== settingsLink.href,
-            },
+            'flex items-center py-2.5 px-4 rounded-lg transition-colors mb-4 text-text/70 hover:bg-secondary/20 hover:text-text'
           )}
         >
           <settingsLink.icon className="h-5 w-5 flex-shrink-0" />
           {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">{settingsLink.name}</span>}
-        </Link>
+        </a>
 
-        {/* Perfil do Usuário */}
         <div className="flex items-center p-2 rounded-lg hover:bg-secondary/10">
           <UserCircle className="h-10 w-10 text-text/60 flex-shrink-0" />
           {!isCollapsed && (
@@ -74,10 +124,21 @@ export default function SideNav() {
             </div>
           )}
         </div>
-        <button className="w-full mt-4 flex items-center justify-center py-2.5 px-4 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
-        <LogOut className="h-5 w-5 flex-shrink-0" />
-        {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">Sair</span>}
-        </button>
+        
+        {/* Formulário de Logout com Server Action (deve ser implementado no seu projeto) */}
+        {/* <form
+            action={async () => {
+              'use server';
+              // Importe e chame sua função signOut aqui
+              // await signOut({ redirectTo: '/login' });
+            }}
+          >
+        */}
+          <button className="w-full mt-4 flex items-center justify-center py-2.5 px-4 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">Sair</span>}
+          </button>
+        {/* </form> */}
       </div>
     </aside>
   );
