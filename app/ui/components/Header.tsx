@@ -1,7 +1,7 @@
 import ConstructionconLogo from "../constructioncon-logo";
 import { Navigation } from "@/app/ui/components/Navigation";
 import { mainNavLinks } from "@/app/lib/data";
-import { ThemeSwitcher } from "./ThemeSwitcher";
+import { ThemeSwitcher } from "../components/ThemeSwitcher";
 
 export default function Header() {
     return (
@@ -15,6 +15,7 @@ export default function Header() {
                         linkClassName="text-text hover:text-primary transition-colors"
                     />
                     <ThemeSwitcher />
+                    
                 </div>
             </div>
         </header>

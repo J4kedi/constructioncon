@@ -1,10 +1,10 @@
-import Header from "@/app/ui/components/Header";
 import Footer from "@/app/ui/components/Footer";
 import HeroSection from "@/app/ui/landing/HeroSection";
 import FeaturesSection from "@/app/ui/landing/FeaturesSection";
 import BenefitsSection from "@/app/ui/landing/BenefitsSection";
 import TestimonialSection from "@/app/ui/landing/TestimonialSection";
 import CtaSection from "@/app/ui/landing/CtaSection";
+import Header from "./ui/landing/header";
 
 export const metadata = {
   title: "ConstructionCon - Gestão de Obras Simplificada",

@@ -10,7 +10,7 @@ export default function CtaSection() {
             Agende uma demonstração gratuita e descubra na prática como o ConstructionCon pode otimizar seus processos e impulsionar seus resultados.
           </p>
           <Link
-            href="#"
+            href={"/contact"}
             className="bg-secondary text-white/85 px-8 py-3 rounded-lg font-bold text-lg hover:bg-accent transition-all duration-300 shadow-lg transform hover:-translate-y-1"
           >
             Agendar Demonstração Agora
