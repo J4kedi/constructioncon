@@ -1,34 +1,106 @@
-export const dados = {
-  title: "Login",
-}
+'use client';
+import { Mail, Lock } from "lucide-react";
+import { useState } from "react";
 
-export default function Login() {
-  return (
-    <form className="bg-background rounded-lg p-6 max-w-md mx-auto mt-10">
-      <div className="container mx-auto lg:px-8">
-        <h2 className="text-text text-center">{dados.title}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-          <div className="col-span-1 md:col-span-2">
-            <input
-              type="text"
-              placeholder="Usuário"
-              className="w-full p-3 border border-secondary rounded-md text-text/80 hover:text-pretty focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <div className="col-span-1">
-            <input
-              type="password"
-              placeholder="Senha"
-              className="w-full p-3 border border-secondary rounded-md text-text/80 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-        </div>
-        <button
-          type="submit"
-          className="mt-6 w-full p-3 bg-primary text-white rounded-md hover:bg-primary/80 transition duration-200 focus:ring-2 focus:ring-primary focus:ring-offset-2">
-          Entrar
-        </button>
-      </div>
-    </form>
+export default function Login(){
+  const [showPassword, setShowPassword] = useState(false);
+
+  const submit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form_dado = new FormData(e.currentTarget);
+    const email = form_dado.get('email');
+    const password = form_dado.get('password');
+
+    console.log('Tentando entrar no login com:', email, password);
+  }
+
+  return(
+    <main className="bg-background flex items-center justify-center py-16 sm:py-24">
+            <div 
+                
+                className="bg-background dark:bg-gradient-to-br dark:from-secondary/50 dark:to-background rounded-2xl shadow-2xl w-full max-w-lg p-8 border border-secondary/20"
+            >
+              <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-text">Acesse sua Conta</h1>
+                    <p className="text-text/70 mt-2">Digite seus dados para entrar no painel.</p>
+                </div>
+
+                <form onSubmit={submit}>
+                    <div className="space-y-5">
+                        {/* Campo Email */}
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-text mb-1">Email de Acesso</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-text/40" />
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email"
+                                    required
+                                    className="w-full pl-10 pr-4 py-2 bg-secondary/20 border border-secondary/50 
+                                               rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    placeholder="seu.email@suaempresa.com"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Campo Senha */}
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-text mb-1">Senha</label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-text/40" />
+                                <input 
+                                    type={showPassword ? 'text' : 'password'}
+                                    id="password" 
+                                    name="password"
+                                    required
+                                    className="w-full pl-10 pr-4 py-2 bg-secondary/20 border border-secondary/50 
+                                               rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        
+                        {/* Checkbox para mostrar senha */}
+                        <div className="flex items-center">
+                            <input
+                                id="showPassword"
+                                type="checkbox"
+                                checked={showPassword}
+                                onChange={() => setShowPassword(!showPassword)}
+                                className="h-4 w-4 rounded border-secondary/50 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="showPassword" className="ml-2 block text-sm text-text/80">
+                                Mostrar senha
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* Botão Entrar */}
+                    <div className="mt-8">
+                        <button 
+                            type="submit"
+                            className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg 
+                                       hover:bg-accent transition-all duration-300 shadow-lg hover:shadow-primary/40"
+                        >
+                            Entrar
+                        </button>
+                    </div>
+                </form>
+
+
+                {/* Link para Registrar-se */}
+                <div className="mt-6 text-center">
+                    <p className="text-sm text-text/70">
+                        Ainda não tem uma conta?{' '}
+                        <a href="/register" className="font-semibold text-primary hover:underline">
+                            Registre-se
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </main>
+
   )
 }
