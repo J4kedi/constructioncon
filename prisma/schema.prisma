@@ -1,0 +1,219 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // A URL vem do seu arquivo .env
+}
+
+// ===================================
+// ENUMs - Tipos de Dados Padronizados
+// ===================================
+
+// Define as permissões dentro do sistema
+enum UserRole {
+  SUPER_ADMIN   // Administrador do software ConstructionCon
+  COMPANY_ADMIN // Gestor da construtora (seu cliente)
+  USER          // Funcionário da construtora
+  END_CUSTOMER  // Cliente final da construtora (acompanha a obra)
+}
+
+enum StatusObra {
+  PLANEJAMENTO
+  EM_ANDAMENTO
+  PAUSADA
+  CONCLUIDA
+  CANCELADA
+}
+
+enum StatusEtapa {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+}
+
+enum CategoriaDespesa {
+  MATERIAL
+  MAO_DE_OBRA
+  EQUIPAMENTO
+  ADMINISTRATIVO
+  OUTROS
+}
+
+// ===================================
+// Modelos de Dados (Tabelas)
+// ===================================
+
+// Tabela para as empresas clientes (as construtoras)
+model Company {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  cnpj      String?  @unique
+  logoUrl   String?  // NOVO: Logo para personalização
+  address   String?  // NOVO: Endereço da empresa
+  phone     String?  // NOVO: Contato da empresa
+  isActive  Boolean  @default(true) // NOVO: Status da assinatura
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  users     User[]
+  obras     Obra[]
+}
+
+// Tabela para todos os usuários do sistema
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String
+  password        String
+  role            UserRole  @default(USER)
+  jobTitle        String?   // NOVO: Cargo do usuário
+  phone           String?   // NOVO: Telefone do usuário
+  avatarUrl       String?   // NOVO: Foto de perfil
+  isActive        Boolean   @default(true) // NOVO: Status do usuário
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  companyId       String
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  obrasComoCliente  Obra[]
+  etapasResponsaveis Etapa[]  @relation("ResponsibleForEtapas") // NOVO: Relação com Etapa
+  despesasAprovadas Despesa[] @relation("ApprovedDespesas")     // NOVO: Relação com Despesa
+  diariosDeObra     WorkLog[] // NOVO: Relação com DiarioDeObra
+}
+
+// Tabela central que representa um projeto de construção
+model Obra {
+  id                String     @id @default(cuid())
+  nome              String
+  address           String?    // NOVO: Endereço da obra
+  endCustomerName   String
+  orcamentoTotal    Float
+  currentCost       Float      @default(0) // NOVO: Custo atual para performance
+  progressPercentage Float   @default(0) // NOVO: Progresso geral para performance
+  dataInicio        DateTime
+  dataPrevistaFim   DateTime
+  status            StatusObra @default(PLANEJAMENTO)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  companyId         String
+  company           Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  endCustomerId     String?
+  endCustomer       User?      @relation(fields: [endCustomerId], references: [id], onDelete: SetNull)
+
+  etapas            Etapa[]
+  despesas          Despesa[]
+  receitas          Receita[]
+  estoqueItens      Estoque[]
+  workLogs          WorkLog[]  // NOVO: Relação com DiarioDeObra
+  documents         Document[] // NOVO: Relação com Documento
+
+  @@unique([companyId, nome])
+}
+
+// Tabela para rastrear o progresso da obra em fases
+model Etapa {
+  id                  String      @id @default(cuid())
+  nome                String
+  custoPrevisto       Float
+  dataInicioPrevista  DateTime    // MELHORIA: Nome mais claro
+  dataFimPrevista     DateTime    // MELHORIA: Nome mais claro
+  dataInicioReal      DateTime?   // NOVO: Para comparar planejado vs. real
+  dataFimReal         DateTime?   // NOVO: Para comparar planejado vs. real
+  progressPercentage  Float       @default(0) // NOVO: Progresso da etapa
+  status              StatusEtapa @default(PENDENTE)
+
+  obraId              String
+  obra                Obra        @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  responsibleId       String?     // NOVO: Vínculo com usuário responsável
+  responsible         User?       @relation("ResponsibleForEtapas", fields: [responsibleId], references: [id], onDelete: SetNull)
+}
+
+// Tabela para todas as saídas financeiras
+model Despesa {
+  id           String           @id @default(cuid())
+  descricao    String
+  valor        Float
+  categoria    CategoriaDespesa
+  data         DateTime         @default(now())
+  invoiceUrl   String?          // NOVO: URL para nota fiscal
+  
+  obraId       String
+  obra         Obra             @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  approverId   String?          // NOVO: Vínculo com usuário aprovador
+  approver     User?            @relation("ApprovedDespesas", fields: [approverId], references: [id], onDelete: SetNull)
+  
+  supplierId   String?          // NOVO: Vínculo com fornecedor
+  supplier     Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+}
+
+// Tabela para todas as entradas financeiras
+model Receita {
+  id        String   @id @default(cuid())
+  descricao String
+  valor     Float
+  data      DateTime @default(now())
+
+  // Relacionamento: Toda receita pertence a uma obra
+  obraId String
+  obra   Obra   @relation(fields: [obraId], references: [id], onDelete: Cascade)
+}
+
+// Tabela para gestão de inventário de materiais da obra
+model Estoque {
+  id            String  @id @default(cuid())
+  item          String
+  quantidade    Float
+  unidade       String
+  custoUnitario Float
+
+  obraId        String
+  obra          Obra    @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  
+  supplierId    String? // NOVO: Vínculo com fornecedor
+  supplier      Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+}
+
+model Supplier { // Fornecedor
+  id          String    @id @default(cuid())
+  name        String
+  cnpj        String?   @unique
+  phone       String?
+  email       String?
+  address     String?
+  
+  despesas    Despesa[]
+  estoqueItens Estoque[]
+}
+
+model WorkLog { // Diário de Obra
+  id        String   @id @default(cuid())
+  date      DateTime
+  notes     String   @db.Text // Campo de texto longo
+  photos    String[] // Array de URLs de fotos
+  
+  obraId    String
+  obra      Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model Document { // Documento da Obra
+  id          String   @id @default(cuid())
+  name        String
+  url         String   // URL do arquivo (S3, etc.)
+  type        String   // Ex: "Planta Baixa", "Alvará", "ART"
+  uploadedAt  DateTime @default(now())
+  
+  obraId      String
+  obra        Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+}

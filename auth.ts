@@ -1,27 +1,28 @@
 import NextAuth from "next-auth";
-import postgres from "postgres";
-import { env } from "process";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { publicPrisma as prisma } from "@/app/lib/prisma";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
-import { User } from "./app/lib/definitions";
+import { User } from "@prisma/client"; 
 
-
-const sql = postgres(env.POSTGRES_URL!, { ssl: 'require' });
-
-async function getUser(email: string): Promise<User | undefined> {
+async function getUser(email: string): Promise<User | null> {
     try {
-        const user = await sql<User[]>`SELECT * FROM users WHERE email=${email}`;
-        return user[0];
+        const user = await prisma.user.findUnique({
+            where: { email },
+        });
+        return user;
     } catch (error) {
         console.error('Failed to fetch user:', error);
         throw new Error('Failed to fetch user.');
     }
 }
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { auth, signIn, signOut, handlers } = NextAuth({
     ...authConfig,
+    adapter: PrismaAdapter(prisma),
+    session: { strategy: "jwt" },
     providers: [
         Credentials({
             async authorize(credentials) {
@@ -33,11 +34,13 @@ export const { auth, signIn, signOut } = NextAuth({
                     const { email, password } = parsedCredentials.data;
                     const user = await getUser(email);
 
-                    if (!user) return null;
+                    if (!user || !user.password) return null;
 
                     const passwordsMatch = await bcrypt.compare(password, user.password);
 
-                    if (passwordsMatch) return user;
+                    if (passwordsMatch) {
+                        return user;
+                    }
                 }
 
                 console.log('Invalid credentials');
@@ -45,4 +48,19 @@ export const { auth, signIn, signOut } = NextAuth({
             },
         }),
     ],
+    // 5. Bloco de Callbacks para injetar o tenantId
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user?.tenantId) {
+                token.tenantId = user.tenantId;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (token?.tenantId && session.user) {
+                session.user.tenantId = token.tenantId as string;
+            }
+            return session;
+        },
+    },
 });

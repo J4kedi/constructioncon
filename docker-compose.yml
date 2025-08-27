@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/constructioncon
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=ed719bcc7953fc66fc9159cc774a6a67
+    depends_on:
+      - db
+    command: >
+      sh -c "pnpm prisma migrate deploy && pnpm start"
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=constructioncon
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+volumes:
+  postgres_data:
