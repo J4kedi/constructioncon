@@ -17,8 +17,8 @@ export default function Login(){
   return(
     <main className="bg-background flex items-center justify-center py-16 sm:py-24">
             <div 
-                className="bg-background dark:bg-gradient-to-br dark:from-secondary/50 dark:to-background 
-                           rounded-2xl shadow-2xl w-full max-w-lg p-8 border border-secondary/20"
+                
+                className="bg-background dark:bg-gradient-to-br dark:from-secondary/50 dark:to-background rounded-2xl shadow-2xl w-full max-w-lg p-8 border border-secondary/20"
             >
               <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-text">Acesse sua Conta</h1>
@@ -27,7 +27,7 @@ export default function Login(){
 
                 <form onSubmit={submit}>
                     <div className="space-y-5">
-                        {}
+                        {/* Campo Email */}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-text mb-1">Email de Acesso</label>
                             <div className="relative">
@@ -44,7 +44,7 @@ export default function Login(){
                             </div>
                         </div>
 
-                        {}
+                        {/* Campo Senha */}
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-text mb-1">Senha</label>
                             <div className="relative">
@@ -61,7 +61,8 @@ export default function Login(){
                             </div>
                         </div>
 
-                        {}
+                        
+                        {/* Checkbox para mostrar senha */}
                         <div className="flex items-center">
                             <input
                                 id="showPassword"
@@ -76,6 +77,7 @@ export default function Login(){
                         </div>
                     </div>
 
+                    {/* Botão Entrar */}
                     <div className="mt-8">
                         <button 
                             type="submit"
@@ -87,6 +89,8 @@ export default function Login(){
                     </div>
                 </form>
 
+
+                {/* Link para Registrar-se */}
                 <div className="mt-6 text-center">
                     <p className="text-sm text-text/70">
                         Ainda não tem uma conta?{' '}
