@@ -123,15 +123,6 @@ export default function RegisterForm() {
                         </button>
                     </div>
                 </form>
-
-                <div className="mt-6 text-center">
-                    <p className="text-sm text-text/70">
-                        Já tem uma conta?{' '}
-                        <a href="/login" className="font-semibold text-primary hover:underline">
-                            Faça login
-                        </a>
-                    </p>
-                </div>
             </div>
         </main>
     );
