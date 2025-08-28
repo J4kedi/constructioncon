@@ -1,37 +1,35 @@
-import { PrismaClient } from '@prisma/client';
-import { env } from 'process';
+import { PrismaClient } from "@prisma/client";
 
-declare global {
-  var prismaClients: Record<string, PrismaClient> | undefined;
+const prismaClientCache = new Map<string, PrismaClient>();
+
+export function getTenantPrismaClient(subdomain: string) {
+    const schemaName = `tenant_${subdomain.replace(/-/g, '-')}`;
+
+    const cachedPrisma = prismaClientCache.get(schemaName);
+    if (cachedPrisma) return cachedPrisma;
+
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) throw new Error('DATABASE_URL não está definida no .env');
+
+    const tenantDatabaseUrl = `${databaseUrl}?schema=${schemaName}`;
+
+    const newPrismaClient = new PrismaClient({
+        datasources: {
+            db: {
+                url: tenantDatabaseUrl,
+            },
+        },
+    });
+
+    prismaClientCache.set(schemaName, newPrismaClient);
+
+    return newPrismaClient;
 }
 
-const prismaClients = global.prismaClients || {};
+let publicPrismaClient: PrismaClient;
 
-const DATABASE_URL_BASE = env.DATABASE_URL!.split('?')[0];
+export function getPublicPrismaClient(): PrismaClient {
+    if (!publicPrismaClient) publicPrismaClient = new PrismaClient();
 
-export function getPrismaClient(tenantId: string): PrismaClient {
-  if (prismaClients[tenantId]) {
-    return prismaClients[tenantId];
-  }
-
-  const tenantDatabaseUrl = `${DATABASE_URL_BASE}?schema=${tenantId}`;
-
-  const newPrismaClient = new PrismaClient({
-    datasources: {
-      db: {
-        url: tenantDatabaseUrl,
-      },
-    },
-    log: tenantId === 'public' ? ['query', 'info', 'warn', 'error'] : [],
-  });
-
-  prismaClients[tenantId] = newPrismaClient;
-
-  return newPrismaClient;
-}
-
-export const publicPrisma = getPrismaClient('public');
-
-if (env.NODE_ENV !== 'production') {
-  global.prismaClients = prismaClients;
+    return publicPrismaClient;
 }
