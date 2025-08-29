@@ -35,7 +35,7 @@ async function main() {
             console.log(`✅ Registro do tenant '${newTenant.name}' criado.`);
 
             console.log('[3/4] Associando features padrão...');
-            const defaultFeatureKeys = ['dashboard-basic', 'projects-list-view'];
+            const defaultFeatureKeys = ['dashboard-basic', 'financial-view', 'user-management', 'inventory-management'];
             await tx.tenant.update({
                 where: { id: newTenant.id },
                 data: {
