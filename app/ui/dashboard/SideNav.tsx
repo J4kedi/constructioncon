@@ -1,9 +1,6 @@
-// components/SideNav.tsx
 'use client';
 
 import { useState } from 'react';
-// Imports para 'next/link' e 'next/navigation' foram removidos para compatibilidade.
-// Em seu projeto Next.js, você pode reintroduzi-los para ter navegação no lado do cliente e estado ativo.
 import clsx from 'clsx';
 import { 
     Building2, 
@@ -18,9 +15,6 @@ import {
     FileText,
     Settings2
 } from 'lucide-react';
-// A importação para 'signOut' foi removida. A ação de logout deve ser implementada com Server Actions no seu projeto.
-
-// --- Componente NavLinks foi mesclado aqui para simplicidade ---
 
 const navLinks = [
   { href: '/dashboard/acompanhamento', name: 'Acompanhamento', icon: BarChart3 },
@@ -37,7 +31,6 @@ const settingsLink = {
 };
 
 function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
-  // A lógica 'usePathname' foi removida. O estado ativo do link não será exibido neste preview.
   return (
     <ul>
       {navLinks.map((link) => {
@@ -60,9 +53,6 @@ function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
     </ul>
   );
 }
-
-// --- Fim do conteúdo de NavLinks ---
-
 
 // Componente do Logo
 const ConstructionconLogo = ({ isCollapsed }: { isCollapsed: boolean }) => (

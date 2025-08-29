@@ -4,7 +4,7 @@ import FeaturesSection from "@/app/ui/landing/FeaturesSection";
 import BenefitsSection from "@/app/ui/landing/BenefitsSection";
 import TestimonialSection from "@/app/ui/landing/TestimonialSection";
 import CtaSection from "@/app/ui/landing/CtaSection";
-import Header from "./ui/landing/header";
+import Header from "./ui/landing/Header";
 
 export const metadata = {
   title: "ConstructionCon - Gestão de Obras Simplificada",

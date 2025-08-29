@@ -1,0 +1,9 @@
+# Evita que o contexto de build do Docker inclua arquivos e pastas desnecessários
+
+.git
+.next
+node_modules
+npm-debug.log
+README.md
+.env
+.env.local
