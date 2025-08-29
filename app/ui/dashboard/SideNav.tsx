@@ -15,6 +15,8 @@ import {
     FileText,
     Settings2
 } from 'lucide-react';
+import Link from 'next/link';
+import { useFeatures } from '@/app/contexts/FeatureContext';
 
 const navLinks = [
   { href: '/dashboard/acompanhamento', name: 'Acompanhamento', icon: BarChart3 },
@@ -31,6 +33,7 @@ const settingsLink = {
 };
 
 function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
+  const { hasFeature } = useFeatures();
   return (
     <ul>
       {navLinks.map((link) => {
@@ -47,6 +50,9 @@ function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
               <LinkIcon className="h-5 w-5 flex-shrink-0" />
               {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">{link.name}</span>}
             </a>
+            {hasFeature('project-timeline-view') && (
+                <Link href="/dashboard/timeline">Linha do Tempo</Link>
+            )}
           </li>
         );
       })}

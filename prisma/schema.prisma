@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
@@ -60,7 +61,6 @@ enum UnidadeMedida {
   PCT // Pacote
 }
 
-
 // ===================================
 // Modelos de Dados (Tabelas)
 // ===================================
@@ -75,6 +75,16 @@ model Tenant {
   updatedAt DateTime @updatedAt
 
   @@map("tenants")
+  features Feature[]
+}
+
+model Feature {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+
+  tenants     Tenant[]
 }
 
 model Company {

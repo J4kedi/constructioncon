@@ -1,6 +1,33 @@
 // ATENÇÃO: Este arquivo contém dados mock para popular o banco de dados.
+import {
+  UserRole,
+  StatusObra,
+  StatusEtapa,
+  CategoriaDespesa,
+  UnidadeMedida,
+  DocumentType,
+  Company,
+  User,
+  Obra,
+  Etapa,
+  Address,
+  Supplier,
+  Despesa,
+  Receita,
+  Estoque,
+  Document,
+  WorkLog
+} from '@prisma/client';
 
-export const companys = [
+import { Decimal } from '@prisma/client/runtime/library';
+
+// --- Tipos para o Seed: Omitimos campos que o DB gera automaticamente ---
+type CompanySeed = Omit<Company, 'createdAt' | 'updatedAt'>;
+type UserSeed = Omit<User, 'createdAt' | 'updatedAt'>;
+type ObraSeed = Omit<Obra, 'createdAt' | 'updatedAt'>;
+type EtapaSeed = Omit<Etapa, 'createdAt' | 'updatedAt'>;
+
+export const companys: CompanySeed[] = [
   {
     id: 'cmevokh740001356oqodb4idq',
     name: 'Amazônia Engenharia e Construções',
@@ -27,19 +54,19 @@ export const companys = [
   },
 ];
 
-export const users = [
-  // SUPER_ADMIN (não associado a uma company específica)
+export const users: UserSeed[] = [
+  // SUPER_ADMIN
   {
     id: 'cmevoish30000356ok0uezrvb',
     name: 'Kauan Pardini Augusto',
     email: 'kauan@constructioncon.com',
     password: '123456',
-    role: 'SUPER_ADMIN',
+    role: UserRole.SUPER_ADMIN,
     jobTitle: 'Software Engineer',
     phone: '(11) 91111-1111',
     avatarUrl: '/avatars/kauan.png',
     isActive: true,
-    companyId: companys[1].id, // Exemplo: SUPER_ADMIN pode pertencer a uma company interna
+    companyId: companys[1].id,
   },
   // COMPANY_ADMIN da Amazônia Engenharia
   {
@@ -47,7 +74,7 @@ export const users = [
     name: 'Mario Fernando Knaipp',
     email: 'mario@amazoniaeng.com',
     password: '123456',
-    role: 'COMPANY_ADMIN',
+    role: UserRole.COMPANY_ADMIN,
     jobTitle: 'Gerente de Projetos',
     phone: '(92) 92222-2222',
     avatarUrl: '/avatars/mario.png',
@@ -60,7 +87,7 @@ export const users = [
     name: 'Eduardo Henrique Camacho',
     email: 'eduardo@paranaprime.com',
     password: '123456',
-    role: 'USER',
+    role: UserRole.USER,
     jobTitle: 'Engenheiro Civil',
     phone: '(41) 93333-3333',
     avatarUrl: '/avatars/eduardo.png',
@@ -73,16 +100,16 @@ export const users = [
     name: 'Caue Souza',
     email: 'caue.cliente@email.com',
     password: '123456',
-    role: 'END_CUSTOMER',
+    role: UserRole.END_CUSTOMER,
     jobTitle: null,
     phone: '(48) 94444-4444',
     avatarUrl: '/avatars/caue.png',
     isActive: true,
-    companyId: companys[2].id, // Cliente associado à empresa que está construindo para ele
+    companyId: companys[2].id,
   },
 ];
 
-export const suppliers = [
+export const suppliers: Supplier[] = [
   {
     id: 'clw1f2g3h0001m8igabcd1234',
     name: 'Cimento Forte S.A.',
@@ -99,10 +126,8 @@ export const suppliers = [
   },
 ];
 
-export const addresses = [
-  // Endereços da Paraná Prime
+export const addresses: Omit<Address, 'id'>[] = [
   {
-    id: 'clw1f3i4j0003m8ighijk9012',
     street: 'Rua da Inovação',
     number: '123',
     neighborhood: 'Tecnoparque',
@@ -111,10 +136,10 @@ export const addresses = [
     zipCode: '81234-567',
     isPrimary: true,
     companyId: companys[1].id,
+    supplierId: null,
+    complement: 'Rua do Jorge'
   },
-  // Endereço do Fornecedor Cimento Forte
   {
-    id: 'clw1f3i4j0004m8iglmno3456',
     street: 'Avenida Industrial',
     number: '1000',
     neighborhood: 'Distrito Industrial',
@@ -122,23 +147,25 @@ export const addresses = [
     state: 'SP',
     zipCode: '01234-567',
     isPrimary: true,
+    companyId: null,
     supplierId: suppliers[0].id,
+    complement: 'Rua do Jorge'
   },
 ];
 
-export const obras = [
+export const obras: ObraSeed[] = [
   {
     id: 'clw1f5k6l0005m8igpqrs7890',
     nome: 'Edifício Sky Tower',
     address: 'Av. das Torres, 100, Manaus - AM',
     endCustomerName: 'Investidores Anônimos',
-    orcamentoTotal: '5000000.00', // Usar string para Decimal
-    currentCost: '1250000.00',
+    orcamentoTotal: new Decimal(1500000.00),
+    currentCost: new Decimal(900000.00),
     progressPercentage: 25.0,
     dataInicio: new Date('2024-01-15T00:00:00.000Z'),
     dataPrevistaFim: new Date('2026-01-15T00:00:00.000Z'),
-    status: 'EM_ANDAMENTO',
-    companyId: companys[0].id, // Obra da Amazônia Engenharia
+    status: StatusObra.EM_ANDAMENTO,
+    companyId: companys[0].id,
     endCustomerId: null,
   },
   {
@@ -146,13 +173,13 @@ export const obras = [
     nome: 'Residencial Araucária',
     address: 'Rua das Araucárias, 500, Curitiba - PR',
     endCustomerName: 'Família Silva',
-    orcamentoTotal: '1500000.00',
-    currentCost: '900000.00',
+    orcamentoTotal: new Decimal(1500000.00),
+    currentCost: new Decimal(900000.00),
     progressPercentage: 60.0,
     dataInicio: new Date('2023-08-01T00:00:00.000Z'),
     dataPrevistaFim: new Date('2025-10-31T00:00:00.000Z'),
-    status: 'EM_ANDAMENTO',
-    companyId: companys[1].id, // Obra da Paraná Prime
+    status: StatusObra.EM_ANDAMENTO,
+    companyId: companys[1].id,
     endCustomerId: null,
   },
   {
@@ -160,98 +187,116 @@ export const obras = [
     nome: 'Casa de Praia - Caue Souza',
     address: 'Av. Beira Mar, 2024, Florianópolis - SC',
     endCustomerName: 'Caue Souza',
-    orcamentoTotal: '850000.00',
-    currentCost: '50000.00',
+    orcamentoTotal: new Decimal(850000.00),
+    currentCost: new Decimal(50000.00),
     progressPercentage: 5.0,
     dataInicio: new Date('2025-07-20T00:00:00.000Z'),
     dataPrevistaFim: new Date('2026-05-20T00:00:00.000Z'),
-    status: 'PLANEJAMENTO',
-    companyId: companys[2].id, // Obra da Sul Forte
-    endCustomerId: users[3].id, // Vinculada ao usuário Caue Souza
+    status: StatusObra.PLANEJAMENTO,
+    companyId: companys[2].id,
+    endCustomerId: users[3].id,
   },
 ];
 
-export const etapas = [
-  // Etapas da Obra Residencial Araucária
+export const etapas: EtapaSeed[] = [
   {
     id: 'clw1g8m9n0008m8igabcd5678',
     nome: 'Fundação e Estrutura',
-    custoPrevisto: '300000.00',
+    custoPrevisto: new Decimal(300000.00),
     dataInicioPrevista: new Date('2023-08-01T00:00:00.000Z'),
     dataFimPrevista: new Date('2024-02-01T00:00:00.000Z'),
     dataInicioReal: new Date('2023-08-05T00:00:00.000Z'),
     dataFimReal: new Date('2024-02-10T00:00:00.000Z'),
-    status: 'CONCLUIDA',
-    obraId: obras[1].id,
-    responsibleId: users[2].id, // Eduardo é o responsável
-  },
-  {
-    id: 'clw1g8m9n0009m8igefgh9012',
-    nome: 'Alvenaria e Lajes',
-    custoPrevisto: '450000.00',
-    dataInicioPrevista: new Date('2024-02-02T00:00:00.000Z'),
-    dataFimPrevista: new Date('2024-08-02T00:00:00.000Z'),
-    dataInicioReal: new Date('2024-02-11T00:00:00.000Z'),
-    dataFimReal: null,
-    status: 'EM_ANDAMENTO',
+    status: StatusEtapa.CONCLUIDA,
     obraId: obras[1].id,
     responsibleId: users[2].id,
+    progressPercentage: 1.0,
   },
 ];
 
-export const despesas = [
+export const despesas: Omit<Despesa, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
-    id: 'clw1h9o0p000am8igijkl3456',
     descricao: 'Compra de 500 sacos de cimento',
-    valor: '15000.00',
-    categoria: 'MATERIAL',
+    valor: new Decimal(15000.00),
+    categoria: CategoriaDespesa.MATERIAL,
     data: new Date(),
     invoiceUrl: '/invoices/inv-001.pdf',
-    obraId: obras[1].id, // Despesa da Obra Residencial Araucária
-    approverId: users[1].id, // Aprovada por um admin da empresa
-    supplierId: suppliers[0].id, // Fornecedor Cimento Forte
-  },
-];
-
-export const receitas = [
-  {
-    id: 'clw1h9o0p000bm8igmnop7890',
-    descricao: 'Primeira parcela do pagamento - Família Silva',
-    valor: '250000.00',
-    data: new Date('2023-08-10T00:00:00.000Z'),
     obraId: obras[1].id,
-  },
-];
-
-export const estoque = [
-  {
-    id: 'clw1i2q3r000cm8igqrst1234',
-    item: 'Saco de Cimento (50kg)',
-    quantidade: '250.00', // Restante da compra
-    unidade: 'UN',
-    custoUnitario: '30.00',
-    obraId: obras[1].id,
+    approverId: users[2].id,
     supplierId: suppliers[0].id,
   },
 ];
 
-export const documents = [
+export const receitas: Omit<Receita, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
-    id: 'clw1j3s4t000dm8iguvw5678',
+    descricao: 'Primeira parcela do pagamento - Família Silva',
+    valor: new Decimal('250000.00'),
+    data: new Date('2023-08-10T00:00:00.000Z'),
+    obraId: obras[1].id,
+  },
+  {
+    descricao: 'Segunda parcela do pagamento - Família Silva',
+    valor: new Decimal('300000.00'),
+    data: new Date('2024-02-15T00:00:00.000Z'),
+    obraId: obras[1].id,
+  },
+];
+
+export const estoque: Omit<Estoque, 'id' | 'createdAt' | 'updatedAt'>[] = [
+  {
+    item: 'Saco de Cimento (50kg)',
+    quantidade: new Decimal('250.00'),
+    unidade: UnidadeMedida.UN,
+    custoUnitario: new Decimal('30.00'),
+    obraId: obras[1].id,
+    supplierId: suppliers[0].id,
+  },
+  {
+    item: 'Viga de Madeira Pinus (6m)',
+    quantidade: new Decimal('50.00'),
+    unidade: UnidadeMedida.UN,
+    custoUnitario: new Decimal('85.00'),
+    obraId: obras[1].id,
+    supplierId: suppliers[1].id,
+  },
+];
+
+export const documents: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>[] = [
+  {
     name: 'Planta Baixa - Térreo',
     url: '/docs/residencial-araucaria/planta-terreo.pdf',
-    type: 'PLANTA_BAIXA',
+    type: DocumentType.PLANTA_BAIXA,
+    uploadedAt: new Date('2023-07-20T00:00:00.000Z'),
+    obraId: obras[1].id,
+  },
+  {
+    name: 'Alvará de Construção',
+    url: '/docs/residencial-araucaria/alvara.pdf',
+    type: DocumentType.ALVARA,
+    uploadedAt: new Date('2023-07-25T00:00:00.000Z'),
+    obraId: obras[1].id,
+  },
+  {
+    name: 'Nota Fiscal - Cimento Forte S.A.',
+    url: '/invoices/inv-001.pdf', // Corresponde à despesa
+    type: DocumentType.OUTRO,
     uploadedAt: new Date(),
     obraId: obras[1].id,
   },
 ];
 
-export const workLogs = [
+export const workLogs: Omit<WorkLog, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
-    id: 'clw1k4u5v000em8igwxyz9012',
-    date: new Date(),
-    notes: 'Iniciada a concretagem da laje do segundo pavimento. Clima favorável.',
+    date: new Date('2024-02-11T00:00:00.000Z'),
+    notes: 'Iniciada a montagem da alvenaria do primeiro pavimento. Equipe completa no local.',
     photos: ['/logs/photo1.jpg', '/logs/photo2.jpg'],
+    obraId: obras[1].id,
+    authorId: users[2].id, // Log feito por Eduardo
+  },
+  {
+    date: new Date('2024-02-12T00:00:00.000Z'),
+    notes: 'Continuação da alvenaria. Recebimento de material (tijolos) conforme planejado. Clima estável.',
+    photos: ['/logs/photo3.jpg'],
     obraId: obras[1].id,
     authorId: users[2].id, // Log feito por Eduardo
   },

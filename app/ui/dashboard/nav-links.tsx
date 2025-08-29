@@ -14,14 +14,12 @@ const navLinks = [
   { href: '/dashboard/relatorios', name: 'Relatórios', icon: FileText },
 ];
 
-// O link de configurações também pode ficar aqui para manter tudo organizado
 export const settingsLink = {
     href: '/dashboard/settings',
     name: 'Personalização',
     icon: Settings2,
 };
 
-// O componente agora aceita a prop isCollapsed
 export default function NavLinks({ isCollapsed }: { isCollapsed: boolean }) {
   const pathname = usePathname();
 

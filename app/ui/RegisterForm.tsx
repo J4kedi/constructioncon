@@ -1,24 +1,29 @@
 'use client';
 
-import { Lock, Mail, User } from "lucide-react";
-import { useState } from "react";
+import { Lock, Mail, TriangleAlert, User } from "lucide-react";
+import { useActionState, useState } from "react";
+import { useFormStatus } from "react-dom";
+import { RegisterState, registerUser } from "../actions/auth";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-accent transition-all duration-300 shadow-lg hover:shadow-primary/40 disabled:bg-gray-400 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Registrando...' : 'Registrar Usuário'}
+    </button>
+  );
+}
 
 export default function RegisterForm() {
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const password = formData.get('password');
-        const confirmPassword = formData.get('confirmPassword');
-
-        if (password !== confirmPassword) {
-            alert("As senhas não coincidem!");
-            return;
-        }
-
-        console.log('Conta criada com sucesso!');
-    };
+    const initialState: RegisterState = {};
+    const [state, dispatch] = useActionState(registerUser, initialState);
     
     return (
         <main className="bg-background flex items-center justify-center py-16 sm:py-24">
@@ -31,7 +36,7 @@ export default function RegisterForm() {
                     <p className="text-text/70 mt-2">Insira os dados para registrar um novo usuário no painel.</p>
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form action={dispatch}>
                     <div className="space-y-5">
                         {/* Campo Nome do Usuário */}
                         <div>
@@ -114,13 +119,15 @@ export default function RegisterForm() {
                         </div>
 
                     </div>
+                    {/* Exibição de Erro */}
+                    {state.error && (
+                        <div className="flex items-center gap-2 mt-4 text-red-500 bg-red-500/10 p-3 rounded-lg">
+                            <TriangleAlert className="h-5 w-5" />
+                            <p className="text-sm">{state.error}</p>
+                        </div>
+                    )}
                     <div className="mt-8">
-                        <button 
-                            type="submit"
-                            className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-accent transition-all duration-300 shadow-lg hover:shadow-primary/40"
-                        >
-                            Registrar Usuário
-                        </button>
+                        <SubmitButton />
                     </div>
                 </form>
             </div>

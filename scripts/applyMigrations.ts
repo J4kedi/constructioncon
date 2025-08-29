@@ -1,4 +1,4 @@
-import { getPublicPrismaClient } from "@/app/lib/prisma";
+import { getPublicPrismaClient } from "../app/lib/prisma.ts";
 import { execSync } from "child_process";
 
 async function main () {
@@ -20,13 +20,17 @@ async function main () {
     if (!databaseUrlBase) throw new Error('DATABASE_URL não definida.');
 
     for (const tenant of tenants) {
-        const tenantDatabaseUrl = `${databaseUrlBase}?schema=${tenant.schemaName}`;
+        const tenantDatabaseUrl = `${databaseUrlBase}?schema=${tenant.schemaName}&search_path=${tenant.schemaName},public`;
 
         try {
             console.log(`--- Aplicando migrações para o tenant: ${tenant.name} (${tenant.schemaName}) ---`);
 
-            execSync(`DATABASE_URL="${tenantDatabaseUrl}" npx prisma migrate deploy`, {
+            execSync(`pnpm prisma migrate deploy`, {
                 stdio: 'inherit',
+                env: {
+                    ...process.env,
+                    DATABASE_URL: tenantDatabaseUrl,
+                },
             });
 
             console.log(`✅ Migrações aplicadas com sucesso para ${tenant.name}.`);

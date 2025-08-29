@@ -11,7 +11,7 @@ export function getTenantPrismaClient(subdomain: string) {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) throw new Error('DATABASE_URL não está definida no .env');
 
-    const tenantDatabaseUrl = `${databaseUrl}?schema=${schemaName}`;
+    const tenantDatabaseUrl = `${databaseUrl}?schema=${schemaName}&search_path=${schemaName},public`;
 
     const newPrismaClient = new PrismaClient({
         datasources: {
