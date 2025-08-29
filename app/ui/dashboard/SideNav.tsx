@@ -2,29 +2,17 @@
 
 import { useState } from 'react';
 import clsx from 'clsx';
+import Link from 'next/link';
 import { 
     Building2, 
     ChevronLeft, 
     ChevronRight, 
     LogOut, 
     UserCircle,
-    BarChart3,
-    Wallet,
-    Users,
-    Warehouse,
-    FileText,
     Settings2
 } from 'lucide-react';
-import Link from 'next/link';
 import { useFeatures } from '@/app/contexts/FeatureContext';
-
-const navLinks = [
-  { href: '/dashboard/acompanhamento', name: 'Acompanhamento', icon: BarChart3 },
-  { href: '/dashboard/financeiro', name: 'Financeiro', icon: Wallet },
-  { href: '/dashboard/users', name: 'Usuários', icon: Users },
-  { href: '/dashboard/estoque', name: 'Estoque', icon: Warehouse },
-  { href: '/dashboard/relatorios', name: 'Relatórios', icon: FileText },
-];
+import { ALL_NAV_LINKS } from '@/app/lib/nav-links';
 
 const settingsLink = {
     href: '/dashboard/settings',
@@ -34,14 +22,17 @@ const settingsLink = {
 
 function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
   const { hasFeature } = useFeatures();
+
+  const availableLinks = ALL_NAV_LINKS.filter(link => hasFeature(link.featureKey));
+
   return (
     <ul>
-      {navLinks.map((link) => {
+      {availableLinks.map((link) => {
         const LinkIcon = link.icon;
 
         return (
           <li key={link.name} className="px-4 py-1">
-            <a
+            <Link
               href={link.href}
               className={clsx(
                 'flex items-center py-2.5 px-4 rounded-lg transition-colors text-text/70 hover:bg-secondary/20 hover:text-text'
@@ -49,10 +40,7 @@ function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
             >
               <LinkIcon className="h-5 w-5 flex-shrink-0" />
               {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">{link.name}</span>}
-            </a>
-            {hasFeature('project-timeline-view') && (
-                <Link href="/dashboard/timeline">Linha do Tempo</Link>
-            )}
+            </Link>
           </li>
         );
       })}
@@ -62,14 +50,14 @@ function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
 
 // Componente do Logo
 const ConstructionconLogo = ({ isCollapsed }: { isCollapsed: boolean }) => (
-    <a href="/dashboard" className="flex items-center justify-center h-16 px-4">
+    <Link href="/dashboard" className="flex items-center justify-center h-16 px-4">
         <Building2 className="h-8 w-8 text-primary flex-shrink-0" />
         {!isCollapsed && (
         <span className="ml-2 text-xl font-bold text-text whitespace-nowrap">
             Construction<span className="text-primary">Con</span>
         </span>
         )}
-    </a>
+    </Link>
 );
 
 export default function SideNav() {
@@ -101,7 +89,7 @@ export default function SideNav() {
 
       {/* Seção Inferior */}
       <div className="flex-shrink-0 p-4 border-t border-secondary/20">
-        <a
+        <Link
           href={settingsLink.href}
           className={clsx(
             'flex items-center py-2.5 px-4 rounded-lg transition-colors mb-4 text-text/70 hover:bg-secondary/20 hover:text-text'
@@ -109,7 +97,7 @@ export default function SideNav() {
         >
           <settingsLink.icon className="h-5 w-5 flex-shrink-0" />
           {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">{settingsLink.name}</span>}
-        </a>
+        </Link>
 
         <div className="flex items-center p-2 rounded-lg hover:bg-secondary/10">
           <UserCircle className="h-10 w-10 text-text/60 flex-shrink-0" />
@@ -121,20 +109,10 @@ export default function SideNav() {
           )}
         </div>
         
-        {/* Formulário de Logout com Server Action (deve ser implementado no seu projeto) */}
-        {/* <form
-            action={async () => {
-              'use server';
-              // Importe e chame sua função signOut aqui
-              // await signOut({ redirectTo: '/login' });
-            }}
-          >
-        */}
-          <button className="w-full mt-4 flex items-center justify-center py-2.5 px-4 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
-            <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">Sair</span>}
-          </button>
-        {/* </form> */}
+        <button className="w-full mt-4 flex items-center justify-center py-2.5 px-4 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
+          <LogOut className="h-5 w-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">Sair</span>}
+        </button>
       </div>
     </aside>
   );

@@ -1,4 +1,3 @@
-// app/dashboard/components/nav-links.tsx
 'use client';
 
 import clsx from 'clsx';

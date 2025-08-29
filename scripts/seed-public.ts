@@ -9,22 +9,27 @@ async function main() {
         {
             key: 'dashboard-basic',
             name: 'Dashboard Básico',
-            description: 'Acesso à visualização principal do dashboard.'
+            description: 'Acesso à visualização de Acompanhamento.'
         },
         {
-            key: 'projects-list-view',
-            name: 'Listagem de Obras',
-            description: 'Permite visualizar a lista de todas as obras da empresa.'
+            key: 'financial-view',
+            name: 'Visualização Financeira',
+            description: 'Acesso ao dashboard Financeiro.'
+        },
+        {
+            key: 'user-management',
+            name: 'Gerenciamento de Usuários',
+            description: 'Permite gerenciar os usuários da empresa.'
+        },
+        {
+            key: 'inventory-management',
+            name: 'Gerenciamento de Estoque',
+            description: 'Acesso ao controle de estoque.'
         },
         {
             key: 'advanced-reporting',
             name: 'Relatórios Avançados',
-            description: 'Permite a exportação de relatórios financeiros detalhados.'
-        },
-        {
-            key: 'project-timeline-view',
-            name: 'Visualização de Linha do Tempo',
-            description: 'Mostra um cronograma visual do andamento dos projetos.'
+            description: 'Permite a exportação de relatórios detalhados.'
         }
     ];
 
@@ -44,3 +49,5 @@ main()
     .finally(async () => {
         await prisma.$disconnect();
     });
+
+export {};
