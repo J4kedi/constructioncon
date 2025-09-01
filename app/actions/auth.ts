@@ -1,31 +1,15 @@
 'use server';
 
 import { z } from 'zod';
-import { getTenantPrismaClient } from '@/app/lib/prisma'; 
+import { getUserByCredentials } from '@/app/lib/data';
+import { getTenantPrismaClient } from '@/app/lib/prisma';
 import bcrypt from 'bcrypt';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import NextAuth, { AuthError } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
-
-export interface RegisterState {
-    error?: string;
-    success?: boolean;
-}
-export interface LoginState {
-    error?: string;
-    success?: boolean;
-}
-const RegisterSchema = z.object({
-    fullName: z.string().min(3, { message: 'O nome completo é obrigatório.' }),
-    email: z.email({ message: 'Por favor, insira um email válido.' }),
-    password: z.string().min(8, { message: 'A senha deve ter no mínimo 8 caracteres.' }),
-    confirmPassword: z.string()
-}).refine(data => data.password === data.confirmPassword, {
-    message: "As senhas não coincidem.",
-    path: ["confirmPassword"],
-});
+import { LoginState, RegisterState, RegisterSchema } from '@/app/lib/definitions';
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -33,47 +17,29 @@ export const { auth, signIn, signOut } = NextAuth({
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
-          .object({ 
-            email: z.email(), 
+          .object({
+            email: z.email(),
             password: z.string().min(6),
-            subdomain: z.string().min(1), 
+            subdomain: z.string().min(1),
           })
           .safeParse(credentials);
 
-        console.log(parsedCredentials)
-
         if (parsedCredentials.success) {
           const { email, password, subdomain } = parsedCredentials.data;
-          
-          const tenantPrisma = getTenantPrismaClient(subdomain);
+          const user = await getUserByCredentials(email, password, subdomain);
+          if (!user) return null;
 
-          try {
-            const user = await tenantPrisma.user.findUnique({ where: { email } });
-            
-            if (!user) {
-              console.log(`Login falhou: Utilizador ${email} não encontrado no tenant ${subdomain}`);
-              return null;
-            }
+          const passwordsMatch = await bcrypt.compare(password, user.password);
+          console.log(`\n\n\nUser encontrado ${user} com a sua senha ebaaaa ${password} ó o que da o ${passwordsMatch}\n\n\n`);
 
-            const passwordsMatch = await bcrypt.compare(password, user.password);
-
-            console.log(`\n\n\nUser encontrado ${user} com a sua senha ebaaaa ${password} ó o que da o passwordsMatch ${passwordsMatch}\n\n\n`)
-
-            if (passwordsMatch) {
-              return user; // Sucesso!
-            }
-          } catch (error) {
-              console.error(`Erro ao autenticar no tenant ${subdomain}:`, error);
-              return null;
-          } finally {
-              await tenantPrisma.$disconnect();
-          }
+          if (passwordsMatch) return user;
         }
         
         console.log('Credenciais inválidas fornecidas.');
         return null;
       },
     }),
+
   ],
 });
 
@@ -85,7 +51,7 @@ export async function registerUser(prevState: RegisterState, formData: FormData)
     const companyId = (await headersList).get('x-tenant-id');
 
     if (typeof subdomain !== 'string' || !subdomain || !companyId) {
-        return { error: 'Acesso inválido. Não foi possível identificar a empresa.'};
+        return { error: 'Acesso inválido. Não foi possível identificar a empresa.' };
     }
 
     const validatedFields = RegisterSchema.safeParse(
@@ -120,35 +86,31 @@ export async function registerUser(prevState: RegisterState, formData: FormData)
     } catch (dbError) {
         console.error("Database Error:", dbError);
         return { error: 'Falha ao registar utilizador. Tente novamente.' };
-    } finally {
-        await tenantPrisma.$disconnect();
     }
 
-    redirect('/login?registered=true');
+    return authenticate(undefined, formData);
 }
 
 export async function authenticate(
   prevState: LoginState | undefined,
   formData: FormData,
 ): Promise<LoginState> {
-  try {
-    const headersList = headers();
-    const subdomain = (await headersList).get('x-tenant-subdomain');
-    const host = (await headersList).get('host');
+  const headersList = headers();
+  const host = (await headersList).get('host');
+  const subdomain = (await headersList).get('x-tenant-subdomain');
 
+  try {
     if (typeof subdomain !== 'string' || !subdomain) {
       return { error: 'Não foi possível identificar a empresa. Tente novamente.' };
     }
     
     formData.append('subdomain', subdomain);
 
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const redirectTo = `${protocol}://${host}/dashboard`;
+    await signIn('credentials', {
+      ...Object.fromEntries(formData),
+      redirect: false,
+    });
 
-    formData.append('redirectTo', redirectTo);
-
-    await signIn('credentials', formData);
-    return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -160,5 +122,9 @@ export async function authenticate(
     }
     throw error;
   }
+
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const redirectUrl = `${protocol}://${host}/dashboard`;
+  redirect(redirectUrl);
 }
 

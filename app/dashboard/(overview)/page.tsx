@@ -2,7 +2,6 @@ import { roboto } from "@/app/ui/fonts";
 import { CardsSkeleton, LatestInvoicesSkeleton, RevenueChartSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
 
-
 export default async function Page() {
     return (
         <main>

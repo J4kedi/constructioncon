@@ -4,14 +4,27 @@ import { NextResponse } from 'next/server';
 
 const MAIN_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'localhost';
 
-export default NextAuth(authConfig).auth(async function middleware(req) {
+export default NextAuth(authConfig).auth(async (req) => {
   const { nextUrl } = req;
+  const isLoggedIn = !!req.auth?.user;
+  const isOnDashboard = await nextUrl.pathname.startsWith('/dashboard');  
+
+  if (isOnDashboard) {                                                                   
+    if (!isLoggedIn) {                                                                    
+        return NextResponse.redirect(new URL(`/login?callbackUrl=${nextUrl.href}`, nextUrl.origin));       
+    }
+  }
+
   const headers = new Headers(req.headers);
   const host = req.headers.get("host")!;
   const hostname = host.split(":")[0];
   const subdomain = hostname.endsWith(`.${MAIN_DOMAIN}`)
-    ? hostname.replace(`.${MAIN_DOMAIN}`, "")
-    : null;
+  ? hostname.replace(`.${MAIN_DOMAIN}`, "")
+  : null;
+
+  if (subdomain && subdomain !== 'www' && nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
 
   if (subdomain && subdomain !== 'www') {
     try {
@@ -20,7 +33,6 @@ export default NextAuth(authConfig).auth(async function middleware(req) {
 
       if (response.ok) {
         const tenant = await response.json();
-        
         const featureKeys = tenant.features.map((f: { key: string }) => f.key).join(',');
         headers.set('x-tenant-id', tenant.id);
         headers.set('x-tenant-subdomain', tenant.subdomain);
@@ -33,8 +45,8 @@ export default NextAuth(authConfig).auth(async function middleware(req) {
 
   return NextResponse.next({
     request: {
-      headers: headers
-    }
+      headers: headers,
+    },
   });
 });
 

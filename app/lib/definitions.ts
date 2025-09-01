@@ -1,5 +1,40 @@
 import { z } from "zod";
 
+// --- Estados de Formulário para Server Actions ---
+export interface RegisterState {
+    error?: string;
+    success?: boolean;
+}
+
+export interface LoginState {
+    error?: string;
+    success?: boolean;
+}
+
+export type FormState = 
+    |    {
+            errors?: {
+                name?: string[]
+                email?: string[]
+                password?: string[]
+                confirmPassword?: string[]
+            }
+            message?: string
+        }
+    |   undefined
+
+// --- Schemas de Validação Zod ---
+
+export const RegisterSchema = z.object({
+    fullName: z.string().min(3, { message: 'O nome completo é obrigatório.' }),
+    email: z.email({ message: 'Por favor, insira um email válido.' }),
+    password: z.string().min(8, { message: 'A senha deve ter no mínimo 8 caracteres.' }),
+    confirmPassword: z.string()
+}).refine(data => data.password === data.confirmPassword, {
+    message: "As senhas não coincidem.",
+    path: ["confirmPassword"],
+});
+
 export const SignupFormSchema = z.object({
     name: z
         .string()
@@ -24,15 +59,3 @@ export const SignupFormSchema = z.object({
     message: "As senhas não correspondem.",
     path: ["confirmPassword"],
 });
-
-export type FormState = 
-    |    {
-            errors?: {
-                name?: string[]
-                email?: string[]
-                password?: string[]
-                confirmPassword?: string[]
-            }
-            message?: string
-        }
-    |   undefined

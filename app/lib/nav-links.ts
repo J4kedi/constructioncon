@@ -9,7 +9,7 @@ import {
 export const ALL_NAV_LINKS = [
   {
     name: 'Acompanhamento',
-    href: '/dashboard/acompanhamento',
+    href: '/dashboard/',
     icon: BarChart3,
     featureKey: 'dashboard-basic',
   },

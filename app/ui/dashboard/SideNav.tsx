@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useFeatures } from '@/app/contexts/FeatureContext';
 import { ALL_NAV_LINKS } from '@/app/lib/nav-links';
+import { handleSignOut } from '@/app/lib/actions';
 
 const settingsLink = {
     href: '/dashboard/settings',
@@ -109,10 +110,15 @@ export default function SideNav() {
           )}
         </div>
         
-        <button className="w-full mt-4 flex items-center justify-center py-2.5 px-4 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
-          <LogOut className="h-5 w-5 flex-shrink-0" />
-          {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">Sair</span>}
-        </button>
+        <form action={handleSignOut}>
+          <button 
+            type="submit"
+            className="w-full mt-4 flex items-center justify-center py-2.5 px-4 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors"
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">Sair</span>}
+          </button>
+        </form>
       </div>
     </aside>
   );

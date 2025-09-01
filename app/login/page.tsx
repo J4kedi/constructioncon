@@ -3,7 +3,9 @@
 import { Mail, Lock, TriangleAlert } from "lucide-react";
 import { useActionState, useState } from "react";
 import { useFormStatus } from 'react-dom';
-import { authenticate, LoginState } from '@/app/actions/auth';
+import { LoginState } from '@/app/lib/definitions';
+import { authenticate } from '@/app/actions/auth';
+import InputField from "../ui/components/InputField";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -35,37 +37,25 @@ export default function Login() {
 
         <form action={dispatch}>
           <div className="space-y-5">
-            {/* Campo Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text mb-1">Email de Acesso</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-text/40" />
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  className="w-full pl-10 pr-4 py-2 bg-secondary/20 border border-secondary/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="seu.email@suaempresa.com"
-                />
-              </div>
-            </div>
+            <InputField
+              id="email"
+              name="email"
+              label="Email de Acesso"
+              Icon={Mail}
+              type="email"
+              placeholder="seu.email@suaempresa.com"
+              required
+            />
 
-            {/* Campo Senha */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text mb-1">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-text/40" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  required
-                  className="w-full pl-10 pr-4 py-2 bg-secondary/20 border border-secondary/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+            <InputField
+              id="password"
+              name="password"
+              label="Senha"
+              Icon={Lock}
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              required
+            />
 
             {/* Checkbox para mostrar senha */}
             <div className="flex items-center">
@@ -95,17 +85,6 @@ export default function Login() {
             <SubmitButton />
           </div>
         </form>
-
-
-        {/* Link para Registrar-se */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-text/70">
-            Ainda não tem uma conta?{' '}
-            <a href="/register" className="font-semibold text-primary hover:underline">
-              Registre-se
-            </a>
-          </p>
-        </div>
       </div>
     </main>
 

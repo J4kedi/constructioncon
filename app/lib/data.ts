@@ -1,4 +1,25 @@
 import { Wallet, Warehouse, BarChart3, Users, FileText, Settings2 } from "lucide-react";
+import { getTenantPrismaClient } from '@/app/lib/prisma';
+import bcrypt from 'bcrypt';
+
+export async function getUserByCredentials(email, password, subdomain) {
+  const tenantPrisma = getTenantPrismaClient(subdomain);
+  try {
+    const user = await tenantPrisma.user.findUnique({ where: { email } });
+    if (!user) {
+        console.log(`Login falhou: Utilizador ${email} não encontrado no tenant ${subdomain}`);
+        return null;
+    }
+
+    const passwordsMatch = await bcrypt.compare(password, user.password);
+    if (passwordsMatch) return user;
+
+    return null;
+  } catch (error) {
+    console.error("Database error during credential check:", error);
+    throw new Error('Failed to fetch user by credentials.');
+  }
+}
 
 export const mainNavLinks = [
   { href: '#features', label: 'Funcionalidades' },
