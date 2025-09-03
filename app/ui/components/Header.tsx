@@ -15,7 +15,6 @@ export default function Header() {
                         linkClassName="text-text hover:text-primary transition-colors"
                     />
                     <ThemeSwitcher />
-                    
                 </div>
             </div>
         </header>

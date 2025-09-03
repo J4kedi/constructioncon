@@ -1,6 +1,7 @@
 import { Wallet, Warehouse, BarChart3, Users, FileText, Settings2 } from "lucide-react";
 import { getTenantPrismaClient } from '@/app/lib/prisma';
 import bcrypt from 'bcrypt';
+import { PrismaQueryBuilder } from "./queryBuilder";
 
 export async function getUserByCredentials(email, password, subdomain) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
@@ -42,3 +43,19 @@ export const testimonials = [
   { quote: "Finalmente encontramos um software que se adapta às nossas necessidades. O suporte para personalização foi fundamental para nosso sucesso.", name: "Maria Oliveira", company: "Diretora, Edifica Engenharia" },
   { quote: "Acompanhar o estoque e o progresso da obra em tempo real nos poupou tempo e dinheiro. Recomendo fortemente!", name: "Carlos Pereira", company: "Gerente de Obras, Solidez Construtora" },
 ];
+
+
+export async function findUsersWithBuilder(subdomain: string, filters: { name?: string; status?: string; createdAfter?: Date; sortBy?: string; page?: number }) {
+  const tenantPrisma = getTenantPrismaClient(subdomain);
+  const query = new PrismaQueryBuilder()
+    .withName(filters.name)
+    .withStatus(filters.status)
+    .createdAfter(filters.createdAfter)
+    .sortBy(filters.sortBy)
+    .withPage(filters.page)
+    .build();
+
+  const users = await tenantPrisma.user.findMany(query);
+
+  return users;
+}
