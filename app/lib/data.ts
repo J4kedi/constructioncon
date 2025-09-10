@@ -27,6 +27,8 @@ export const mainNavLinks = [
   { href: '#testimonials', label: 'Depoimentos' },
   { href: '#pricing', label: 'Preços' },
   { href: '#contact', label: 'Contato' },
+  { href : '#login', label : 'Login'},
+  { href : '#register', label: 'Registrar'}
 ];
 
 export const features = [
@@ -54,6 +56,7 @@ export async function findUsersWithBuilder(subdomain: string, filters: { name?: 
     .sortBy(filters.sortBy)
     .withPage(filters.page)
     .build();
+
 
   const users = await tenantPrisma.user.findMany(query);
 
