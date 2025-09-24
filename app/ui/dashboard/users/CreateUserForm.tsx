@@ -21,7 +21,11 @@ function SubmitButton() {
   );
 }
 
-export default function CreateUserForm({ onClose }: { onClose?: () => void }) {
+type CreateUserFormProps = {
+  onClose?: () => void;
+};
+
+export default function CreateUserForm({ onClose }: CreateUserFormProps) {
     const [showPassword, setShowPassword] = useState(false);
 
     const initialState: RegisterState = {};

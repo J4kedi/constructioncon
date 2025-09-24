@@ -9,7 +9,11 @@ const iconMap = {
   obras: Building,
 };
 
-export default async function CardWrapper({ subdomain }: { subdomain: string }) {
+type CardWrapperProps = {
+  subdomain: string;
+};
+
+export default async function CardWrapper({ subdomain }: CardWrapperProps) {
   const {
     numberOfObras,
     numberOfUsers,
@@ -31,15 +35,13 @@ export default async function CardWrapper({ subdomain }: { subdomain: string }) 
   );
 }
 
-export function Card({
-  title,
-  value,
-  type,
-}: {
+type CardProps = {
   title: string;
   value: number | string;
   type: 'obras' | 'users' | 'budget' | 'cost';
-}) {
+};
+
+export function Card({ title, value, type }: CardProps) {
   const Icon = iconMap[type];
 
   return (

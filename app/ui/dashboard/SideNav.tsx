@@ -21,7 +21,11 @@ const settingsLink = {
     icon: Settings2,
 };
 
-function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
+type NavLinksContentProps = {
+  isCollapsed: boolean;
+};
+
+function NavLinksContent({ isCollapsed }: NavLinksContentProps) {
   const { hasFeature } = useFeatures();
 
   const availableLinks = ALL_NAV_LINKS.filter(link => hasFeature(link.featureKey));
@@ -49,8 +53,12 @@ function NavLinksContent({ isCollapsed }: { isCollapsed: boolean }) {
   );
 }
 
+type ConstructionconLogoProps = {
+  isCollapsed: boolean;
+};
+
 // Componente do Logo
-const ConstructionconLogo = ({ isCollapsed }: { isCollapsed: boolean }) => (
+const ConstructionconLogo = ({ isCollapsed }: ConstructionconLogoProps) => (
     <Link href="/dashboard" className="flex items-center justify-center h-16 px-4">
         <Building2 className="h-8 w-8 text-primary flex-shrink-0" />
         {!isCollapsed && (

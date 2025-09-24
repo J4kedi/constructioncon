@@ -3,7 +3,11 @@
 import { deleteUser } from '@/app/actions/user.actions';
 import { Trash2 } from 'lucide-react';
 
-export function DeleteUser({ id }: { id: string }) {
+type DeleteUserProps = {
+  id: string;
+};
+
+export function DeleteUser({ id }: DeleteUserProps) {
   const deleteUserWithId = deleteUser.bind(null, id);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

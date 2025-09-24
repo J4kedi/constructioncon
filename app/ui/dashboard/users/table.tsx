@@ -5,7 +5,11 @@ import { DeleteUser } from './DeleteUserButton';
 
 type User = Prisma.UserGetPayload<{}>;
 
-function RoleBadge({ role }: { role: UserRole }) {
+type RoleBadgeProps = {
+    role: UserRole;
+};
+
+function RoleBadge({ role }: RoleBadgeProps) {
     const baseClasses = "px-2 py-1 text-xs font-medium rounded-full capitalize";
     const roleStyles = {
         USER: "bg-primary/20 text-primary",
@@ -23,8 +27,12 @@ function RoleBadge({ role }: { role: UserRole }) {
     );
 }
 
+type UsersTableProps = {
+    users: User[];
+    currentUserRole?: UserRole;
+};
 
-export default function UsersTable({ users, currentUserRole }: { users: User[], currentUserRole?: UserRole }) {
+export default function UsersTable({ users, currentUserRole }: UsersTableProps) {
     const isAdmin = currentUserRole === 'COMPANY_ADMIN' || currentUserRole === 'SUPER_ADMIN';
 
     return (

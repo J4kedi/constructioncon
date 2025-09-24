@@ -1,11 +1,13 @@
-'use client';
-
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
-export default function Pagination({ totalPages }: { totalPages: number }) {
+type PaginationProps = {
+  totalPages: number;
+};
+
+export default function Pagination({ totalPages }: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
@@ -56,17 +58,14 @@ export default function Pagination({ totalPages }: { totalPages: number }) {
   );
 }
 
-function PaginationNumber({
-  page,
-  href,
-  isActive,
-  position,
-}: {
+type PaginationNumberProps = {
   page: number | string;
   href: string;
   position?: 'first' | 'last' | 'middle' | 'single';
   isActive: boolean;
-}) {
+};
+
+function PaginationNumber({ page, href, isActive, position }: PaginationNumberProps) {
   const className = clsx(
     'flex h-10 w-10 items-center justify-center text-sm border border-secondary/30',
     {
@@ -87,15 +86,13 @@ function PaginationNumber({
   );
 }
 
-function PaginationArrow({
-  href,
-  direction,
-  isDisabled,
-}: {
+type PaginationArrowProps = {
   href: string;
   direction: 'left' | 'right';
   isDisabled?: boolean;
-}) {
+};
+
+function PaginationArrow({ href, direction, isDisabled }: PaginationArrowProps) {
   const className = clsx(
     'flex h-10 w-10 items-center justify-center rounded-md border border-secondary/30',
     {

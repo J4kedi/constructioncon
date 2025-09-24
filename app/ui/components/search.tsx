@@ -1,10 +1,12 @@
-'use client';
-
 import { Search as SearchIcon } from 'lucide-react';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
 
-export default function Search({ placeholder }: { placeholder: string }) {
+type SearchProps = {
+  placeholder: string;
+};
+
+export default function Search({ placeholder }: SearchProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
