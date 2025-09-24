@@ -5,8 +5,12 @@ import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { UpdateUserSchema } from '@/app/lib/definitions';
 
+import { getRequestContext } from '@/app/lib/utils';
+
+// ... other imports
+
 export async function updateUser(prevState: any, formData: FormData) {
-  const subdomain = (await headers()).get('x-tenant-subdomain');
+  const { subdomain } = await getRequestContext();
   if (!subdomain) {
     return { message: 'Falha: Subdomínio não identificado.' };
   }
@@ -40,7 +44,7 @@ export async function updateUser(prevState: any, formData: FormData) {
 }
 
 export async function deleteUser(userId: string) {
-  const subdomain = (await headers()).get('x-tenant-subdomain');
+  const { subdomain } = await getRequestContext();
 
   if (!subdomain) {
     return { success: false, message: 'Falha: Subdomínio não identificado.' };

@@ -11,6 +11,7 @@ import { authConfig } from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { LoginState, RegisterState, UserRegistrationSchema } from '@/app/lib/definitions';
 import { revalidatePath } from 'next/cache';
+import { getRequestContext } from '@/app/lib/utils';
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -47,9 +48,7 @@ export const { auth, signIn, signOut } = NextAuth({
 // --- Server Actions ---
 
 export async function registerUser(prevState: RegisterState, formData: FormData): Promise<RegisterState> {
-    const headersList = headers();
-    const subdomain = (await headersList).get('x-tenant-subdomain');
-    const companyId = (await headersList).get('x-tenant-id');
+    const { subdomain, tenantId: companyId } = await getRequestContext();
 
     if (!subdomain || !companyId) {
         return { error: 'Acesso inválido. Não foi possível identificar a empresa.' };
@@ -103,9 +102,8 @@ export async function authenticate(
   prevState: LoginState | undefined,
   formData: FormData,
 ): Promise<LoginState> {
-  const headersList = headers();
-  const host = (await headersList).get('host');
-  const subdomain = (await headersList).get('x-tenant-subdomain');
+  const { subdomain } = await getRequestContext();
+  const host = (await headers()).get('host');
 
   try {
     if (typeof subdomain !== 'string' || !subdomain) {
