@@ -3,21 +3,21 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-background: #f2f4f8;
-  --color-text: #0b0c0f;
-  --color-primary: #5471c4;
-  --color-secondary: #89a2e7;
-  --color-accent: #567ff0;
+  --color-background: #f9fafb;  /* gray-50 */
+  --color-text: #111827;       /* gray-900 */
+  --color-primary: #4f46e5;      /* indigo-600 */
+  --color-secondary: #6366f1;    /* indigo-500 */
+  --color-accent: #c7d2fe;       /* indigo-200 */
 }
 
 @layer theme {
   :root, :host {
     @variant dark {
-      --color-background: #07090d;
-      --color-text: #f0f1f4;
-      --color-primary: #3b59ab;
-      --color-secondary: #183177;
-      --color-accent: #0f38a9;
+      --color-background: #030712;  /* gray-950 */
+      --color-text: #f9fafb;       /* gray-50 */
+      --color-primary: #818cf8;      /* indigo-400 */
+      --color-secondary: #3730a3;    /* indigo-800 */
+      --color-accent: #4338ca;       /* indigo-700 */
     }
   }
 }

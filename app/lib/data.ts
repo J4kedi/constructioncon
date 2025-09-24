@@ -130,3 +130,16 @@ export async function fetchUsersTotalPages(subdomain: string, query: string) {
         throw new Error('Failed to fetch total number of users.');
     }
 }
+
+export async function fetchUserById(subdomain: string, id: string) {
+  try {
+    const tenantPrisma = getTenantPrismaClient(subdomain);
+    const user = await tenantPrisma.user.findUnique({
+      where: { id },
+    });
+    return user;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch user.');
+  }
+}

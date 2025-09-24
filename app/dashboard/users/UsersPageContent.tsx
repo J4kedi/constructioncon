@@ -29,7 +29,7 @@ export default function UsersPageContent({ initialUsers, totalPages, currentUser
         </h1>
         <button 
           onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary/80 transition-all duration-300 shadow-md hover:shadow-primary/40"
+          className="flex items-center gap-2 bg-secondary text-white font-semibold py-2 px-4 rounded-lg hover:bg-secondary/90 transition-all duration-300 shadow-md hover:shadow-primary/40"
         >
           <Plus size={20} />
           <span>Adicionar Novo Usuário</span>
@@ -49,7 +49,7 @@ export default function UsersPageContent({ initialUsers, totalPages, currentUser
       </div>
 
       <div className="w-full mt-6">
-        <UsersTable users={initialUsers} /*currentUserRole={currentUserRole}*/ />
+        <UsersTable users={initialUsers} currentUserRole={currentUserRole} />
       </div>
 
       <div className="mt-5 flex w-full justify-center">

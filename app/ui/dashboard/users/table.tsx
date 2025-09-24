@@ -1,7 +1,12 @@
+'use client';
+
 import Image from 'next/image';
 import { Prisma, UserRole } from '@prisma/client';
 import { Pencil } from 'lucide-react';
 import { DeleteUser } from './DeleteUserButton';
+import { useState } from 'react';
+import Modal from '@/app/ui/components/Modal';
+import EditUserForm from './EditUserForm';
 
 type User = Prisma.UserGetPayload<{}>;
 
@@ -33,7 +38,20 @@ type UsersTableProps = {
 };
 
 export default function UsersTable({ users, currentUserRole }: UsersTableProps) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
     const isAdmin = currentUserRole === 'COMPANY_ADMIN' || currentUserRole === 'SUPER_ADMIN';
+
+    const handleOpenModal = (user: User) => {
+        setSelectedUser(user);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedUser(null);
+        setIsModalOpen(false);
+    };
 
     return (
         <div className="w-full">
@@ -96,7 +114,7 @@ export default function UsersTable({ users, currentUserRole }: UsersTableProps) 
                                             {isAdmin && (
                                                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
                                                     <div className="flex justify-end gap-3">
-                                                        <button className="rounded-md border p-2 hover:bg-secondary/20">
+                                                        <button onClick={() => handleOpenModal(user)} className="rounded-md p-2 hover:bg-secondary/20 cursor-pointer">
                                                             <Pencil className="w-4" />
                                                         </button>
                                                         <DeleteUser id={user.id} />
@@ -111,6 +129,12 @@ export default function UsersTable({ users, currentUserRole }: UsersTableProps) 
                     </div>
                 </div>
             </div>
+
+            {selectedUser && (
+                <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Editar Usuário">
+                    <EditUserForm user={selectedUser} onClose={handleCloseModal} />
+                </Modal>
+            )}
         </div>
     );
 }

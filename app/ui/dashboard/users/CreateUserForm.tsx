@@ -1,11 +1,12 @@
 'use client';
 
 import { Lock, Mail, TriangleAlert, User, Briefcase } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
-import { RegisterState } from "@/app/lib/definitions";
+import { RegisterState, UserRegistrationSchema } from "@/app/lib/definitions";
 import { registerUser } from "@/app/actions/auth";
 import InputField from "@/app/ui/components/InputField";
+import { UserRole } from "@prisma/client";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -31,16 +32,18 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
     const initialState: RegisterState = {};
     const [state, dispatch] = useActionState(registerUser, initialState);
 
-    if (state.success) {
-        if(onClose) onClose();
-    }
+    useEffect(() => {
+        if (state.success && onClose) {
+            onClose();
+        }
+    }, [state.success, onClose]);
     
     return (
         <form action={dispatch}>
             <div className="space-y-5">
                 <InputField
-                    id="fullName"
-                    name="fullName"
+                    id="name"
+                    name="name"
                     label="Nome do Usuário"
                     Icon={User}
                     type="text"
@@ -80,15 +83,22 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
                     minLength={8}
                 />
 
-                <InputField
-                    id="role"
-                    name="role"
-                    label="Função"
-                    Icon={Briefcase}
-                    type="text"
-                    placeholder="Ex: USER, CUSTOMER"
-                    required
-                />
+                <div>
+                  <label htmlFor="role" className="mb-2 block text-sm font-medium">Função</label>
+                  <div className="relative">
+                    <select
+                      id="role"
+                      name="role"
+                      className="peer block w-full cursor-pointer rounded-md border border-secondary/30 bg-background py-2 pl-10 text-sm outline-none placeholder:text-text/60 focus:border-primary focus:ring-1 focus:ring-primary/50"
+                      defaultValue="USER"
+                    >
+                      {Object.values(UserRole).map(role => (
+                        <option key={role} value={role}>{role.replace('_', ' ').toLowerCase()}</option>
+                      ))}
+                    </select>
+                    <Briefcase className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-text/70" />
+                  </div>
+                </div>
 
                 <div className="flex items-center">
                     <input
