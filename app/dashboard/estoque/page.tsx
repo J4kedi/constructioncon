@@ -1,14 +1,12 @@
 'use client';
 
-import { lazy, Suspense } from 'react';
-
-const EstoqueMfe = lazy(() => import('estoque/page'));
+import { Suspense } from 'react';
 
 export default function Page() {
     return (
         <div>
             <Suspense fallback={<div>Carregando módulo de estoque...</div>}>
-                <EstoqueMfe />
+                <h1>Página de estoque</h1>
             </Suspense>
         </div>
     );

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useFeatures } from '@/app/contexts/FeatureContext';
 import { ALL_NAV_LINKS } from '@/app/lib/nav-links';
-import { handleSignOut } from '@/app/lib/actions';
+import { handleSignOut } from '@/app/actions/auth';
 
 const settingsLink = {
     href: '/dashboard/settings',

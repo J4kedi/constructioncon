@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Building2 } from "lucide-react"; 
-import { roboto } from "./fonts";
+import { roboto } from "../fonts";
 
 export default function ConstructionconLogo() {
     return (

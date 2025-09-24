@@ -1,4 +1,4 @@
-'use server';
+'use server'
 
 import { z } from 'zod';
 import { getUserByCredentials } from '@/app/lib/data';
@@ -9,7 +9,8 @@ import { headers } from 'next/headers';
 import NextAuth, { AuthError } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
-import { LoginState, RegisterState, RegisterSchema } from '@/app/lib/definitions';
+import { LoginState, RegisterState, UserRegistrationSchema } from '@/app/lib/definitions';
+import { revalidatePath } from 'next/cache';
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -50,24 +51,29 @@ export async function registerUser(prevState: RegisterState, formData: FormData)
     const subdomain = (await headersList).get('x-tenant-subdomain');
     const companyId = (await headersList).get('x-tenant-id');
 
-    if (typeof subdomain !== 'string' || !subdomain || !companyId) {
+    if (!subdomain || !companyId) {
         return { error: 'Acesso inválido. Não foi possível identificar a empresa.' };
     }
 
-    const validatedFields = RegisterSchema.safeParse(
+    const validatedFields = UserRegistrationSchema.safeParse(
         Object.fromEntries(formData.entries())
     );
 
     if (!validatedFields.success) {
-        const firstError = validatedFields.error;
-        return { error: `${firstError}: ${firstError.message}` };
+        const errorMessages = validatedFields.error.issues.map(e => e.message).join(', ');
+        return { error: `Erro de validação: ${errorMessages}` };
     }
 
-    const { email, fullName, password } = validatedFields.data;
+    const { email, name, password, role } = validatedFields.data;
     
     const tenantPrisma = getTenantPrismaClient(subdomain);
 
     try {
+        const company = await tenantPrisma.company.findFirst();
+        if (!company) {
+            return { error: 'Configuração de empresa não encontrada para este tenant.' };
+        }
+
         const existingUser = await tenantPrisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return { error: 'Este email já está em uso.' };
@@ -77,18 +83,20 @@ export async function registerUser(prevState: RegisterState, formData: FormData)
 
         await tenantPrisma.user.create({
             data: {
-                name: fullName,
+                name: name,
                 email: email,
                 password: hashedPassword,
-                companyId: companyId,
+                companyId: company.id,
             },
         });
+
+        revalidatePath('/dashboard/users');
+        return { success: true };
+
     } catch (dbError) {
         console.error("Database Error:", dbError);
-        return { error: 'Falha ao registar utilizador. Tente novamente.' };
+        return { error: 'Falha ao registrar usuário. Tente novamente.' };
     }
-
-    return authenticate(undefined, formData);
 }
 
 export async function authenticate(
@@ -128,3 +136,7 @@ export async function authenticate(
   redirect(redirectUrl);
 }
 
+export async function handleSignOut() {
+    await signOut({ redirect: false });
+    redirect('/login');
+}

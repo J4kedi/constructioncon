@@ -1,21 +1,40 @@
+import { Suspense } from 'react';
 import { headers } from 'next/headers';
-import { findUsersWithBuilder } from '@/app/lib/data';
+import { fetchFilteredUsers, fetchUsersTotalPages } from '@/app/lib/data';
+import { UsersTableSkeleton } from '@/app/ui/components/skeletons';
+import UsersPageContent from '@/app/dashboard/users/UsersPageContent';
+import { auth } from '@/app/actions/auth';
 
-export default async function Page() {
-  const heads = headers();
-  const subdomain = (await heads).get('x-tenant-subdomain');
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: {
+    query?: string;
+    page?: string;
+  };
+}) {
+  const headerList = headers();
+  const subdomain = (await headerList).get('x-tenant-subdomain');
+  const session = await auth();
+  // const currentUserRole = session?.user?.userRole;
 
   if (!subdomain) {
-    return <h1>Tenant não identificado.</h1>;
+    return <p className="text-red-500">Erro: Tenant não pôde ser identificado.</p>;
   }
 
-  const users = await findUsersWithBuilder(subdomain, {});
+  const query = searchParams?.query || '';
+  const currentPage = Number(searchParams?.page) || 1;
+
+  const totalPages = await fetchUsersTotalPages(subdomain, query);
+  const users = await fetchFilteredUsers(subdomain, query, currentPage);
 
   return (
-    <div>
-      <h1>Página de Usuários do Tenant: {subdomain}</h1>
-      <p>Dados recebidos do banco de dados do tenant:</p>
-      <pre>{JSON.stringify(users, null, 2)}</pre>
-    </div>
+    <Suspense key={query + currentPage} fallback={<UsersTableSkeleton />}>
+      <UsersPageContent 
+        initialUsers={users} 
+        totalPages={totalPages} 
+        // currentUserRole={currentUserRole}
+      />
+    </Suspense>
   );
 }

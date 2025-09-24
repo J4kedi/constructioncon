@@ -1,43 +1,93 @@
+import { Prisma, UserRole } from '@prisma/client';
 
+type PrismaQueryArgs = {
+    where?: object;
+    orderBy?: object | object[];
+    take?: number;
+    skip?: number;
+};
 
-export class PrismaQueryBuilder {
-    private query: { where: any; orderBy: any; take: number; skip: number; };
+class BasePrismaQueryBuilder<T extends PrismaQueryArgs> {
+    protected query: T;
+    protected itemsPerPage: number;
 
-    constructor() {
+    constructor(initialQuery: Partial<T>, itemsPerPage: number = 10) {
+        this.itemsPerPage = itemsPerPage;
         this.query = {
-            where: {},
-            orderBy: {},
-            take: 10,
-            skip: 0,
-        };
+            ...initialQuery,
+            where: initialQuery.where ?? {},
+            orderBy: initialQuery.orderBy ?? { createdAt: 'desc' },
+            take: this.itemsPerPage,
+            skip: initialQuery.skip ?? 0,
+        } as T;
     }
 
-    withName(name?: string) {
-        if (name) this.query.where.name = { contains: name, mode: 'insensitive' };
+    sortBy(field?: string): this {
+        if (field) {
+            const [fieldName, direction] = field.split(':');
+            const dir = direction === 'desc' ? 'desc' : 'asc';
+            this.query.orderBy = { [fieldName]: dir } as T['orderBy'];
+        }
         return this;
     }
 
-    withStatus(status?: string) {
-        if (status) this.query.where.status = status;
+    withPage(page: number = 1): this {
+        this.query.skip = (page - 1) * this.itemsPerPage;
         return this;
     }
 
-    createdAfter(date?: Date) {
-        if (date) this.query.where.createdAt = { gte: date };
-        return this;
-    }
-
-    sortBy(field?: string) {
-        if (field) this.query.orderBy[field] = 'asc';
-        return this;
-    }
-
-    withPage(page: number = 1) {
-        this.query.skip = (page - 1) * this.query.take;
-        return this;
-    }
-
-    build() {
+    build(): T {
         return this.query;
+    }
+
+    buildWhere(): Prisma.UserWhereInput {
+        return this.query.where as Prisma.UserWhereInput;
+    }
+}
+
+export class UserQueryBuilder extends BasePrismaQueryBuilder<Prisma.UserFindManyArgs> {
+    constructor() {
+        super({}, 8);
+        this.query.where = { AND: [] };
+    }
+
+    withSearch(query?: string): this {
+        if (query) {
+            (this.query.where?.AND as Prisma.Input<Prisma.UserWhereInput>[])?.push({
+                OR: [
+                    { name: { contains: query, mode: 'insensitive' } },
+                    { email: { contains: query, mode: 'insensitive' } },
+                    { jobTitle: { contains: query, mode: 'insensitive' } },
+                ]
+            });
+        }
+        return this;
+    }
+
+    withName(name?: string): this {
+        if (name) {
+            (this.query.where?.AND as Prisma.Input<Prisma.UserWhereInput>[])?.push({ 
+                name: { contains: name, mode: 'insensitive' } 
+            });
+        }
+        return this;
+    }
+
+    withRoles(roles?: UserRole[]): this {
+        if (roles && roles.length > 0) {
+            (this.query.where?.AND as Prisma.Input<Prisma.UserWhereInput>[])?.push({ 
+                role: { in: roles } 
+            });
+        }
+        return this;
+    }
+
+    createdAfter(date?: Date): this {
+        if (date) {
+            (this.query.where?.AND as Prisma.Input<Prisma.UserWhereInput>[])?.push({ 
+                createdAt: { gte: date } 
+            });
+        }
+        return this;
     }
 }

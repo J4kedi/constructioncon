@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from 'react-dom';
 import { LoginState } from '@/app/lib/definitions';
 import { authenticate } from '@/app/actions/auth';
-import InputField from "./components/InputField";
+import InputField from "./InputField";
 
 function SubmitButton() {
   const { pending } = useFormStatus();

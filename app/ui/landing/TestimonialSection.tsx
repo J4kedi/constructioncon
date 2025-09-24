@@ -1,4 +1,4 @@
-import { testimonials } from "@/app/lib/data";
+import { testimonials } from "@/app/lib/constants";
 
 export default function TestimonialSection() {
   return (

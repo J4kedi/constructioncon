@@ -1,4 +1,4 @@
-import { features } from "@/app/lib/data";
+import { features } from "@/app/lib/constants";
 
 export default function FeaturesSection() {
   return (

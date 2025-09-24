@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ConstructionconLogo from "../constructioncon-logo";
+import ConstructionconLogo from "./constructioncon-logo";
 
 export default function Footer() {
     return (

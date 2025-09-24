@@ -14,7 +14,9 @@ export default NextAuth(authConfig).auth(async (req) => {
     return NextResponse.redirect(new URL(`/login?callbackUrl=${nextUrl.href}`, nextUrl.origin));
   }
 
-  const host = req.headers.get("host")!;
+  const host = req.headers.get("host");
+  if (!host) return NextResponse.next();
+
   const hostname = host.split(":")[0];
   const subdomain = hostname.endsWith(`.${MAIN_DOMAIN}`)
     ? hostname.replace(`.${MAIN_DOMAIN}`, ""): null;

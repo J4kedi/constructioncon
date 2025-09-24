@@ -4,8 +4,8 @@ import { Lock, Mail, TriangleAlert, User } from "lucide-react";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { RegisterState } from "@/app/lib/definitions";
-import { registerUser } from "../actions/auth";
-import InputField from "./components/InputField";
+import { registerUser } from "@/app/actions/auth";
+import InputField from "./InputField";
 
 function SubmitButton() {
   const { pending } = useFormStatus();

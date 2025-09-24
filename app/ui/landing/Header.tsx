@@ -1,6 +1,6 @@
-import ConstructionconLogo from "../constructioncon-logo";
+import ConstructionconLogo from "../components/constructioncon-logo";
 import { Navigation } from "@/app/ui/components/Navigation";
-import { mainNavLinks } from "@/app/lib/data";
+import { mainNavLinks } from "@/app/lib/constants";
 import { ThemeSwitcher } from "../components/ThemeSwitcher";
 import { Menu } from "lucide-react";
 import Link from "next/link";

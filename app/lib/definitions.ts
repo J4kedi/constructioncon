@@ -11,51 +11,35 @@ export interface LoginState {
     success?: boolean;
 }
 
-export type FormState = 
-    |    {
-            errors?: {
-                name?: string[]
-                email?: string[]
-                password?: string[]
-                confirmPassword?: string[]
-            }
-            message?: string
-        }
-    |   undefined
-
 // --- Schemas de Validação Zod ---
 
-export const RegisterSchema = z.object({
-    fullName: z.string().min(3, { message: 'O nome completo é obrigatório.' }),
-    email: z.email({ message: 'Por favor, insira um email válido.' }),
-    password: z.string().min(8, { message: 'A senha deve ter no mínimo 8 caracteres.' }),
-    confirmPassword: z.string()
-}).refine(data => data.password === data.confirmPassword, {
-    message: "As senhas não coincidem.",
-    path: ["confirmPassword"],
-});
-
-export const SignupFormSchema = z.object({
+export const UserRegistrationSchema = z.object({
     name: z
         .string()
-        .min(2, { message: 'Nome precisa ser no mínimo de dois caracteres' })
+        .min(2, { error: 'Nome precisa ter no mínimo 2 caracteres.' })
         .trim(),
     email: z
-        .email({ message: 'Coloque um email válido' })
+        .email({ error: 'Por favor, insira um email válido.' })
         .trim(),
     password: z
         .string()
-        .min(8, { message: 'Be at least 8 characters long' })
-        .regex(/[a-zA-Z]/, { message: 'Contain at least one letter.' })
-        .regex(/[0-9]/, { message: 'Contain at least one number.' })
-        .regex(/[^a-zA-Z0-9]/, {
-        message: 'Contain at least one special character.',
-        })
+        .min(8, { error: 'A senha deve ter no mínimo 8 caracteres.' })
+        .regex(/[a-zA-Z]/, { error: 'A senha deve conter pelo menos uma letra.' })
+        .regex(/[0-9]/, { error: 'A senha deve conter pelo menos um número.' })
+        .regex(/[^a-zA-Z0-9]/, { error: 'A senha deve conter pelo menos um caractere especial.' })
         .trim(),
     confirmPassword: z
-    .string()
-    .trim()
+        .string()
+        .trim(),
+    role: z.enum(['SUPER_ADMIN', 'COMPANY_ADMIN', 'USER', 'END_CUSTOMER'], { error: 'Função inválida.' })
 }).refine((data) => data.password === data.confirmPassword, {
-    message: "As senhas não correspondem.",
+    error: "As senhas não correspondem.",
     path: ["confirmPassword"],
+});
+
+export const UpdateUserSchema = z.object({
+    id: z.string(),
+    name: z.string().min(3, { error: 'O nome completo deve ter pelo menos 3 caracteres.' }),
+    jobTitle: z.string().optional(),
+    role: z.enum(['SUPER_ADMIN', 'COMPANY_ADMIN', 'USER', 'END_CUSTOMER'], { error: 'Função inválida.' })
 });
