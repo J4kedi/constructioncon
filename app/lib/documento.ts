@@ -7,5 +7,5 @@ export interface Documento {
     data_emissão: Date;
     conteudo: string;
     autor: string;
-    anexos?: string[];
+    anexos?: File[];
 }
