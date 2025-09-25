@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Recursos_Factory } from '../dashboard/factories_cronograma_recursos/recursos_factory';
+import { Recursos_Factory } from '../dashboard/factories/recursos_factory';
 
 export default function ligar(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
