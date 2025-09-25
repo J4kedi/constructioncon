@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Document_Factory } from '../ui/factories/Document_Factory';
+import { Document_Factory } from '../dashboard/factories/Document_Factory';
 
 export default function ligar(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
