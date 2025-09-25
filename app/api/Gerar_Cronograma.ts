@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Cronograma_Factory } from '../dashboard/factories_cronograma_recursos/cronograma_factory';
+import { Cronograma_Factory } from '../dashboard/factories/cronograma_factory';
 
 export default function ligar(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
