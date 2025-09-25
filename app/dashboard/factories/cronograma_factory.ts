@@ -1,23 +1,22 @@
-// Factory responsável por criar e validar cronogramas
+import { Tipos_Cronograma } from '../../lib/cronograma';
+
+const Titulos_Por_Tipo: Record<Tipos_Cronograma, string> = {
+  fisico: 'Cronograma Físico',
+  financeiro: 'Cronograma Financeiro',
+  'fisico-financeiro': 'Cronograma Físico-Financeiro',
+}
+
+let id_contador = 1;
+
 export type Atividade = {
-  id: string;                  // identificador único da atividade
-  descricao: string;           // descrição da atividade
-  duracaoDias: number;         // duração em dias
-  predecessoras?: string[];    // ids das atividades predecessoras
+  id: string;
+  descricao: string;
+  duracaoDias: number;
+  predecessoras?: string[];
 };
 
 export type CronogramaTipo = 'fisico' | 'financeiro' | 'fisico-financeiro';
 
-export type Cronograma = {
-  id: string;
-  tipo: CronogramaTipo;
-  atividades: Atividade[];
-  criadoEm: Date;
-  mostrarDetalhes: () => string;   // método utilitário para visualizar resumo
-  toJSON: () => any;               // método para serializar em JSON
-};
-
-// Função auxiliar que valida as atividades do cronograma
 function validarAtividades(atividades: Atividade[]) {
   if (!Array.isArray(atividades)) throw new Error('Atividades devem ser um array');
 
@@ -28,34 +27,57 @@ function validarAtividades(atividades: Atividade[]) {
     if (!a.id) throw new Error('Atividade sem id');
     if (!a.descricao.trim()) throw new Error(`Atividade ${a.id} sem descrição`);
     if (a.duracaoDias <= 0) throw new Error(`Atividade ${a.id} com duração inválida`);
-    // verifica se todas predecessoras existem
+
     (a.predecessoras || []).forEach((p) => {
       if (p && !ids.has(p)) throw new Error(`Predecessora '${p}' não existe`);
     });
   });
 }
 
-// Factory de cronogramas
-export const Cronograma_Factory = {
-  criar: (tipo: CronogramaTipo, atividades: Atividade[], id?: string): Cronograma => {
+export type Cronograma = {
+  id: string;
+  tipo: CronogramaTipo;
+  titulo: string;
+  atividades: Atividade[];
+  criadoEm: Date;
+
+  mostrarDetalhes: () => string;
+  toJSON: () => any;
+};
+
+export class Cronograma_Factory {
+  static criar(
+    tipo: CronogramaTipo,
+    atividades: Atividade[],
+    id?: string
+  ): Cronograma {
     const tiposValidos: CronogramaTipo[] = ['fisico', 'financeiro', 'fisico-financeiro'];
     if (!tiposValidos.includes(tipo)) throw new Error('Tipo inválido');
 
     validarAtividades(atividades);
 
     return {
-      id: id ?? 'cron_' + Math.random().toString(36).slice(2, 9),
+      id: id ?? 'cron_' + (id_contador++).toString(),
       tipo,
+      titulo: Titulos_Por_Tipo[tipo],
       atividades,
       criadoEm: new Date(),
+
       mostrarDetalhes() {
-        return `Cronograma (${this.id}) com ${this.atividades.length} atividades`;
+        return `Cronograma (${this.id} - ${this.titulo}) com ${this.atividades.length} atividades criadas em ${this.criadoEm.toLocaleDateString()}`;
       },
+
       toJSON() {
-        return { id: this.id, tipo: this.tipo, atividades: this.atividades, criadoEm: this.criadoEm.toISOString() };
+        return {
+          id: this.id,
+          tipo: this.tipo,
+          titulo: this.titulo,
+          atividades: this.atividades,
+          criadoEm: this.criadoEm.toISOString(),
+        };
       },
     };
-  },
-};
+  }
+}
 
 export default Cronograma_Factory;
