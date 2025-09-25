@@ -1,19 +1,25 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { Recursos_Factory } from '@/ui/factories/Recursos_Factory';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { Recursos_Factory } from '../dashboard/factories_cronograma_recursos/recursos_factory';
 
-// Endpoint de API para criação de recursos
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ erro: 'Método não permitido' });
+export default function ligar(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'POST') {
+    const { tipo, quantidade, nomeMaterial, nomeEquipamento,} = req.body;
 
-  try {
-    const { tipo, quantidade, nomeMaterial, nomeEquipamento, funcao } = req.body;
+    try {
+      const recurso = Recursos_Factory.criar({
+        tipo,
+        quantidade,
+        nomeMaterial,
+        nomeEquipamento,
+      });
 
-    // cria recurso usando a factory
-    const recurso = Recursos_Factory.criar({ tipo, quantidade, nomeMaterial, nomeEquipamento, funcao });
-
-    // retorna em formato JSON
-    return res.status(200).json({ recurso: recurso.toJSON() });
-  } catch (err: any) {
-    return res.status(400).json({ erro: err.message });
+      res.status(200).json({ recurso });
+    } catch (error) {
+      res.status(400).json({
+        erro: 'Tipo de recurso inválido ou dados incompletos',
+      });
+    }
+  } else {
+    res.status(405).json({ erro: 'Método não permitido' });
   }
 }
