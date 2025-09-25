@@ -1,19 +1,24 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { Cronograma_Factory } from '@/ui/factories/Cronograma_Factory';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { Cronograma_Factory } from '../dashboard/factories_cronograma_recursos/cronograma_factory';
 
-// Endpoint de API para criação de cronogramas
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ erro: 'Método não permitido' });
+export default function ligar(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'POST') {
+    const { tipo, Date, atividades } = req.body;
 
-  try {
-    const { tipo, atividades } = req.body;
+    try {
+      const cronograma = Cronograma_Factory.criar(
+        tipo,
+        new Date(),
+        atividades
+      );
 
-    // cria cronograma usando a factory
-    const cronograma = Cronograma_Factory.criar(tipo, atividades);
-
-    // retorna em formato JSON
-    return res.status(200).json({ cronograma: cronograma.toJSON() });
-  } catch (err: any) {
-    return res.status(400).json({ erro: err.message });
+      res.status(200).json({ cronograma });
+    } catch (error) {
+      res.status(400).json({
+        erro: 'Tipo de cronograma inválido ou dados incompletos',
+      });
+    }
+  } else {
+    res.status(405).json({ erro: 'Método não permitido' });
   }
 }
