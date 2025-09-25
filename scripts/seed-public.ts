@@ -2,33 +2,46 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+export const DEFAULT_FEATURE_KEYS = [
+    'dashboard-basic',
+    'works-management',
+    'financial-view',
+    'user-management',
+    'inventory-management',
+];
+
 async function main() {
     console.log(`Iniciando o seed do schema public...`);
 
     const featuresToCreate = [
         {
             key: 'dashboard-basic',
-            name: 'Dashboard Básico',
+            name: 'Acompanhamento',
             description: 'Acesso à visualização de Acompanhamento.'
         },
         {
+            key: 'works-management',
+            name: 'Obras',
+            description: 'Permite criar e gerenciar obras/projetos.'
+        },
+        {
             key: 'financial-view',
-            name: 'Visualização Financeira',
+            name: 'Financeiro',
             description: 'Acesso ao dashboard Financeiro.'
         },
         {
             key: 'user-management',
-            name: 'Gerenciamento de Usuários',
+            name: 'Usuários',
             description: 'Permite gerenciar os usuários da empresa.'
         },
         {
             key: 'inventory-management',
-            name: 'Gerenciamento de Estoque',
+            name: 'Estoque',
             description: 'Acesso ao controle de estoque.'
         },
         {
             key: 'advanced-reporting',
-            name: 'Relatórios Avançados',
+            name: 'Relatórios',
             description: 'Permite a exportação de relatórios detalhados.'
         }
     ];

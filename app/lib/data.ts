@@ -1,8 +1,9 @@
-import { getTenantPrismaClient } from '@/app/lib/prisma';
+import { getPublicPrismaClient, getTenantPrismaClient } from '@/app/lib/prisma';
 import bcrypt from 'bcrypt';
 import { UserQueryBuilder } from "./queryBuilder";
 import { formatCurrency } from "./utils";
 import type { UserRole } from "@prisma/client";
+import { FEATURE_UI_MAP } from './feature-map';
 
 export async function getUserByCredentials(email, password, subdomain) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
@@ -141,5 +142,57 @@ export async function fetchUserById(subdomain: string, id: string) {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch user.');
+  }
+}
+
+export async function fetchNavLinks() {
+    const publicPrisma = getPublicPrismaClient();
+    
+    try {
+        const features = await publicPrisma.feature.findMany({
+            orderBy: { name: 'asc' }
+        });
+
+        const navLinks = features.map(feature => {
+            const uiDetails = FEATURE_UI_MAP[feature.key];
+            if (!uiDetails) return null;
+
+            return {
+                name: feature.name,
+                href: uiDetails.href,
+                featureKey: feature.key,
+            };
+        }).filter(Boolean);
+
+        return navLinks;
+
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch navigation links.');
+    }
+}
+
+export async function fetchObraById(id: string, subdomain: string) {
+  try {
+    const tenantPrisma = getTenantPrismaClient(subdomain);
+    
+    const company = await tenantPrisma.company.findFirst({
+        where: { name: subdomain },
+    });
+
+    if (!company) {
+        throw new Error(`Empresa não encontrada para o subdomínio: ${subdomain}`);
+    }
+
+    const obra = await tenantPrisma.obra.findUnique({
+      where: {
+        id: id,
+        companyId: company.id, 
+      },
+    });
+    return obra;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch obra.');
   }
 }

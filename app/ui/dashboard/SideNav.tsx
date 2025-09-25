@@ -1,14 +1,14 @@
 import { auth } from '@/app/actions/auth';
+import { fetchNavLinks } from '@/app/lib/data';
 import SideNavContent from './SideNavContent';
 
 export default async function SideNav() {
   const session = await auth();
+  const navLinks = await fetchNavLinks();
 
-  // A sessão deve existir por causa do middleware, mas é uma boa prática verificar.
   if (!session?.user) {
-    // Pode-se retornar um skeleton ou null se o middleware já garante a sessão
     return null; 
   }
 
-  return <SideNavContent user={session.user} />;
+  return <SideNavContent user={session.user} navLinks={navLinks} />;
 }

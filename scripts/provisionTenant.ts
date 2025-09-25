@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { execSync } from 'child_process';
+import { DEFAULT_FEATURE_KEYS } from "./seed-public";
 
 const prisma = new PrismaClient();
 
@@ -35,16 +36,15 @@ async function main() {
             console.log(`✅ Registro do tenant '${newTenant.name}' criado.`);
 
             console.log('[3/4] Associando features padrão...');
-            const defaultFeatureKeys = ['dashboard-basic', 'financial-view', 'user-management', 'inventory-management'];
             await tx.tenant.update({
                 where: { id: newTenant.id },
                 data: {
                     features: {
-                        connect: defaultFeatureKeys.map(key => ({ key }))
+                        connect: DEFAULT_FEATURE_KEYS.map(key => ({ key }))
                     }
                 }
             });
-            console.log(`✅ Features padrão associadas: ${defaultFeatureKeys.join(', ')}`);
+            console.log(`✅ Features padrão associadas: ${DEFAULT_FEATURE_KEYS.join(', ')}`);
 
             console.log(`[4/4] Criando schema '${schemaName}' no banco de dados...`);
             await tx.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "${schemaName}";`);

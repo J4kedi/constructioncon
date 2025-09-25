@@ -9,13 +9,14 @@ import {
     ChevronLeft, 
     ChevronRight, 
     LogOut, 
-    Settings2
+    Settings2,
+    LucideIcon
 } from 'lucide-react';
 import { useFeatures } from '@/app/contexts/FeatureContext';
-import { ALL_NAV_LINKS } from '@/app/lib/nav-links';
 import { handleSignOut } from '@/app/actions/auth';
 import { ThemeSwitcher } from '@/app/ui/components/ThemeSwitcher';
 import { User } from 'next-auth';
+import { FEATURE_UI_MAP } from '@/app/lib/feature-map';
 
 const settingsLink = {
     href: '/dashboard/settings',
@@ -23,19 +24,27 @@ const settingsLink = {
     icon: Settings2,
 };
 
-type NavLinksContentProps = {
-  isCollapsed: boolean;
+type NavLink = {
+    name: string;
+    href: string;
+    featureKey: string;
 };
 
-function NavLinksContent({ isCollapsed }: NavLinksContentProps) {
+type NavLinksContentProps = {
+  isCollapsed: boolean;
+  navLinks: NavLink[];
+};
+
+function NavLinksContent({ isCollapsed, navLinks }: NavLinksContentProps) {
   const { hasFeature } = useFeatures();
 
-  const availableLinks = ALL_NAV_LINKS.filter(link => hasFeature(link.featureKey));
+  const availableLinks = navLinks.filter(link => hasFeature(link.featureKey));
 
   return (
     <ul>
       {availableLinks.map((link) => {
-        const LinkIcon = link.icon;
+        const LinkIcon = FEATURE_UI_MAP[link.featureKey]?.icon;
+        if (!LinkIcon) return null;
 
         return (
           <li key={link.name} className="px-4 py-1">
@@ -72,9 +81,10 @@ const ConstructionconLogo = ({ isCollapsed }: ConstructionconLogoProps) => (
 
 interface SideNavContentProps {
   user: User;
+  navLinks: NavLink[];
 }
 
-export default function SideNavContent({ user }: SideNavContentProps) {
+export default function SideNavContent({ user, navLinks }: SideNavContentProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -97,7 +107,7 @@ export default function SideNavContent({ user }: SideNavContentProps) {
       </div>
 
       <nav className="flex-grow mt-4">
-        <NavLinksContent isCollapsed={isCollapsed} />
+        <NavLinksContent isCollapsed={isCollapsed} navLinks={navLinks} />
       </nav>
 
       <div className="flex-shrink-0 p-4 border-t border-secondary/20">

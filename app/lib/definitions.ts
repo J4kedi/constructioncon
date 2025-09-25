@@ -43,3 +43,19 @@ export const UpdateUserSchema = z.object({
     jobTitle: z.string().optional(),
     role: z.enum(['SUPER_ADMIN', 'COMPANY_ADMIN', 'USER', 'END_CUSTOMER'], { error: 'Função inválida.' })
 });
+
+export const ObraSchema = z.object({
+    id: z.string().optional(),
+    obraType: z.enum(['RESIDENCIAL', 'COMERCIAL'], { error: "Tipo de obra inválido." }),
+    nome: z.string().min(3, { error: "O nome da obra deve ter pelo menos 3 caracteres." }),
+    endCustomerName: z.string().min(3, { error: "O nome do cliente final deve ter pelo menos 3 caracteres." }),
+    orcamentoTotal: z.coerce.number().gt(0, { error: "O orçamento deve ser maior que zero." }),
+    dataInicio: z.string().refine((date) => !isNaN(Date.parse(date)), { error: "Data de início inválida." }),
+    dataPrevistaFim: z.string().refine((date) => !isNaN(Date.parse(date)), { error: "Data de fim prevista inválida." }),
+    address: z.string().optional(),
+    endCustomerId: z.string().optional(),
+});
+
+export const UpdateObraSchema = ObraSchema.partial().extend({
+    id: z.string(),
+});
