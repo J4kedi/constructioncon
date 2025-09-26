@@ -1,4 +1,4 @@
-import FactoryCronograma from './FactoryCronograma';
+import FactoryCronograma from '../FactoryCronograma';
 export default function Page(){
     return (
         <div>

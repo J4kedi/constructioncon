@@ -1,4 +1,5 @@
-import FactoryRecursos from './FactoryRecursos';
+import FactoryRecursos from "../FactoryRecursos";
+
 export default function Page(){
     return (
         <div>
