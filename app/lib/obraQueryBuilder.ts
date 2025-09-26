@@ -1,4 +1,4 @@
-import { Prisma, UserRole } from '@prisma/client';
+import { Prisma, StatusObra } from '@prisma/client';
 
 type PrismaQueryArgs = {
     where?: object;
@@ -16,7 +16,7 @@ class BasePrismaQueryBuilder<T extends PrismaQueryArgs> {
         this.query = {
             ...initialQuery,
             where: initialQuery.where ?? {},
-            orderBy: initialQuery.orderBy ?? { createdAt: 'desc' },
+            orderBy: initialQuery.orderBy ?? { dataInicio: 'desc' },
             take: this.itemsPerPage,
             skip: initialQuery.skip ?? 0,
         } as T;
@@ -39,13 +39,9 @@ class BasePrismaQueryBuilder<T extends PrismaQueryArgs> {
     build(): T {
         return this.query;
     }
-
-    buildWhere(): Prisma.UserWhereInput {
-        return this.query.where as Prisma.UserWhereInput;
-    }
 }
 
-export class UserQueryBuilder extends BasePrismaQueryBuilder<Prisma.UserFindManyArgs> {
+export class ObraQueryBuilder extends BasePrismaQueryBuilder<Prisma.ObraFindManyArgs> {
     constructor() {
         super({}, 8);
         this.query.where = { AND: [] };
@@ -53,39 +49,21 @@ export class UserQueryBuilder extends BasePrismaQueryBuilder<Prisma.UserFindMany
 
     withSearch(query?: string): this {
         if (query) {
-            (this.query.where.AND as Prisma.UserWhereInput[]).push({
+            (this.query.where.AND as Prisma.ObraWhereInput[]).push({
                 OR: [
-                    { name: { contains: query, mode: 'insensitive' } },
-                    { email: { contains: query, mode: 'insensitive' } },
-                    { jobTitle: { contains: query, mode: 'insensitive' } },
+                    { nome: { contains: query, mode: 'insensitive' } },
+                    { endCustomerName: { contains: query, mode: 'insensitive' } },
+                    { address: { contains: query, mode: 'insensitive' } },
                 ]
             });
         }
         return this;
     }
 
-    withName(name?: string): this {
-        if (name) {
-            (this.query.where.AND as Prisma.UserWhereInput[]).push({ 
-                name: { contains: name, mode: 'insensitive' } 
-            });
-        }
-        return this;
-    }
-
-    withRoles(roles?: UserRole[]): this {
-        if (roles && roles.length > 0) {
-            (this.query.where.AND as Prisma.UserWhereInput[]).push({ 
-                role: { in: roles } 
-            });
-        }
-        return this;
-    }
-
-    createdAfter(date?: Date): this {
-        if (date) {
-            (this.query.where.AND as Prisma.UserWhereInput[]).push({ 
-                createdAt: { gte: date } 
+    withStatus(statuses?: StatusObra[]): this {
+        if (statuses && statuses.length > 0) {
+            (this.query.where.AND as Prisma.ObraWhereInput[]).push({ 
+                status: { in: statuses } 
             });
         }
         return this;

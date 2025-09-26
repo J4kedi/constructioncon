@@ -1,3 +1,5 @@
+'use client';
+
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';

@@ -1,42 +1,45 @@
-'use client';
+import { Suspense } from 'react';
+import { headers } from 'next/headers';
+import { getTenantPrismaClient } from '@/app/lib/prisma';
+import { ObrasTableSkeleton } from '@/app/ui/components/skeletons';
+import CreateObraButton from '@/app/ui/dashboard/obras/CreateObraButton';
+import { UserRole } from '@prisma/client';
+import Search from '@/app/ui/components/search';
+import ObrasDataFetcher from './ObrasDataFetcher';
 
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import Modal from '@/app/ui/components/Modal';
-import CreateObraForm from '@/app/ui/dashboard/obras/CreateObraForm';
+export default async function ObrasPage({
+  searchParams 
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) {
+  const headerList = headers();
+  const subdomain = (await headerList).get('x-tenant-subdomain');
+  let customers = [];
+  if (subdomain) {
+    const prisma = getTenantPrismaClient(subdomain);
+    customers = await prisma.user.findMany({
+      where: { role: UserRole.END_CUSTOMER },
+      orderBy: { name: 'asc' },
+    });
+  }
 
-// Supondo que você terá uma lista de clientes para passar para o formulário
-// Por enquanto, passaremos um array vazio.
-// const customers = await fetchUsers(subdomain, { roles: [UserRole.END_CUSTOMER] });
-
-export default function ObrasPage() {
-  const [isModalOpen, setModalOpen] = useState(false);
+  const query = searchParams?.query || '';
+  const currentPage = Number(searchParams?.page) || 1;
 
   return (
     <div className="w-full">
       <div className="flex w-full items-center justify-between">
         <h1 className="text-2xl font-bold text-text">Minhas Obras</h1>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors shadow-md"
-        >
-          <Plus size={20} />
-          <span>Criar Nova Obra</span>
-        </button>
+        <CreateObraButton customers={customers} />
       </div>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setModalOpen(false)} 
-        title="Criar Nova Obra"
-      >
-        <CreateObraForm customers={[]} />
-      </Modal>
-
-      <div className="mt-8">
-        {/* A tabela ou lista de obras será adicionada aqui no futuro */}
-        <p className="text-center text-text/60">Nenhuma obra encontrada.</p>
+      <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
+        <Search placeholder="Buscar obras..." />
       </div>
+
+      <Suspense key={query + currentPage} fallback={<ObrasTableSkeleton />}>
+        <ObrasDataFetcher searchParams={searchParams} />
+      </Suspense>
     </div>
   );
 }

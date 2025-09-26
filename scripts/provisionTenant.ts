@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { execSync } from 'child_process';
-import { DEFAULT_FEATURE_KEYS } from "./seed-public";
+import { DEFAULT_FEATURE_KEYS } from "./seed-public.ts";
 
 const prisma = new PrismaClient();
 

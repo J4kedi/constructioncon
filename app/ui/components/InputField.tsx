@@ -6,9 +6,10 @@ interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   name: string;
   label: string;
   Icon: LucideIcon;
+  errors?: string[];
 }
 
-export default function InputField({ id, name, label, Icon, ...props }: InputFieldProps) {
+export default function InputField({ id, name, label, Icon, errors, ...props }: InputFieldProps) {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-text mb-1">
@@ -21,7 +22,16 @@ export default function InputField({ id, name, label, Icon, ...props }: InputFie
           name={name}
           {...props}
           className="w-full pl-10 pr-4 py-2 bg-secondary/20 border border-secondary/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          aria-describedby={`${id}-error`}
         />
+      </div>
+      <div id={`${id}-error`} aria-live="polite" aria-atomic="true">
+        {errors &&
+          errors.map((error: string) => (
+            <p className="mt-2 text-sm text-red-500" key={error}>
+              {error}
+            </p>
+          ))}
       </div>
     </div>
   );

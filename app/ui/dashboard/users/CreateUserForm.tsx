@@ -8,6 +8,8 @@ import { registerUser } from "@/app/actions/auth";
 import InputField from "@/app/ui/components/InputField";
 import { UserRole } from "@prisma/client";
 
+import { FormState } from "@/app/lib/action-handler";
+
 function SubmitButton() {
   const { pending } = useFormStatus();
 
@@ -29,7 +31,7 @@ type CreateUserFormProps = {
 export default function CreateUserForm({ onClose }: CreateUserFormProps) {
     const [showPassword, setShowPassword] = useState(false);
 
-    const initialState: RegisterState = {};
+    const initialState: FormState = { message: null, errors: {} };
     const [state, dispatch] = useActionState(registerUser, initialState);
 
     useEffect(() => {
@@ -48,6 +50,7 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
                     Icon={User}
                     type="text"
                     placeholder="João da Silva"
+                    errors={state.errors?.name}
                     required
                 />
 
@@ -58,6 +61,7 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
                     Icon={Mail}
                     type="email"
                     placeholder="joao.silva@suaempresa.com"
+                    errors={state.errors?.email}
                     required
                 />
                 
@@ -68,6 +72,7 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
                     Icon={Lock}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
+                    errors={state.errors?.password}
                     required
                     minLength={8}
                 />
@@ -79,6 +84,7 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
                     Icon={Lock}
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
+                    errors={state.errors?.confirmPassword}
                     required
                     minLength={8}
                 />
@@ -98,6 +104,12 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
                     </select>
                     <Briefcase className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-text/70" />
                   </div>
+                   {state.errors?.role &&
+                    state.errors.role.map((error: string) => (
+                        <p className="mt-2 text-sm text-red-500" key={error}>
+                        {error}
+                        </p>
+                    ))}
                 </div>
 
                 <div className="flex items-center">
@@ -114,10 +126,10 @@ export default function CreateUserForm({ onClose }: CreateUserFormProps) {
                 </div>
 
             </div>
-            {state.error && (
+            {state.message && (
                 <div className="flex items-center gap-2 mt-4 text-red-500 bg-red-500/10 p-3 rounded-lg">
                     <TriangleAlert className="h-5 w-5" />
-                    <p className="text-sm">{state.error}</p>
+                    <p className="text-sm">{state.message}</p>
                 </div>
             )}
             <div className="mt-8">

@@ -13,6 +13,7 @@ import {
   documents,
   workLogs,
 } from '@/app/lib/placeholder-data';
+import { ALL_FEATURES, DEFAULT_FEATURE_KEYS } from '@/app/lib/features';
 import bcrypt from 'bcrypt';
 
 const publicPrisma = getPublicPrismaClient();
@@ -24,9 +25,9 @@ const tenantToCompany = {
 };
 
 const tenantFeatures = {
-    amazonia: ['dashboard-basic', 'financial-view', 'user-management', 'inventory-management'],
-    parana: ['dashboard-basic', 'financial-view', 'user-management', 'inventory-management', 'advanced-reporting'],
-    sul: ['dashboard-basic'],
+    amazonia: DEFAULT_FEATURE_KEYS,
+    parana: [...DEFAULT_FEATURE_KEYS, 'advanced-reporting'],
+    sul: DEFAULT_FEATURE_KEYS,
 }
 
 async function seedTenantData(
@@ -125,39 +126,11 @@ async function main() {
   console.log('Iniciando o seed dos dados de teste...');
 
   console.log('--- Populando schema public: Features e Tenants ---');
-  const featuresToCreate = [
-      {
-          key: 'dashboard-basic',
-          name: 'Dashboard Básico',
-          description: 'Acesso à visualização de Acompanhamento.'
-      },
-      {
-          key: 'financial-view',
-          name: 'Visualização Financeira',
-          description: 'Acesso ao dashboard Financeiro.'
-      },
-      {
-          key: 'user-management',
-          name: 'Gerenciamento de Usuários',
-          description: 'Permite gerenciar os usuários da empresa.'
-      },
-      {
-          key: 'inventory-management',
-          name: 'Gerenciamento de Estoque',
-          description: 'Acesso ao controle de estoque.'
-      },
-      {
-          key: 'advanced-reporting',
-          name: 'Relatórios Avançados',
-          description: 'Permite a exportação de relatórios detalhados.'
-      }
-  ];
-
-  await publicPrisma.feature.createMany({
-      data: featuresToCreate,
+    await publicPrisma.feature.createMany({
+      data: ALL_FEATURES,
       skipDuplicates: true, 
   });
-  console.log(`✅ ${featuresToCreate.length} features garantidas no schema public.`);
+  console.log(`✅ ${ALL_FEATURES.length} features garantidas no schema public.`);
 
   for (const tenantName of Object.keys(tenantToCompany) as Array<keyof typeof tenantToCompany>) {
       const featureKeys = tenantFeatures[tenantName];

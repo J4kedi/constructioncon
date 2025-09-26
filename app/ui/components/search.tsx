@@ -1,3 +1,5 @@
+'use client';
+
 import { Search as SearchIcon } from 'lucide-react';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';

@@ -53,7 +53,14 @@ const creationStrategies: Record<string, (data: ObraData, companyId: string, sub
   COMERCIAL: createComercialObra,
 };
 
-export async function createObra(subdomain: string, prevState: FormState, formData: FormData) {
+import { getRequestContext } from '@/app/lib/utils';
+
+export async function createObra(prevState: FormState, formData: FormData) {
+  const { subdomain } = await getRequestContext();
+  if (!subdomain) {
+    return { message: 'Falha: Subdomínio não identificado.', success: false };
+  }
+  
   return executeFormAction({
     formData,
     schema: ObraSchema,
