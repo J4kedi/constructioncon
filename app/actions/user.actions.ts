@@ -2,45 +2,26 @@
 
 import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
 import { UpdateUserSchema } from '@/app/lib/definitions';
-
 import { getRequestContext } from '@/app/lib/utils';
+import { executeFormAction, FormState } from '@/app/lib/action-handler';
 
-// ... other imports
-
-export async function updateUser(prevState: any, formData: FormData) {
+export async function updateUser(prevState: FormState, formData: FormData): Promise<FormState> {
   const { subdomain } = await getRequestContext();
   if (!subdomain) {
-    return { message: 'Falha: Subdomínio não identificado.' };
+    return { message: 'Falha: Subdomínio não identificado.', success: false };
   }
 
-  const validatedFields = UpdateUserSchema.safeParse({
-    id: formData.get('id'),
-    name: formData.get('name'),
-    jobTitle: formData.get('jobTitle'),
-    role: formData.get('role'),
+  return executeFormAction({
+    formData,
+    schema: UpdateUserSchema,
+    revalidatePath: '/dashboard/users',
+    logic: async (data) => {
+      const { id, ...dataToUpdate } = data;
+      const tenantPrisma = getTenantPrismaClient(subdomain);
+      await tenantPrisma.user.update({ where: { id }, data: dataToUpdate });
+    },
   });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Erro de validação. Verifique os campos.',
-    };
-  }
-
-  const { id, ...dataToUpdate } = validatedFields.data;
-
-  try {
-    const tenantPrisma = getTenantPrismaClient(subdomain);
-    await tenantPrisma.user.update({ where: { id }, data: dataToUpdate });
-    
-    revalidatePath('/dashboard/users');
-    return { success: true, message: 'Usuário atualizado com sucesso.' };
-  } catch (e) {
-    console.error('Erro ao atualizar usuário:', e);
-    return { message: 'Falha no banco de dados: Não foi possível atualizar o usuário.' };
-  }
 }
 
 export async function deleteUser(userId: string) {

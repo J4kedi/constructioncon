@@ -3,11 +3,17 @@
 import { useFormState } from 'react-dom';
 import { updateObra } from '@/app/actions/obra.actions';
 import type { Obra } from '@prisma/client';
+import { FormState } from '@/app/lib/action-handler';
 
-export default function EditObraForm({ obra }: { obra: Obra }) {
-  const initialState = { errors: {}, message: null };
-  const updateObraWithId = updateObra.bind(null, { obraId: obra.id });
-  const [state, dispatch] = useFormState(updateObraWithId, initialState);
+interface EditObraFormProps {
+  obra: Obra;
+  subdomain: string;
+}
+
+export default function EditObraForm({ obra, subdomain }: EditObraFormProps) {
+  const initialState: FormState = { errors: {}, message: null };
+  const updateObraWithTenant = updateObra.bind(null, subdomain);
+  const [state, dispatch] = useFormState(updateObraWithTenant, initialState);
 
   return (
     <form action={dispatch}>

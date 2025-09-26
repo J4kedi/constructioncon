@@ -9,9 +9,9 @@ import { headers } from 'next/headers';
 import NextAuth, { AuthError } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
-import { LoginState, RegisterState, UserRegistrationSchema } from '@/app/lib/definitions';
-import { revalidatePath } from 'next/cache';
+import { LoginState, UserRegistrationSchema } from '@/app/lib/definitions';
 import { getRequestContext } from '@/app/lib/utils';
+import { executeFormAction, FormState } from '@/app/lib/action-handler';
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -47,55 +47,45 @@ export const { auth, signIn, signOut } = NextAuth({
 
 // --- Server Actions ---
 
-export async function registerUser(prevState: RegisterState, formData: FormData): Promise<RegisterState> {
-    const { subdomain, tenantId: companyId } = await getRequestContext();
+export async function registerUser(prevState: FormState, formData: FormData): Promise<FormState> {
+    const { subdomain } = await getRequestContext();
 
-    if (!subdomain || !companyId) {
-        return { error: 'Acesso inválido. Não foi possível identificar a empresa.' };
+    if (!subdomain) {
+        return { message: 'Acesso inválido. Não foi possível identificar a empresa.', success: false };
     }
 
-    const validatedFields = UserRegistrationSchema.safeParse(
-        Object.fromEntries(formData.entries())
-    );
+    return executeFormAction({
+        formData,
+        schema: UserRegistrationSchema,
+        revalidatePath: '/login',
+        redirectPath: '/login',
+        logic: async (data) => {
+            const { email, name, password, role } = data;
+            const tenantPrisma = getTenantPrismaClient(subdomain);
 
-    if (!validatedFields.success) {
-        const errorMessages = validatedFields.error.issues.map(e => e.message).join(', ');
-        return { error: `Erro de validação: ${errorMessages}` };
-    }
+            const company = await tenantPrisma.company.findFirst();
+            if (!company) {
+                throw new Error('Configuração de empresa não encontrada para este tenant.');
+            }
 
-    const { email, name, password, role } = validatedFields.data;
-    
-    const tenantPrisma = getTenantPrismaClient(subdomain);
+            const existingUser = await tenantPrisma.user.findUnique({ where: { email } });
+            if (existingUser) {
+                throw new Error('Este email já está em uso.');
+            }
 
-    try {
-        const company = await tenantPrisma.company.findFirst();
-        if (!company) {
-            return { error: 'Configuração de empresa não encontrada para este tenant.' };
-        }
+            const hashedPassword = await bcrypt.hash(password, 10);
 
-        const existingUser = await tenantPrisma.user.findUnique({ where: { email } });
-        if (existingUser) {
-            return { error: 'Este email já está em uso.' };
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        await tenantPrisma.user.create({
-            data: {
-                name: name,
-                email: email,
-                password: hashedPassword,
-                companyId: company.id,
-            },
-        });
-
-        revalidatePath('/dashboard/users');
-        return { success: true };
-
-    } catch (dbError) {
-        console.error("Database Error:", dbError);
-        return { error: 'Falha ao registrar usuário. Tente novamente.' };
-    }
+            await tenantPrisma.user.create({
+                data: {
+                    name,
+                    email,
+                    password: hashedPassword,
+                    companyId: company.id,
+                    role,
+                },
+            });
+        },
+    });
 }
 
 export async function authenticate(

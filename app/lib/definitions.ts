@@ -56,6 +56,6 @@ export const ObraSchema = z.object({
     endCustomerId: z.string().optional(),
 });
 
-export const UpdateObraSchema = ObraSchema.partial().extend({
+export const UpdateObraSchema = ObraSchema.omit({ obraType: true }).partial().extend({
     id: z.string(),
 });
