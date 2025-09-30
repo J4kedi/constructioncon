@@ -1,33 +1,46 @@
-import { getPublicPrismaClient } from '../app/lib/prisma.ts';
+import { BaseScript } from './BaseScript.ts';
 
-async function main() {
-  const prisma = getPublicPrismaClient();
-  console.log('Starting cleanup...');
+class CleanupScript extends BaseScript {
+  protected getScriptName(): string {
+    return "Limpeza de Todos os Tenants e Schemas";
+  }
 
-  try {
-    const tenants = await prisma.tenant.findMany();
-    if (tenants.length > 0) {
-      console.log(`Found ${tenants.length} tenants to clean up.`);
-      for (const tenant of tenants) {
-        console.log(`- Dropping schema for tenant: ${tenant.name} (${tenant.schemaName})`);
-        await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS \"${tenant.schemaName}\" CASCADE;`);
-        console.log(`  Schema \"${tenant.schemaName}\" dropped.`);
-      }
+  protected async run(): Promise<void> {
+    const isForce = process.argv.includes('--force');
 
-      console.log('Deleting all records from tenant table...');
-      await prisma.tenant.deleteMany({});
-      console.log('Tenant records deleted.');
-    } else {
-      console.log('No tenants found to clean up.');
+    if (!isForce) {
+      console.warn(`
+        ###################################################################################
+        #                                                                                 #
+        #  ATENÇÃO: Este é um script destrutivo que apagará TODOS os schemas de tenants.   #
+        #                                                                                 #
+        #  Para confirmar a execução, rode o comando com o argumento --force.             #
+        #  Exemplo: ts-node scripts/cleanup.ts --force                                    #
+        #                                                                                 #
+        ###################################################################################
+      `);
+      return;
     }
 
-    console.log('🚀 Cleanup complete.');
-  } catch (error) {
-    console.error('❌ An error occurred during cleanup:', error);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
+    console.log('Iniciando limpeza forçada...');
+    const tenants = await this.prisma.tenant.findMany();
+
+    if (tenants.length > 0) {
+      console.log(`Encontrados ${tenants.length} tenants para limpar.`);
+      for (const tenant of tenants) {
+        console.log(`- Apagando schema para o tenant: ${tenant.name} (${tenant.schemaName})`);
+        await this.prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS \"${tenant.schemaName}\" CASCADE;`);
+        console.log(`  Schema \"${tenant.schemaName}\" apagado.`);
+      }
+
+      console.log('Apagando todos os registros da tabela de tenants...');
+      await this.prisma.tenant.deleteMany({});
+      console.log('Registros de tenants apagados.');
+    } else {
+      console.log('Nenhum tenant encontrado para limpar.');
+    }
   }
 }
 
-main();
+const script = new CleanupScript();
+script.execute();

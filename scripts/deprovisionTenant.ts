@@ -1,51 +1,52 @@
-import { getPublicPrismaClient } from '../app/lib/prisma.ts';
+import { BaseScript } from './BaseScript.ts';
 
-const prisma = getPublicPrismaClient();
+class DeprovisionTenantScript extends BaseScript {
+  private subdomain: string | undefined;
 
-async function main() {
-  const args = process.argv.slice(2);
-  if (args.length !== 1) {
-    console.error('Uso: ts-node scripts/deprovisionTenant.ts <subdominio>');
-    process.exit(1);
+  protected getScriptName(): string {
+    return "Deprovisionamento de Tenant";
   }
 
-  const [subdomain] = args;
-  console.log(`Iniciando deprovisionamento para o tenant com subdomínio: ${subdomain}`);
+  protected async run(): Promise<void> {
+    this.parseArgs();
+    if (!this.subdomain) return;
 
-  try {
-    // 1. Encontrar o tenant para obter o nome do schema
-    const tenant = await prisma.tenant.findUnique({
-      where: { subdomain },
+    console.log(`Iniciando deprovisionamento para o tenant com subdomínio: ${this.subdomain}`);
+
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { subdomain: this.subdomain },
     });
 
     if (!tenant) {
-      throw new Error(`Tenant com subdomínio '${subdomain}' não encontrado.`);
+      throw new Error(`Tenant com subdomínio '${this.subdomain}' não encontrado.`);
     }
-    
+
     const { schemaName } = tenant;
     console.log(`- Schema a ser removido: ${schemaName}`);
 
-    // 2. Usar transação para remover o registro e o schema
-    await prisma.$transaction(async (tx) => {
-      // 2.1 Apagar o registro do tenant na tabela `tenants`
+    await this.prisma.$transaction(async (tx) => {
       await tx.tenant.delete({
-        where: { subdomain },
+        where: { subdomain: this.subdomain },
       });
-      console.log(`✅ Registro do tenant '${subdomain}' removido da tabela public.tenants.`);
+      console.log(`✅ Registro do tenant '${this.subdomain}' removido da tabela public.tenants.`);
 
-      // 2.2 Executar SQL raw para apagar o schema físico
       await tx.$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE;`);
       console.log(`✅ Schema '${schemaName}' removido do banco de dados.`);
     });
 
-    console.log(`\n🚀 Deprovisionamento do tenant '${subdomain}' concluído com sucesso!`);
+    console.log(`
+🚀 Deprovisionamento do tenant '${this.subdomain}' concluído com sucesso!`);
+  }
 
-  } catch (error) {
-    console.error('❌ Erro durante o deprovisionamento do tenant:', error.message);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
+  private parseArgs(): void {
+    const args = process.argv.slice(2);
+    if (args.length !== 1 || args[0].startsWith('--')) {
+      console.error('Uso: ts-node scripts/deprovisionTenant.ts <subdominio>');
+      process.exit(1);
+    }
+    this.subdomain = args[0];
   }
 }
 
-main();
+const script = new DeprovisionTenantScript();
+script.execute();

@@ -1,4 +1,4 @@
-import { getPublicPrismaClient } from '../app/lib/prisma';
+import { getPublicPrismaClient } from '../app/lib/prisma.ts';
 import { PrismaClient } from '@prisma/client';
 
 export abstract class BaseScript {

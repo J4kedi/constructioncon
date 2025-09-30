@@ -9,7 +9,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "setup:dev": "ts-node scripts/setup-dev-environment.ts",
+    "db:cleanup": "ts-node scripts/cleanup.ts",
+    "db:provision": "ts-node scripts/provisionTenant.ts",
+    "db:deprovision": "ts-node scripts/deprovisionTenant.ts",
+    "db:seed:public": "ts-node scripts/seed-public.ts",
+    "db:seed:tenant": "ts-node scripts/seed-tenant.ts",
+    "db:seed:demo": "ts-node scripts/seed-demo.ts",
+    "db:migrate:tenants": "ts-node scripts/applyMigrations.ts",
+    "db:migrate:resolve": "ts-node scripts/resolveMigrations.ts"
   },
   "keywords": [],
   "author": "",

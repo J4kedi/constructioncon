@@ -8,10 +8,10 @@ import { z } from 'zod';
 type ObraData = z.infer<typeof ObraSchema>;
 
 async function findCompany(subdomain: string) {
-  const publicPrisma = getPublicPrismaClient();
-  const company = await publicPrisma.company.findFirst({ where: { name: subdomain } });
+  const tenantPrisma = getTenantPrismaClient(subdomain);
+  const company = await tenantPrisma.company.findFirst();
   if (!company) {
-    throw new Error(`Empresa não encontrada para o subdomínio: ${subdomain}`);
+    throw new Error(`Registro da empresa não encontrado no schema do tenant: ${subdomain}. O script 'seed-tenant' foi executado?`);
   }
   return company;
 }
