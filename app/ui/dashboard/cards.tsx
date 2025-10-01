@@ -1,19 +1,10 @@
 import { Building, Users, Wallet, TrendingDown } from "lucide-react";
 import { roboto } from "../fonts";
 import { fetchDashboardData } from "@/app/lib/data";
+import React from "react";
 
-const iconMap = {
-  budget: Wallet,
-  users: Users,
-  cost: TrendingDown,
-  obras: Building,
-};
-
-type CardWrapperProps = {
-  subdomain: string;
-};
-
-export default async function CardWrapper({ subdomain }: CardWrapperProps) {
+// O CardWrapper agora é responsável por buscar os dados e passar os ícones corretos
+export default async function CardWrapper({ subdomain }: { subdomain: string; }) {
   const {
     numberOfObras,
     numberOfUsers,
@@ -23,31 +14,42 @@ export default async function CardWrapper({ subdomain }: CardWrapperProps) {
 
   return (
     <>
-      <Card title="Orçamento Total" value={totalBudget} type="budget" />
-      <Card title="Custo Atual" value={totalCost} type="cost" />
-      <Card title="Total de Obras" value={numberOfObras} type="obras" />
+      <Card 
+        title="Orçamento Total" 
+        value={totalBudget} 
+        icon={<Wallet className="h-5 w-5 text-primary" />}
+      />
+      <Card 
+        title="Custo Atual" 
+        value={totalCost} 
+        icon={<TrendingDown className="h-5 w-5 text-primary" />}
+      />
+      <Card 
+        title="Total de Obras" 
+        value={numberOfObras} 
+        icon={<Building className="h-5 w-5 text-primary" />}
+      />
       <Card
         title="Total de Clientes"
         value={numberOfUsers}
-        type="users"
+        icon={<Users className="h-5 w-5 text-primary" />}
       />
     </>
   );
 }
 
+// O componente Card agora é genérico e reutilizável
 type CardProps = {
   title: string;
   value: number | string;
-  type: 'obras' | 'users' | 'budget' | 'cost';
+  icon: React.ReactNode; // Aceita qualquer ícone como um nó React
 };
 
-export function Card({ title, value, type }: CardProps) {
-  const Icon = iconMap[type];
-
+export function Card({ title, value, icon }: CardProps) {
   return (
     <div className="rounded-xl bg-secondary/20 p-2 shadow-sm">
       <div className="flex p-4">
-        {Icon ? <Icon className="h-5 w-5 text-primary" /> : null}
+        {icon} {/* Renderiza o ícone passado diretamente */}
         <h3 className="ml-2 text-sm font-medium text-text/90">{title}</h3>
       </div>
       <p

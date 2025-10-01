@@ -190,3 +190,12 @@ export async function fetchObraById(id: string, subdomain: string) {
         return null;
     }
 }
+
+export async function findCompany(subdomain: string) {
+  const tenantPrisma = getTenantPrismaClient(subdomain);
+  const company = await tenantPrisma.company.findFirst();
+  if (!company) {
+    throw new Error(`Registro da empresa não encontrado no schema do tenant: ${subdomain}. O script 'seed-tenant' foi executado?`);
+  }
+  return company;
+}

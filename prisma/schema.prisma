@@ -60,6 +60,12 @@ enum UnidadeMedida {
   PCT // Pacote
 }
 
+enum TipoMovimento {
+  ENTRADA
+  SAIDA
+  AJUSTE
+}
+
 // ===================================
 // Modelos de Dados (Tabelas)
 // ===================================
@@ -96,9 +102,10 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  obras     Obra[]
-  addresses Address[]
+  users         User[]
+  obras         Obra[]
+  addresses     Address[]
+  catalogoItens CatalogoItem[]
 }
 
 model User {
@@ -117,10 +124,11 @@ model User {
   companyId          String
   company            Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  obrasComoCliente   Obra[]
-  etapasResponsaveis Etapa[]   @relation("ResponsibleForEtapas")
-  despesasAprovadas  Despesa[] @relation("ApprovedDespesas")
-  diariosDeObra      WorkLog[]
+  obrasComoCliente       Obra[]
+  etapasResponsaveis     Etapa[]            @relation("ResponsibleForEtapas")
+  despesasAprovadas      Despesa[]          @relation("ApprovedDespesas")
+  diariosDeObra          WorkLog[]
+  movimentacoesDeEstoque EstoqueMovimento[]
 }
 
 model Obra {
@@ -143,12 +151,12 @@ model Obra {
   endCustomerId      String?
   endCustomer        User?      @relation(fields: [endCustomerId], references: [id], onDelete: SetNull)
 
-  etapas             Etapa[]
-  despesas           Despesa[]
-  receitas           Receita[]
-  estoqueItens       Estoque[]
-  workLogs           WorkLog[]
-  documents          Document[]
+  etapas                 Etapa[]
+  despesas               Despesa[]
+  receitas               Receita[]
+  workLogs               WorkLog[]
+  documents              Document[]
+  movimentacoesDeEstoque EstoqueMovimento[]
 
   @@unique([companyId, nome])
   @@index([status])
@@ -203,30 +211,16 @@ model Receita {
   obra      Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
 }
 
-model Estoque {
-  id            String        @id @default(cuid())
-  item          String
-  quantidade    Decimal
-  unidade       UnidadeMedida
-  custoUnitario Decimal
-
-  obraId        String
-  obra          Obra          @relation(fields: [obraId], references: [id], onDelete: Cascade)
-
-  supplierId    String?
-  supplier      Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-}
-
 model Supplier {
-  id           String    @id @default(cuid())
-  name         String
-  cnpj         String?   @unique
-  phone        String?
-  email        String?
+  id        String    @id @default(cuid())
+  name      String
+  cnpj      String?   @unique
+  phone     String?
+  email     String?
 
-  despesas     Despesa[]
-  estoqueItens Estoque[]
-  addresses    Address[]
+  despesas  Despesa[]
+  addresses Address[]
+  movimentosDeEstoque EstoqueMovimento[]
 }
 
 model WorkLog {
@@ -274,4 +268,41 @@ model Address {
 
   @@index([companyId])
   @@index([supplierId])
+}
+
+model CatalogoItem {
+  id             String   @id @default(cuid())
+  nome           String
+  descricao      String?
+  unidade        UnidadeMedida
+  categoria      String?
+  custoUnitario  Decimal  @default(0)
+  nivelMinimo    Decimal  @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  movimentos     EstoqueMovimento[]
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, nome])
+}
+
+model EstoqueMovimento {
+  id              String        @id @default(cuid())
+  quantidade      Decimal
+  tipo            TipoMovimento
+  data            DateTime      @default(now())
+  
+  catalogoItemId  String
+  catalogoItem    CatalogoItem  @relation(fields: [catalogoItemId], references: [id], onDelete: Cascade)
+
+  obraDestinoId   String?
+  obraDestino     Obra?         @relation(fields: [obraDestinoId], references: [id], onDelete: SetNull)
+  
+  usuarioId       String?
+  usuario         User?         @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  supplierId      String?
+  supplier        Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 }

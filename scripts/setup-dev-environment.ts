@@ -1,30 +1,52 @@
 import { execSync } from 'child_process';
 
-// Função auxiliar para pausas
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function main() {
-  console.log('🚀 Iniciando a configuração completa do ambiente de desenvolvimento...');
+  const args = process.argv.slice(2);
+  const isForce = args.includes('--force');
+
+  if (!isForce) {
+    console.warn(`
+      ###################################################################################
+      #                                                                                 #
+      #  ATENÇÃO: Este script destruirá e recriará completamente o banco de dados.      #
+      #                                                                                 #
+      #  Para confirmar a execução, rode o comando com o argumento --force.             #
+      #  Exemplo: pnpm run setup:dev -- --force                                         #
+      #                                                                                 #
+      ###################################################################################
+    `);
+    return;
+  }
+
+  console.log('🚀 Iniciando a configuração completa do ambiente de desenvolvimento (modo forçado)...');
 
   try {
-    // Etapa 1: Iniciar os contêineres Docker
-    console.log('\n--- Etapa 1: Iniciando o Docker Compose... ---');
+    console.log('\n--- Etapa 1: Destruindo ambiente Docker existente (incluindo volumes)... ---');
+    execSync('docker-compose down -v', { stdio: 'inherit' });
+    console.log('✅ Ambiente Docker anterior destruído.');
+
+    console.log('\n--- Etapa 2: Iniciando um novo ambiente Docker... ---');
     execSync('docker-compose up -d', { stdio: 'inherit' });
     console.log('✅ Contêineres do Docker iniciados em background.');
 
-    // Etapa 2: Aguardar o banco de dados ficar pronto
-    const waitTime = 20; // segundos
-    console.log(`\n--- Etapa 2: Aguardando ${waitTime} segundos para o banco de dados iniciar... ---`);
+    const waitTime = 20;
+    console.log(`\n--- Etapa 3: Aguardando ${waitTime} segundos para o banco de dados iniciar... ---`);
     await sleep(waitTime * 1000);
     console.log('✅ Tempo de espera concluído.');
 
-    // Etapa 3: Resetar o banco de dados para um estado limpo
-    console.log('\n--- Etapa 3: Resetando o banco de dados... ---');
-    execSync('pnpm prisma migrate reset --force', { stdio: 'inherit' });
+    console.log('\n--- Etapa 4: Resetando o schema public... ---');
+    execSync('pnpm prisma migrate reset --force', {
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: 'yes',
+      },
+    });
     console.log('✅ Banco de dados resetado com sucesso.');
 
-    // Etapa 4: Executar o seed completo do ambiente de demonstração
-    console.log('\n--- Etapa 4: Executando o seed do ambiente de demonstração... ---');
+    console.log('\n--- Etapa 5: Executando o seed do ambiente de demonstração... ---');
     execSync('pnpm run db:seed:demo', { stdio: 'inherit' });
     console.log('✅ Seed de demonstração concluído.');
 

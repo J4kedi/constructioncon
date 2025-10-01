@@ -1,20 +1,15 @@
 'use server';
 
-import { getPublicPrismaClient, getTenantPrismaClient } from '@/app/lib/prisma';
+import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { ObraSchema, UpdateObraSchema } from '@/app/lib/definitions';
 import { executeFormAction, FormState } from '@/app/lib/action-handler';
 import { z } from 'zod';
+import { findCompany } from '@/app/lib/data'; // Importa a função compartilhada
+import { getRequestContext } from '@/app/lib/utils';
 
 type ObraData = z.infer<typeof ObraSchema>;
 
-async function findCompany(subdomain: string) {
-  const tenantPrisma = getTenantPrismaClient(subdomain);
-  const company = await tenantPrisma.company.findFirst();
-  if (!company) {
-    throw new Error(`Registro da empresa não encontrado no schema do tenant: ${subdomain}. O script 'seed-tenant' foi executado?`);
-  }
-  return company;
-}
+// A função findCompany foi movida para data.ts
 
 async function createResidencialObra(data: ObraData, companyId: string, subdomain: string) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
@@ -52,8 +47,6 @@ const creationStrategies: Record<string, (data: ObraData, companyId: string, sub
   RESIDENCIAL: createResidencialObra,
   COMERCIAL: createComercialObra,
 };
-
-import { getRequestContext } from '@/app/lib/utils';
 
 export async function createObra(prevState: FormState, formData: FormData) {
   const { subdomain } = await getRequestContext();

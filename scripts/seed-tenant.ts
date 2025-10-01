@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { getPublicPrismaClient, getTenantPrismaClient } from '../app/lib/prisma.ts';
-import { UserRole } from '@prisma/client';
+import { UserRole, UnidadeMedida } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -53,6 +54,34 @@ async function main() {
         },
       });
       console.log(`  -> 👤 Usuário COMPANY_ADMIN '${adminUser.email}' criado.`);
+
+      console.log('  -> 📦 Criando itens de exemplo no catálogo...');
+      await tx.catalogoItem.createMany({
+        data: [
+          {
+            nome: 'Cimento Portland CP II 50kg',
+            unidade: UnidadeMedida.UN,
+            categoria: 'Materiais Básicos',
+            custoUnitario: new Decimal(35.50),
+            companyId: company.id,
+          },
+          {
+            nome: 'Vergalhão de Aço CA-50 10mm (Barra 12m)',
+            unidade: UnidadeMedida.UN,
+            categoria: 'Aço',
+            custoUnitario: new Decimal(52.00),
+            companyId: company.id,
+          },
+          {
+            nome: 'Areia Média (Metro Cúbico)',
+            unidade: UnidadeMedida.M3,
+            categoria: 'Agregados',
+            custoUnitario: new Decimal(100.00),
+            companyId: company.id,
+          },
+        ],
+      });
+      console.log('  -> ✅ 3 itens de catálogo criados.');
     });
 
     console.log('\n🚀 Seed de dados essenciais para o tenant concluído com sucesso!');

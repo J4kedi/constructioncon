@@ -1,8 +1,6 @@
-import { execSync } from 'child_process';
 import { BaseScript } from './BaseScript.ts';
 import { DEFAULT_FEATURE_KEYS } from '../app/lib/features.ts';
-import fs from 'fs';
-import path from 'path';
+import { runTenantSafeDeploy } from '../app/lib/migration-utils.ts';
 
 class ProvisionTenantScript extends BaseScript {
   private name: string | undefined;
@@ -23,9 +21,7 @@ class ProvisionTenantScript extends BaseScript {
     console.log('--- Fase 1 concluída: Registro e schema criados com sucesso. ---');
 
     // --- Fase 2: Migrações do Schema ---
-    console.log(`
---- Iniciando Fase 2: Aplicando migrações ao schema '${this.schemaName}' ---`);
-    this.applyMigrations();
+    runTenantSafeDeploy(this.schemaName);
 
     console.log(`
 🚀 Provisionamento completo do tenant '${this.name}' concluído com sucesso!`);
@@ -69,65 +65,6 @@ class ProvisionTenantScript extends BaseScript {
       await tx.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "${this.schemaName}";`);
       console.log(`✅ Schema criado.`);
     });
-  }
-
-  private applyMigrations(): void {
-    const migrationDir = path.join(process.cwd(), 'prisma', 'migrations');
-    const originalMigrations = new Map<string, string>();
-
-    try {
-      const migrationFolders = fs.readdirSync(migrationDir).filter(file => 
-        fs.statSync(path.join(migrationDir, file)).isDirectory()
-      );
-
-      if (migrationFolders.length === 0) {
-        console.log('⚠️ Nenhuma migração encontrada para aplicar.');
-        return;
-      }
-
-      console.log(`🔧 Encontradas ${migrationFolders.length} migrações. Modificando temporariamente...`);
-
-      for (const folder of migrationFolders) {
-        const filePath = path.join(migrationDir, folder, 'migration.sql');
-        if (fs.existsSync(filePath)) {
-          const originalContent = fs.readFileSync(filePath, 'utf-8');
-          originalMigrations.set(filePath, originalContent);
-          
-          const tenantSafeContent = originalContent.replace(/"public"\./g, '');
-          fs.writeFileSync(filePath, tenantSafeContent, 'utf-8');
-        }
-      }
-      console.log('✅ Arquivos de migração modificados.');
-
-      const databaseUrlBase = process.env.DATABASE_URL;
-      if (!databaseUrlBase) {
-        throw new Error('DATABASE_URL não definida no .env');
-      }
-
-      const tenantDatabaseUrl = `${databaseUrlBase}?schema=${this.schemaName}&search_path=${this.schemaName}`;
-
-      console.log('▶️  Executando prisma migrate deploy com as migrações modificadas...');
-      execSync(`pnpm prisma migrate deploy`, {
-          stdio: 'inherit',
-          env: {
-              ...process.env,
-              DATABASE_URL: tenantDatabaseUrl,
-          },
-      });
-      console.log(`✅ Migrações aplicadas com sucesso para o tenant '${this.name}'.`);
-
-    } catch (error) {
-        console.error(`❌ Falha crítica ao aplicar migrações para '${this.name}'.`);
-        throw error;
-    } finally {
-      if (originalMigrations.size > 0) {
-        console.log('🔄 Restaurando arquivos de migração originais...');
-        for (const [filePath, originalContent] of originalMigrations) {
-          fs.writeFileSync(filePath, originalContent, 'utf-8');
-        }
-        console.log('✅ Arquivos de migração restaurados.');
-      }
-    }
   }
 
   private parseArgs(): void {

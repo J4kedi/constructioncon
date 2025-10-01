@@ -1,11 +1,13 @@
-// ATENÇÃO: Este arquivo contém dados mock para popular o banco de dados.
-import {
+import { 
   UserRole,
   StatusObra,
   StatusEtapa,
   CategoriaDespesa,
   UnidadeMedida,
   DocumentType,
+  TipoMovimento
+} from '@prisma/client';
+import type {
   Company,
   User,
   Obra,
@@ -14,22 +16,28 @@ import {
   Supplier,
   Despesa,
   Receita,
-  Estoque,
+  CatalogoItem,
+  EstoqueMovimento,
   Document,
   WorkLog
 } from '@prisma/client';
 
 import { Decimal } from '@prisma/client/runtime/library';
 
-// --- Tipos para o Seed: Omitimos campos que o DB gera automaticamente ---
+// --- Tipos para o Seed: Agora incluímos o ID para ter referências estáveis ---
 type CompanySeed = Omit<Company, 'createdAt' | 'updatedAt'>;
 type UserSeed = Omit<User, 'createdAt' | 'updatedAt'>;
 type ObraSeed = Omit<Obra, 'createdAt' | 'updatedAt'>;
-type EtapaSeed = Omit<Etapa, 'createdAt' | 'updatedAt'>;
+type EtapaSeed = Omit<Etapa, 'progressPercentage'>;
+type CatalogoItemSeed = Omit<CatalogoItem, 'createdAt' | 'updatedAt'>;
+type EstoqueMovimentoSeed = Omit<EstoqueMovimento, 'data'>;
+type DespesaSeed = Omit<Despesa, 'data'>;
+type ReceitaSeed = Omit<Receita, 'data'>;
+type DocumentSeed = Omit<Document, 'uploadedAt'>;
 
 export const companys: CompanySeed[] = [
   {
-    id: 'cmevokh740001356oqodb4idq',
+    id: 'comp-amazonia',
     name: 'Amazônia Engenharia e Construções',
     cnpj: '11.222.333/0001-44',
     logoUrl: '/logos/amazonia-eng.png',
@@ -37,7 +45,7 @@ export const companys: CompanySeed[] = [
     isActive: true,
   },
   {
-    id: 'cmevoo9cz0003356o0i6s3hwi',
+    id: 'comp-parana',
     name: 'Paraná Prime Construtora',
     cnpj: '22.333.444/0001-55',
     logoUrl: '/logos/parana-prime.png',
@@ -45,7 +53,7 @@ export const companys: CompanySeed[] = [
     isActive: true,
   },
   {
-    id: 'cmevoodv90005356o2p7oc6yn',
+    id: 'comp-sul',
     name: 'Sul Forte Empreendimentos',
     cnpj: '33.444.555/0001-66',
     logoUrl: '/logos/sul-forte.png',
@@ -55,12 +63,11 @@ export const companys: CompanySeed[] = [
 ];
 
 export const users: UserSeed[] = [
-  // SUPER_ADMIN
   {
-    id: 'cmevoish30000356ok0uezrvb',
+    id: 'user-kauan',
     name: 'Kauan Pardini Augusto',
     email: 'kauan@constructioncon.com',
-    password: '12345678',
+    password: 'Qwe123@@',
     role: UserRole.SUPER_ADMIN,
     jobTitle: 'Software Engineer',
     phone: '(11) 91111-1111',
@@ -68,12 +75,11 @@ export const users: UserSeed[] = [
     isActive: true,
     companyId: companys[1].id,
   },
-  // COMPANY_ADMIN da Amazônia Engenharia
   {
-    id: 'cmevopcs50009356o2pjfzxlo',
+    id: 'user-mario',
     name: 'Mario Fernando Knaipp',
     email: 'mario@amazoniaeng.com',
-    password: '12345678',
+    password: 'Qwe123@@',
     role: UserRole.COMPANY_ADMIN,
     jobTitle: 'Gerente de Projetos',
     phone: '(92) 92222-2222',
@@ -81,12 +87,11 @@ export const users: UserSeed[] = [
     isActive: true,
     companyId: companys[0].id,
   },
-  // USER da Paraná Prime
   {
-    id: 'cmevopj52000b356o6b82a7bn',
+    id: 'user-eduardo',
     name: 'Eduardo Henrique Camacho',
     email: 'eduardo@paranaprime.com',
-    password: '12345678',
+    password: 'Qwe123@@',
     role: UserRole.USER,
     jobTitle: 'Engenheiro Civil',
     phone: '(41) 93333-3333',
@@ -94,12 +99,11 @@ export const users: UserSeed[] = [
     isActive: true,
     companyId: companys[1].id,
   },
-  // END_CUSTOMER (cliente final)
   {
-    id: 'cmevopojl000d356o9yqaiwgr',
+    id: 'user-caue',
     name: 'Caue Souza',
     email: 'caue.cliente@email.com',
-    password: '12345678',
+    password: 'Qwe123@@',
     role: UserRole.END_CUSTOMER,
     jobTitle: null,
     phone: '(48) 94444-4444',
@@ -111,14 +115,14 @@ export const users: UserSeed[] = [
 
 export const suppliers: Supplier[] = [
   {
-    id: 'clw1f2g3h0001m8igabcd1234',
+    id: 'supp-cimento',
     name: 'Cimento Forte S.A.',
     cnpj: '44.555.666/0001-77',
     phone: '(11) 4004-1000',
     email: 'vendas@cimentoforte.com',
   },
   {
-    id: 'clw1f2g3h0002m8igefgh5678',
+    id: 'supp-madeira',
     name: 'Madeireira Pinheiro',
     cnpj: '55.666.777/0001-88',
     phone: '(41) 3344-5566',
@@ -126,10 +130,12 @@ export const suppliers: Supplier[] = [
   },
 ];
 
-export const addresses: Omit<Address, 'id'>[] = [
+export const addresses: Address[] = [
   {
+    id: 'addr-parana',
     street: 'Rua da Inovação',
     number: '123',
+    complement: 'Bloco A',
     neighborhood: 'Tecnoparque',
     city: 'Curitiba',
     state: 'PR',
@@ -137,11 +143,12 @@ export const addresses: Omit<Address, 'id'>[] = [
     isPrimary: true,
     companyId: companys[1].id,
     supplierId: null,
-    complement: 'Rua do Jorge'
   },
   {
+    id: 'addr-cimento',
     street: 'Avenida Industrial',
     number: '1000',
+    complement: null,
     neighborhood: 'Distrito Industrial',
     city: 'São Paulo',
     state: 'SP',
@@ -149,13 +156,12 @@ export const addresses: Omit<Address, 'id'>[] = [
     isPrimary: true,
     companyId: null,
     supplierId: suppliers[0].id,
-    complement: 'Rua do Jorge'
   },
 ];
 
 export const obras: ObraSeed[] = [
   {
-    id: 'clw1f5k6l0005m8igpqrs7890',
+    id: 'obra-sky-tower',
     nome: 'Edifício Sky Tower',
     address: 'Av. das Torres, 100, Manaus - AM',
     endCustomerName: 'Investidores Anônimos',
@@ -169,7 +175,7 @@ export const obras: ObraSeed[] = [
     endCustomerId: null,
   },
   {
-    id: 'clw1f5k6l0006m8igtuv12345',
+    id: 'obra-araucaria',
     nome: 'Residencial Araucária',
     address: 'Rua das Araucárias, 500, Curitiba - PR',
     endCustomerName: 'Família Silva',
@@ -183,7 +189,7 @@ export const obras: ObraSeed[] = [
     endCustomerId: null,
   },
   {
-    id: 'clw1f5k6l0007m8igwxyz6789',
+    id: 'obra-praia',
     nome: 'Casa de Praia - Caue Souza',
     address: 'Av. Beira Mar, 2024, Florianópolis - SC',
     endCustomerName: 'Caue Souza',
@@ -200,7 +206,7 @@ export const obras: ObraSeed[] = [
 
 export const etapas: EtapaSeed[] = [
   {
-    id: 'clw1g8m9n0008m8igabcd5678',
+    id: 'etapa-fundacao-araucaria',
     nome: 'Fundação e Estrutura',
     custoPrevisto: new Decimal(300000.00),
     dataInicioPrevista: new Date('2023-08-01T00:00:00.000Z'),
@@ -210,16 +216,15 @@ export const etapas: EtapaSeed[] = [
     status: StatusEtapa.CONCLUIDA,
     obraId: obras[1].id,
     responsibleId: users[2].id,
-    progressPercentage: 1.0,
   },
 ];
 
-export const despesas: Omit<Despesa, 'id' | 'createdAt' | 'updatedAt'>[] = [
+export const despesas: DespesaSeed[] = [
   {
+    id: 'desp-cimento-araucaria',
     descricao: 'Compra de 500 sacos de cimento',
     valor: new Decimal(15000.00),
     categoria: CategoriaDespesa.MATERIAL,
-    data: new Date(),
     invoiceUrl: '/invoices/inv-001.pdf',
     obraId: obras[1].id,
     approverId: users[2].id,
@@ -227,77 +232,112 @@ export const despesas: Omit<Despesa, 'id' | 'createdAt' | 'updatedAt'>[] = [
   },
 ];
 
-export const receitas: Omit<Receita, 'id' | 'createdAt' | 'updatedAt'>[] = [
+export const receitas: ReceitaSeed[] = [
   {
+    id: 'rec-parcela1-araucaria',
     descricao: 'Primeira parcela do pagamento - Família Silva',
     valor: new Decimal('250000.00'),
-    data: new Date('2023-08-10T00:00:00.000Z'),
-    obraId: obras[1].id,
-  },
-  {
-    descricao: 'Segunda parcela do pagamento - Família Silva',
-    valor: new Decimal('300000.00'),
-    data: new Date('2024-02-15T00:00:00.000Z'),
     obraId: obras[1].id,
   },
 ];
 
-export const estoque: Omit<Estoque, 'id' | 'createdAt' | 'updatedAt'>[] = [
+export const catalogoItens: CatalogoItemSeed[] = [
   {
-    item: 'Saco de Cimento (50kg)',
-    quantidade: new Decimal('250.00'),
+    id: 'cat-cimento-50kg',
+    nome: 'Cimento Portland CP II 50kg',
+    descricao: 'Cimento para uso geral em construções.',
     unidade: UnidadeMedida.UN,
-    custoUnitario: new Decimal('30.00'),
-    obraId: obras[1].id,
+    categoria: 'Materiais Básicos',
+    custoUnitario: new Decimal(35.50),
+    nivelMinimo: new Decimal(50),
+    companyId: companys[0].id, // Amazônia
+  },
+  {
+    id: 'cat-vergalhao-10mm',
+    nome: 'Vergalhão de Aço CA-50 10mm',
+    descricao: 'Barra de 12 metros.',
+    unidade: UnidadeMedida.UN,
+    categoria: 'Aço',
+    custoUnitario: new Decimal(52.00),
+    nivelMinimo: new Decimal(100),
+    companyId: companys[0].id, // Amazônia
+  },
+  {
+    id: 'cat-tijolo-9f',
+    nome: 'Tijolo Baiano 9 Furos (Milheiro)',
+    descricao: 'Tijolos cerâmicos para alvenaria.',
+    unidade: UnidadeMedida.UN,
+    categoria: 'Alvenaria',
+    custoUnitario: new Decimal(850.00),
+    nivelMinimo: new Decimal(5),
+    companyId: companys[1].id, // Paraná
+  },
+];
+
+export const estoqueMovimentos: EstoqueMovimentoSeed[] = [
+  {
+    id: 'mov-001',
+    catalogoItemId: catalogoItens[0].id, // Cimento
+    quantidade: new Decimal(200),
+    tipo: TipoMovimento.ENTRADA,
+    obraDestinoId: null,
+    usuarioId: users[1].id,
     supplierId: suppliers[0].id,
   },
   {
-    item: 'Viga de Madeira Pinus (6m)',
-    quantidade: new Decimal('50.00'),
-    unidade: UnidadeMedida.UN,
-    custoUnitario: new Decimal('85.00'),
-    obraId: obras[1].id,
+    id: 'mov-002',
+    catalogoItemId: catalogoItens[1].id, // Vergalhão
+    quantidade: new Decimal(500),
+    tipo: TipoMovimento.ENTRADA,
+    obraDestinoId: null,
+    usuarioId: users[1].id,
+    supplierId: suppliers[0].id,
+  },
+  {
+    id: 'mov-003',
+    catalogoItemId: catalogoItens[0].id, // Cimento
+    quantidade: new Decimal(-50),
+    tipo: TipoMovimento.SAIDA,
+    obraDestinoId: obras[0].id, // Edifício Sky Tower
+    usuarioId: users[1].id,
+    supplierId: null,
+  },
+  {
+    id: 'mov-004',
+    catalogoItemId: catalogoItens[2].id, // Tijolo
+    quantidade: new Decimal(20),
+    tipo: TipoMovimento.ENTRADA,
+    obraDestinoId: null,
+    usuarioId: users[2].id,
     supplierId: suppliers[1].id,
+  },
+  {
+    id: 'mov-005',
+    catalogoItemId: catalogoItens[2].id, // Tijolo
+    quantidade: new Decimal(-10),
+    tipo: TipoMovimento.SAIDA,
+    obraDestinoId: obras[1].id, // Residencial Araucária
+    usuarioId: users[2].id,
+    supplierId: null,
   },
 ];
 
-export const documents: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>[] = [
+export const documents: DocumentSeed[] = [
   {
+    id: 'doc-planta-araucaria',
     name: 'Planta Baixa - Térreo',
     url: '/docs/residencial-araucaria/planta-terreo.pdf',
     type: DocumentType.PLANTA_BAIXA,
-    uploadedAt: new Date('2023-07-20T00:00:00.000Z'),
-    obraId: obras[1].id,
-  },
-  {
-    name: 'Alvará de Construção',
-    url: '/docs/residencial-araucaria/alvara.pdf',
-    type: DocumentType.ALVARA,
-    uploadedAt: new Date('2023-07-25T00:00:00.000Z'),
-    obraId: obras[1].id,
-  },
-  {
-    name: 'Nota Fiscal - Cimento Forte S.A.',
-    url: '/invoices/inv-001.pdf', // Corresponde à despesa
-    type: DocumentType.OUTRO,
-    uploadedAt: new Date(),
     obraId: obras[1].id,
   },
 ];
 
-export const workLogs: Omit<WorkLog, 'id' | 'createdAt' | 'updatedAt'>[] = [
+export const workLogs: Omit<WorkLog, 'id'>[] = [
   {
     date: new Date('2024-02-11T00:00:00.000Z'),
-    notes: 'Iniciada a montagem da alvenaria do primeiro pavimento. Equipe completa no local.',
-    photos: ['/logs/photo1.jpg', '/logs/photo2.jpg'],
+    notes: 'Iniciada a montagem da alvenaria do primeiro pavimento.',
+    photos: ['/logs/photo1.jpg'],
     obraId: obras[1].id,
-    authorId: users[2].id, // Log feito por Eduardo
-  },
-  {
-    date: new Date('2024-02-12T00:00:00.000Z'),
-    notes: 'Continuação da alvenaria. Recebimento de material (tijolos) conforme planejado. Clima estável.',
-    photos: ['/logs/photo3.jpg'],
-    obraId: obras[1].id,
-    authorId: users[2].id, // Log feito por Eduardo
+    authorId: users[2].id,
   },
 ];

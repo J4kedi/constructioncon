@@ -1,6 +1,6 @@
 import { getTenantPrismaClient, getPublicPrismaClient } from '../app/lib/prisma.ts';
 import { PrismaClient } from '@prisma/client';
-import { companys, users, suppliers, addresses, obras, etapas, despesas, receitas, estoque, documents, workLogs } from '../app/lib/placeholder-data.ts';
+import { companys, users, suppliers, addresses, obras, etapas, despesas, receitas, catalogoItens, estoqueMovimentos, documents, workLogs } from '../app/lib/placeholder-data.ts';
 import { ALL_FEATURES, DEFAULT_FEATURE_KEYS } from '../app/lib/features.ts';
 import bcrypt from 'bcrypt';
 import { execSync } from 'child_process';
@@ -82,9 +82,7 @@ function applyMigrations(schemaName: string): void {
 }
 
 async function seedTenantData(tenantName: keyof typeof tenantToCompany, prisma: PrismaClient) {
-  const companyName = tenantToCompany[tenantName];
-  const company = companys.find((c) => c.name === companyName);
-
+  const company = companys.find((c) => c.name === tenantToCompany[tenantName]);
   if (!company) {
     console.error(`❌ Empresa para o tenant '${tenantName}' não encontrada.`);
     return;
@@ -93,9 +91,11 @@ async function seedTenantData(tenantName: keyof typeof tenantToCompany, prisma: 
   console.log(`--- Populando dados para o tenant '${tenantName}' via transação ---`);
 
   await prisma.$transaction(async (tx) => {
+    // Limpa em ordem de dependência (quem é referenciado por outros, por último)
+    await tx.estoqueMovimento.deleteMany({});
+    await tx.catalogoItem.deleteMany({});
     await tx.workLog.deleteMany({});
     await tx.document.deleteMany({});
-    await tx.estoque.deleteMany({});
     await tx.receita.deleteMany({});
     await tx.despesa.deleteMany({});
     await tx.etapa.deleteMany({});
@@ -106,44 +106,42 @@ async function seedTenantData(tenantName: keyof typeof tenantToCompany, prisma: 
     await tx.company.deleteMany({});
     console.log('🧹 Dados antigos do schema do tenant limpos.');
 
+    // Recria os dados
     await tx.company.create({ data: company });
     console.log('🏢 Empresa criada:', company.name);
 
     const companyUsers = users.filter((u) => u.companyId === company.id);
     for (const user of companyUsers) {
-      const { companyId, ...userData } = user;
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-      await tx.user.create({
-        data: {
-          ...userData,
-          password: hashedPassword,
-          role: userData.role,
-          company: { connect: { id: companyId } },
-        },
-      });
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+      await tx.user.create({ data: { ...user, password: hashedPassword } });
     }
     console.log(`👤 ${companyUsers.length} usuários criados.`);
-    
+
+    // Filtra dados relevantes para esta empresa
     const companyObras = obras.filter((o) => o.companyId === company.id);
-    const companyEtapas = etapas.filter((e) => companyObras.some((o) => o.id === e.obraId));
+    const companyCatalogo = catalogoItens.filter((i) => i.companyId === company.id);
+    const companyMovimentos = estoqueMovimentos.filter(m => companyCatalogo.some(c => c.id === m.catalogoItemId));
     const companyDespesas = despesas.filter((d) => companyObras.some((o) => o.id === d.obraId));
+    const companySuppliers = suppliers.filter(s => companyDespesas.some(d => d.supplierId === s.id) || companyMovimentos.some(m => m.supplierId === s.id));
+    const companyAddresses = addresses.filter(a => a.companyId === company.id || companySuppliers.some(s => s.id === a.supplierId));
+    const companyEtapas = etapas.filter((e) => companyObras.some((o) => o.id === e.obraId));
     const companyReceitas = receitas.filter((r) => companyObras.some((o) => o.id === r.obraId));
-    const companyEstoque = estoque.filter((e) => companyObras.some((o) => o.id === e.obraId));
     const companyDocuments = documents.filter((d) => companyObras.some((o) => o.id === d.obraId));
     const companyWorkLogs = workLogs.filter((w) => companyObras.some((o) => o.id === w.obraId));
-    const companySuppliers = suppliers.filter(s => companyDespesas.some(d => d.supplierId === s.id) || companyEstoque.some(e => e.supplierId === s.id));
-    const companyAddresses = addresses.filter(a => a.companyId === company.id || companySuppliers.some(s => s.id === a.supplierId));
 
-    await tx.supplier.createMany({ data: companySuppliers });
-    await tx.address.createMany({ data: companyAddresses });
-    await tx.obra.createMany({ data: companyObras });
-    await tx.etapa.createMany({ data: companyEtapas });
-    await tx.despesa.createMany({ data: companyDespesas });
-    await tx.receita.createMany({ data: companyReceitas });
-    await tx.estoque.createMany({ data: companyEstoque });
-    await tx.document.createMany({ data: companyDocuments });
-    await tx.workLog.createMany({ data: companyWorkLogs });
-    console.log(`✅ ${companyObras.length} obras com todos os dados relacionados criadas.`);
+    // Insere os dados em massa
+    await tx.supplier.createMany({ data: companySuppliers, skipDuplicates: true });
+    await tx.address.createMany({ data: companyAddresses, skipDuplicates: true });
+    await tx.obra.createMany({ data: companyObras, skipDuplicates: true });
+    await tx.etapa.createMany({ data: companyEtapas, skipDuplicates: true });
+    await tx.despesa.createMany({ data: companyDespesas, skipDuplicates: true });
+    await tx.receita.createMany({ data: companyReceitas, skipDuplicates: true });
+    await tx.document.createMany({ data: companyDocuments, skipDuplicates: true });
+    await tx.workLog.createMany({ data: companyWorkLogs, skipDuplicates: true });
+    await tx.catalogoItem.createMany({ data: companyCatalogo, skipDuplicates: true });
+    await tx.estoqueMovimento.createMany({ data: companyMovimentos, skipDuplicates: true });
+
+    console.log(`✅ Dados de demonstração para entidades relacionadas criados.`);
   });
 }
 
