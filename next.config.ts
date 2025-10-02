@@ -5,16 +5,14 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     remotePatterns: [{ protocol: 'https', hostname: 'placehold.co', pathname: '/**' }],
   },
-  /** @type {import('next').NextConfig} */
-  // assetPrefix: '/dashboard/estoque',
-  // async rewrites() {
-  //     return [
-  //         {
-  //             source: '/dashboard',
-  //             destination: `${process.env.SUBDOMAIN}/estoque`,
-  //         },
-  //     ];
-  // },
+  async rewrites() {
+    return [
+      {
+        source: '/marketplace/:path*',
+        destination: 'http://localhost:3001/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
