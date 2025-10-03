@@ -6,6 +6,7 @@ import {
     FileText,
     HardHat,
     LucideIcon,
+    ShoppingCart,
 } from 'lucide-react';
 
 export type FeatureUI = {

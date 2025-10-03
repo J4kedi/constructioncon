@@ -8,8 +8,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/marketplace/:path*',
-        destination: 'http://localhost:3001/:path*',
+        source: '/dashboard/marketplace/:path*',
+        destination: 'http://localhost:3001/dashboard/marketplace/:path*',
+      },
+{
+        source: '/proxy/:path*',
+        destination: `http://localhost:8080/proxy/:path*`,
       },
     ];
   },

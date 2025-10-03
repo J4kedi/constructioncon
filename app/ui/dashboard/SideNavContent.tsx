@@ -4,15 +4,15 @@ import { useState } from 'react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
+import {
     Building2, 
     ChevronLeft, 
     ChevronRight, 
     LogOut, 
     Settings2,
+    ShoppingCart,
     LucideIcon
-} from 'lucide-react';
-import { useFeatures } from '@/app/contexts/FeatureContext';
+} from 'lucide-react';import { useFeatures } from '@/app/contexts/FeatureContext';
 import { handleSignOut } from '@/app/actions/auth';
 import { ThemeSwitcher } from '@/app/ui/components/ThemeSwitcher';
 import { User } from 'next-auth';
@@ -111,6 +111,21 @@ export default function SideNavContent({ user, navLinks }: SideNavContentProps) 
       </nav>
 
       <div className="flex-shrink-0 p-4 border-t border-secondary/20">
+        <ul className="mb-2">
+          <li className="px-4 py-1">
+            <Link
+              href="/dashboard/marketplace"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={clsx(
+                'flex items-center py-2.5 px-4 rounded-lg transition-colors text-text/70 bg-secondary/10 hover:bg-secondary/20 hover:text-text'
+              )}
+            >
+              <ShoppingCart className="h-5 w-5 flex-shrink-0" />
+              {!isCollapsed && <span className="ml-3 font-medium whitespace-nowrap">Marketplace</span>}
+            </Link>
+          </li>
+        </ul>
         <div className="flex items-center justify-between w-full mb-4">
             <Link
             href={settingsLink.href}
