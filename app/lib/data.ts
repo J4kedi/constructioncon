@@ -7,7 +7,7 @@ import { FEATURE_UI_MAP } from './feature-map';
 
 const SERVICES = [
   { name: 'BFF', url: 'http://localhost:8080/health' },
-  { name: 'Frontend (Marketplace)', url: 'http://localhost:3001/health' },
+  { name: 'Frontend (Marketplace)', url: 'http://localhost:3001/dashboard/marketplace/health' },
   { name: 'Serviço de Catálogo', url: 'http://localhost:3002/health' },
   { name: 'Serviço de Pedidos', url: 'http://localhost:3020/health' },
   { name: 'Função de Cotação', url: 'http://localhost:3004/health' },
