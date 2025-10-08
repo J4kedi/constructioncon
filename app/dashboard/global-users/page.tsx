@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import { UsersTableSkeleton } from '@/app/ui/components/skeletons';
-import UserDataFetcher from './UserDataFetcher';
+import { InvoiceSkeleton } from '@/app/ui/components/skeletons';
+import GlobalUserDataFetcher from './GlobalUserDataFetcher';
 
 export default async function Page({
   searchParams,
@@ -11,8 +11,8 @@ export default async function Page({
   const currentPage = Number(searchParams?.page) || 1;
 
   return (
-    <Suspense key={query + currentPage} fallback={<UsersTableSkeleton />}>
-      <UserDataFetcher searchParams={searchParams} />
+    <Suspense key={query + currentPage} fallback={<InvoiceSkeleton />}>
+      <GlobalUserDataFetcher searchParams={searchParams} />
     </Suspense>
   );
 }

@@ -58,7 +58,7 @@ export default function UsersTable({ users, currentUserRole }: UsersTableProps) 
             <div className="flow-root">
                 <div className="overflow-x-auto">
                     <div className="inline-block min-w-full align-middle">
-                        <div className="rounded-lg bg-secondary/20 p-2 md:pt-0">
+                        <div className="overflow-hidden rounded-lg bg-background md:pt-0">
                             <table className="min-w-full text-text">
                                 <thead className="rounded-lg text-left text-sm font-normal">
                                     <tr>

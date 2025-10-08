@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function Header() {
     return (
-        <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-800/50">
+        <header className="bg-gradient-to-b from-background to-secondary/5 dark:from-background dark:to-secondary/10 backdrop-blur-sm sticky top-0 z-50 border-b border-secondary/20">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <ConstructionconLogo />

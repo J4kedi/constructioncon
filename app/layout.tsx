@@ -14,7 +14,7 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-br" suppressHydrationWarning>
-      <body className={`${inter.className} antialiased bg-background`}>
+      <body className={`${inter.className} antialiased bg-gradient-to-br from-white to-background dark:bg-gradient-to-br dark:from-secondary/15 dark:to-background`}>
         <Providers attribute="class" defaultTheme="system" enableSystem features={featureKeys}>
           {children}
         </Providers>

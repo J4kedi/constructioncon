@@ -306,19 +306,3 @@ model EstoqueMovimento {
   supplierId      String?
   supplier        Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 }
-
-model Atividade{
-  id  Int   @id @default(autoincrement())
-  descricao String
-  duracaoDias Int
-  predecessoras String
-  cronogramaId Int
-  Cronograma  Cronograma @relation(fields: [cronogramaId], references: [id])
-}
-
-model Cronograma {
-  id         Int         @id @default(autoincrement())
-  tipo       String
-  criadoEm   DateTime    @default(now())
-  atividades Atividade[]
-}

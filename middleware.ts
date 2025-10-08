@@ -8,11 +8,8 @@ const ESTOQUE_MFE_URL = process.env.NEXT_PUBLIC_ESTOQUE_MFE_URL || 'http://local
 export default NextAuth(authConfig).auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth?.user;
+  const userRole = req.auth?.user?.role;
   const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-
-  if (isOnDashboard && !isLoggedIn) {
-    return NextResponse.redirect(new URL(`/login?callbackUrl=${nextUrl.href}`, nextUrl.origin));
-  }
 
   const host = req.headers.get("host");
   if (!host) return NextResponse.next();
@@ -20,7 +17,17 @@ export default NextAuth(authConfig).auth(async (req) => {
   const hostname = host.split(":")[0];
   const subdomain = hostname.endsWith(`.${MAIN_DOMAIN}`)
     ? hostname.replace(`.${MAIN_DOMAIN}`, ""): null;
-  
+
+
+
+  if (isOnDashboard && !isLoggedIn) {
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${nextUrl.href}`, nextUrl.origin));
+  }
+
+  if (isLoggedIn && !isOnDashboard && !subdomain && userRole !== 'SUPER_ADMIN') {
+    return NextResponse.redirect(new URL(`/dashboard`, nextUrl.origin));
+  }
+
   if (subdomain && subdomain !== 'www' && nextUrl.pathname === '/') {
     return NextResponse.redirect(new URL('/login', req.url));
   }

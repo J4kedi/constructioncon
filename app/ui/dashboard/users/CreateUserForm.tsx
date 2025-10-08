@@ -3,7 +3,6 @@
 import { Lock, Mail, TriangleAlert, User, Briefcase } from "lucide-react";
 import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
-import { RegisterState, UserRegistrationSchema } from "@/app/lib/definitions";
 import { registerUser } from "@/app/actions/auth";
 import InputField from "@/app/ui/components/InputField";
 import { UserRole } from "@prisma/client";

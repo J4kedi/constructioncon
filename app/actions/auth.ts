@@ -21,23 +21,29 @@ export const { auth, signIn, signOut } = NextAuth({
         const parsedCredentials = z
           .object({
             email: z.email(),
-            password: z.string().min(6),
-            subdomain: z.string().min(1),
+            password: z.string(),
+            subdomain: z.string().optional(),
           })
           .safeParse(credentials);
 
         if (parsedCredentials.success) {
           const { email, password, subdomain } = parsedCredentials.data;
-          const user = await getUserByCredentials(email, password, subdomain);
+          
+          const targetSubdomain = subdomain || 'admin';
+
+          const user = await getUserByCredentials(email, password, targetSubdomain);
           if (!user) return null;
 
-          const passwordsMatch = await bcrypt.compare(password, user.password);
-          console.log(`\n\n\nUser encontrado ${user} com a sua senha ebaaaa ${password} ó o que da o ${passwordsMatch}\n\n\n`);
+          if (!subdomain && user.role !== 'SUPER_ADMIN') {
+            console.log('Attempted main domain login without SUPER_ADMIN role.');
+            return null;
+          }
 
+          const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) return user;
         }
         
-        console.log('Credenciais inválidas fornecidas.');
+        console.log('Invalid credentials provided.');
         return null;
       },
     }),
@@ -96,11 +102,9 @@ export async function authenticate(
   const host = (await headers()).get('host');
 
   try {
-    if (typeof subdomain !== 'string' || !subdomain) {
-      return { error: 'Não foi possível identificar a empresa. Tente novamente.' };
+    if (subdomain) {
+      formData.append('subdomain', subdomain);
     }
-    
-    formData.append('subdomain', subdomain);
 
     await signIn('credentials', {
       ...Object.fromEntries(formData),
