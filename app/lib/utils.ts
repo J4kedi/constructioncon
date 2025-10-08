@@ -9,7 +9,7 @@ export const formatCurrency = (amount: number) => {
   });
 };
 
-interface RequestContext {
+export interface RequestContext {
   subdomain: string | null;
   tenantId: string | null;
   user: User | undefined;

@@ -1,5 +1,5 @@
 import { auth } from '@/app/actions/auth';
-import { fetchNavLinks } from '@/app/lib/data';
+import { fetchNavLinks } from '@/app/lib/data/nav';
 import SideNavContent from './SideNavContent';
 
 export default async function SideNav() {

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { getRequestContext, RequestContext } from '@/app/lib/utils';
 
 export type FormState = {
   errors?: Record<string, string[] | undefined>;
@@ -10,17 +11,31 @@ export type FormState = {
   success?: boolean;
 };
 
+type RequiredContext = 'subdomain' | 'user';
+
 interface ActionConfig<T extends z.ZodType<any, any>> {
   schema: T;
   formData: FormData;
-  logic: (data: z.infer<T>) => Promise<void>;
+  logic: (data: z.infer<T>, context: RequestContext) => Promise<void>;
   revalidatePath: string;
   redirectPath?: string;
+  requires?: RequiredContext[];
+  successMessage?: string;
 }
 
 export async function executeFormAction<T extends z.ZodType<any, any>>(
   config: ActionConfig<T>
 ): Promise<FormState> {
+  const context = await getRequestContext();
+
+  if (config.requires?.includes('subdomain') && !context.subdomain) {
+    return { message: 'Falha: Subdomínio não identificado.', success: false };
+  }
+
+  if (config.requires?.includes('user') && !context.user?.id) {
+    return { message: 'Falha: Usuário não autenticado.', success: false };
+  }
+
   const validatedFields = config.schema.safeParse(
     Object.fromEntries(config.formData.entries())
   );
@@ -34,12 +49,12 @@ export async function executeFormAction<T extends z.ZodType<any, any>>(
   }
 
   try {
-    await config.logic(validatedFields.data);
+    await config.logic(validatedFields.data, context);
   } catch (error) {
-    console.error('Database Error:', error);
+    console.error('Action Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Não foi possível completar a operação.';
     return {
-      message: `Erro no banco de dados: ${errorMessage}`,
+      message: `Erro: ${errorMessage}`,
       success: false,
     };
   }
@@ -51,7 +66,7 @@ export async function executeFormAction<T extends z.ZodType<any, any>>(
   }
 
   return {
-    message: 'Operação concluída com sucesso!',
+    message: config.successMessage || 'Operação concluída com sucesso!',
     success: true,
   };
 }

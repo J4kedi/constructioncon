@@ -8,21 +8,29 @@ import { z } from 'zod';
 const execAsync = promisify(exec);
 
 const ALLOWED_SCRIPTS: Record<string, { command: string; description: string }> = {
+  'db:provision': {
+    command: 'pnpm db:provision',
+    description: 'Provisiona um novo tenant (requer nome e subdomínio).',
+  },
   'db:cleanup': {
     command: 'pnpm db:cleanup',
     description: 'Limpa os dados de tenants de demonstração ou teste.',
+  },
+  'db:deprovision': {
+    command: 'pnpm db:deprovision',
+    description: 'Desprovisiona um tenant específico (requer subdomínio).',
   },
   'db:seed:public': {
     command: 'pnpm db:seed:public',
     description: 'Popula a tabela `features` no schema public com os dados iniciais.',
   },
-  'db:seed:demo': {
-    command: 'pnpm db:seed:demo',
-    description: 'Popula o banco de dados com dados de demonstração completos.',
-  },
   'db:seed:tenant': {
     command: 'pnpm db:seed:tenant',
     description: 'Popula um tenant específico com dados iniciais (requer subdomínio).',
+  },
+  'db:seed:demo': {
+    command: 'pnpm db:seed:demo',
+    description: 'Popula o banco de dados com dados de demonstração completos.',
   },
   'db:migrate:tenants': {
     command: 'pnpm db:migrate:tenants',
@@ -55,7 +63,7 @@ export async function provisionTenantAction(formData: FormData): Promise<{ succe
   const validation = provisionSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validation.success) {
-    return { success: false, output: validation.error.errors.map(e => e.message).join('\n') };
+    return { success: false, output: validation.error.issues.map(e => e.message).join('\n') };
   }
 
   const { name, subdomain } = validation.data;

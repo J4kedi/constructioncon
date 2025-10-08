@@ -4,12 +4,10 @@ import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { ObraSchema, UpdateObraSchema } from '@/app/lib/definitions';
 import { executeFormAction, FormState } from '@/app/lib/action-handler';
 import { z } from 'zod';
-import { findCompany } from '@/app/lib/data'; // Importa a função compartilhada
-import { getRequestContext } from '@/app/lib/utils';
+import { findCompany } from '@/app/lib/data/tenant';
+
 
 type ObraData = z.infer<typeof ObraSchema>;
-
-// A função findCompany foi movida para data.ts
 
 async function createResidencialObra(data: ObraData, companyId: string, subdomain: string) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
@@ -49,38 +47,36 @@ const creationStrategies: Record<string, (data: ObraData, companyId: string, sub
 };
 
 export async function createObra(prevState: FormState, formData: FormData) {
-  const { subdomain } = await getRequestContext();
-  if (!subdomain) {
-    return { message: 'Falha: Subdomínio não identificado.', success: false };
-  }
-  
   return executeFormAction({
     formData,
     schema: ObraSchema,
+    requires: ['subdomain'],
     revalidatePath: '/dashboard/obras',
     redirectPath: '/dashboard/obras',
-    logic: async (data) => {
-      const company = await findCompany(subdomain);
+    logic: async (data, context) => {
+      const company = await findCompany(context.subdomain!);
       const strategy = creationStrategies[data.obraType];
 
       if (!strategy) {
         throw new Error(`Tipo de obra desconhecido: ${data.obraType}`);
       }
 
-      await strategy(data, company.id, subdomain);
+      await strategy(data, company.id, context.subdomain!);
     },
+    successMessage: 'Obra criada com sucesso!',
   });
 }
 
-export async function updateObra(subdomain: string, prevState: FormState, formData: FormData) {
+export async function updateObra(prevState: FormState, formData: FormData) {
   return executeFormAction({
     formData,
     schema: UpdateObraSchema,
+    requires: ['subdomain'],
     revalidatePath: '/dashboard/obras',
     redirectPath: '/dashboard/obras',
-    logic: async (data) => {
+    logic: async (data, context) => {
       const { id, dataInicio, dataPrevistaFim, ...rest } = data;
-      const tenantPrisma = getTenantPrismaClient(subdomain);
+      const tenantPrisma = getTenantPrismaClient(context.subdomain!);
       
       await tenantPrisma.obra.update({
         where: { id },
@@ -93,5 +89,6 @@ export async function updateObra(subdomain: string, prevState: FormState, formDa
         },
       });
     },
+    successMessage: 'Obra atualizada com sucesso!',
   });
 }

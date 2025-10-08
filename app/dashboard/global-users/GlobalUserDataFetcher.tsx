@@ -1,4 +1,4 @@
-import { fetchFilteredGlobalUsers, fetchGlobalUsersTotalPages } from '@/app/lib/data';
+import { fetchFilteredGlobalUsers, fetchGlobalUsersTotalPages } from '@/app/lib/data/user';
 import GlobalUsersPageContent from '@/app/ui/dashboard/super-admin/global-users-page';
 
 export default async function GlobalUserDataFetcher({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {

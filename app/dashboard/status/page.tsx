@@ -1,4 +1,4 @@
-import { getSystemHealthStatus } from '@/app/lib/data';
+import { getSystemHealthStatus } from '@/app/lib/data/system';
 import StatusCard from '@/app/ui/dashboard/super-admin/status-card';
 
 export default async function Page() {

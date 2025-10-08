@@ -6,6 +6,7 @@ import { deprovisionTenantAction } from '@/app/actions/scripts.actions';
 import Modal from '@/app/ui/components/Modal';
 import { Terminal, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Table from '@/app/ui/components/Table';
 
 export default function TenantsTable({ tenants }: { tenants: Tenant[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,44 +44,27 @@ export default function TenantsTable({ tenants }: { tenants: Tenant[] }) {
     });
   };
 
-  return (
-    <div className="w-full">
-      <div className="flow-root">
-        <div className="overflow-x-auto">
-          <div className="inline-block min-w-full align-middle">
-            <div className="overflow-hidden rounded-lg bg-background md:pt-0">
-              <table className="min-w-full text-text">
-                <thead className="rounded-lg text-left text-sm font-normal">
-                  <tr>
-                    <th scope="col" className="px-4 py-5 font-medium sm:pl-6">Nome da Empresa</th>
-                    <th scope="col" className="px-3 py-5 font-medium">Subdomínio</th>
-                    <th scope="col" className="px-3 py-5 font-medium">Schema</th>
-                    <th scope="col" className="px-3 py-5 font-medium">Data de Criação</th>
-                    <th scope="col" className="relative py-3 pl-6 pr-3"><span className="sr-only">Ações</span></th>
-                  </tr>
-                </thead>
-                <tbody className="bg-background">
-                  {tenants.map((tenant) => (
-                    <tr key={tenant.id} className="w-full border-b border-secondary/20 py-3 text-sm last-of-type:border-none">
-                      <td className="whitespace-nowrap py-3 pl-6 pr-3">{tenant.name}</td>
-                      <td className="whitespace-nowrap px-3 py-3">{tenant.subdomain}</td>
-                      <td className="whitespace-nowrap px-3 py-3">{tenant.schemaName}</td>
-                      <td className="whitespace-nowrap px-3 py-3">{new Date(tenant.createdAt).toLocaleDateString('pt-BR')}</td>
-                      <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                        <div className="flex justify-end gap-3">
-                          <button onClick={() => openConfirmationModal(tenant)} className="text-red-500 hover:text-red-700">
-                            <Trash2 size={20} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+  const headers = ['Nome da Empresa', 'Subdomínio', 'Schema', 'Data de Criação'];
+
+  const renderRow = (tenant: Tenant) => (
+    <tr key={tenant.id} className="w-full border-b border-secondary/20 py-3 text-sm last-of-type:border-none">
+      <td className="whitespace-nowrap py-3 pl-6 pr-3">{tenant.name}</td>
+      <td className="whitespace-nowrap px-3 py-3">{tenant.subdomain}</td>
+      <td className="whitespace-nowrap px-3 py-3">{tenant.schemaName}</td>
+      <td className="whitespace-nowrap px-3 py-3">{new Date(tenant.createdAt).toLocaleDateString('pt-BR')}</td>
+      <td className="whitespace-nowrap py-3 pl-6 pr-3">
+        <div className="flex justify-end gap-3">
+          <button onClick={() => openConfirmationModal(tenant)} className="text-red-500 hover:text-red-700">
+            <Trash2 size={20} />
+          </button>
         </div>
-      </div>
+      </td>
+    </tr>
+  );
+
+  return (
+    <>
+      <Table headers={headers} data={tenants} renderRow={renderRow} hasActions={true} />
 
       {selectedTenant && (
         <Modal isOpen={isModalOpen} onClose={closeModal} title={`Remover Tenant: ${selectedTenant.name}`}>
@@ -121,6 +105,6 @@ export default function TenantsTable({ tenants }: { tenants: Tenant[] }) {
             )}
         </Modal>
       )}
-    </div>
+    </>
   );
 }

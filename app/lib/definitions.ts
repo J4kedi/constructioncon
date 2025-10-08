@@ -82,3 +82,7 @@ export const EstoqueSaidaSchema = z.object({
   quantidade: z.coerce.number().gt(0, { message: "A quantidade deve ser maior que zero." }),
   obraDestinoId: z.string().min(1, { message: "Você deve selecionar uma obra de destino." }),
 });
+
+export const DeleteUserSchema = z.object({
+  id: z.string(),
+});

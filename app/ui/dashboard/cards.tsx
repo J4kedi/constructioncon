@@ -1,7 +1,7 @@
 import { Building, Users, Wallet, TrendingDown } from "lucide-react";
 import { roboto } from "../fonts";
-import { fetchDashboardData } from "@/app/lib/data";
 import React from "react";
+import { fetchDashboardData } from "@/app/lib/data/dashboard";
 
 // O CardWrapper agora é responsável por buscar os dados e passar os ícones corretos
 export default async function CardWrapper({ subdomain }: { subdomain: string; }) {

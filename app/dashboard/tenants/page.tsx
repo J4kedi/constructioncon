@@ -1,4 +1,4 @@
-import { getAllTenants } from '@/app/lib/data';
+import { getAllTenants } from '@/app/lib/data/tenant';
 import TenantsTable from '@/app/ui/dashboard/super-admin/tenants-table';
 import ProvisionTenantForm from '@/app/ui/dashboard/super-admin/provision-tenant-form';
 

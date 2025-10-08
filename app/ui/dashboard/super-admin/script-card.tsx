@@ -36,7 +36,7 @@ export default function ScriptCard({ scriptKey, description }: ScriptCardProps) 
         <button
           onClick={handleRunScript}
           disabled={isLoading}
-          className="flex items-center gap-2 bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors shadow-md disabled:bg-gray-500 disabled:cursor-wait"
+          className="flex items-center gap-2 bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors shadow-md disabled:bg-gray-500 disabled:cursor-wait cursor-pointer"
         >
           <Play size={16} />
           {isLoading ? 'Executando...' : 'Executar'}

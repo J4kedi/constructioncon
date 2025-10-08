@@ -6,7 +6,6 @@ export const mainNavLinks = [
   { href: '#testimonials', label: 'Depoimentos' },
   { href: '#pricing', label: 'Preços' },
   { href: '#contact', label: 'Contato' },
-  { href : '#login', label : 'Login'}
 ];
 
 export const features = [

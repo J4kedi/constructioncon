@@ -1,4 +1,4 @@
-import { getAllTenants, getAllUsersAcrossTenants } from '@/app/lib/data';
+import { getAllTenants, getAllUsersAcrossTenants } from '@/app/lib/data/tenant';
 
 export default async function SuperAdminDashboard() {
   const tenants = await getAllTenants();

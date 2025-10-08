@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod';
-import { getUserByCredentials } from '@/app/lib/data';
+import { getUserByCredentials } from '@/app/lib/data/user';
 import { getTenantPrismaClient } from '@/app/lib/prisma';
 import bcrypt from 'bcrypt';
 import { redirect } from 'next/navigation';

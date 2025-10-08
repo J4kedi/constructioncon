@@ -7,13 +7,11 @@ import { FormState } from '@/app/lib/action-handler';
 
 interface EditObraFormProps {
   obra: Obra;
-  subdomain: string;
 }
 
-export default function EditObraForm({ obra, subdomain }: EditObraFormProps) {
+export default function EditObraForm({ obra }: EditObraFormProps) {
   const initialState: FormState = { errors: {}, message: null };
-  const updateObraWithTenant = updateObra.bind(null, subdomain);
-  const [state, dispatch] = useFormState(updateObraWithTenant, initialState);
+  const [state, dispatch] = useFormState(updateObra, initialState);
 
   return (
     <form action={dispatch}>
