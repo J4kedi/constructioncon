@@ -8,7 +8,8 @@ import { useState } from 'react';
 import Modal from '@/app/ui/components/Modal';
 import EditUserForm from './EditUserForm';
 import Table from '@/app/ui/components/Table';
-import Badge, { type BadgeVariant } from '@/app/ui/components/Badge';
+import { Badge, badgeVariants } from '@/app/ui/components/Badge';
+import { type VariantProps } from 'class-variance-authority';
 
 type User = Prisma.UserGetPayload<{}>;
 
@@ -17,11 +18,13 @@ type UsersTableProps = {
     currentUserRole?: UserRole;
 };
 
+type BadgeVariant = VariantProps<typeof badgeVariants>['variant'];
+
 const roleVariantMap: Record<UserRole, BadgeVariant> = {
-    USER: 'primary',
-    END_CUSTOMER: 'accent',
-    COMPANY_ADMIN: 'danger',
-    SUPER_ADMIN: 'warning',
+    USER: 'default',
+    END_CUSTOMER: 'outline',
+    COMPANY_ADMIN: 'secondary',
+    SUPER_ADMIN: 'destructive',
 };
 
 export default function UsersTable({ users, currentUserRole }: UsersTableProps) {
@@ -59,10 +62,9 @@ export default function UsersTable({ users, currentUserRole }: UsersTableProps) 
             <td className="whitespace-nowrap px-3 py-3">{user.email}</td>
             <td className="whitespace-nowrap px-3 py-3">{user.jobTitle || 'N/A'}</td>
             <td className="whitespace-nowrap px-3 py-3">
-                <Badge 
-                    text={user.role.replace('_', ' ').toLowerCase()} 
-                    variant={roleVariantMap[user.role] || 'neutral'} 
-                />
+                <Badge variant={roleVariantMap[user.role] || 'outline'}>
+                    {user.role.replace('_', ' ').toLowerCase()}
+                </Badge>
             </td>
             <td className="whitespace-nowrap px-4 py-3">{new Date(user.createdAt).toLocaleDateString('pt-BR')}</td>
             <td className="whitespace-nowrap py-3 pl-6 pr-3">

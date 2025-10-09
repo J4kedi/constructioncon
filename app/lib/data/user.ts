@@ -4,6 +4,31 @@ import { UserQueryBuilder } from "./query/UserQueryBuilder";
 import type { User, UserRole } from "@prisma/client";
 import { getAllTenants } from './tenant';
 
+const ITEMS_PER_PAGE = 8;
+
+export async function fetchFilteredUsers(subdomain: string, query: string, currentPage: number) {
+  try {
+    const tenantPrisma = getTenantPrismaClient(subdomain);
+    const userQueryBuilder = new UserQueryBuilder();
+    const queryArgs = userQueryBuilder
+      .withSearch(query)
+      .withPage(currentPage)
+      .build();
+
+    const [users, totalCount] = await tenantPrisma.$transaction([
+      tenantPrisma.user.findMany(queryArgs),
+      tenantPrisma.user.count({ where: queryArgs.where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+    return { users, totalPages };
+
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch filtered users.');
+  }
+}
+
 export async function getUserByCredentials(email, password, subdomain) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
   try {
@@ -55,22 +80,6 @@ export async function fetchPageUsers(subdomain: string) {
     return users;
 }
 
-export async function fetchFilteredUsers(subdomain: string, query: string, currentPage: number) {
-    try {
-        const tenantPrisma = getTenantPrismaClient(subdomain);
-        const queryArgs = new UserQueryBuilder()
-            .withSearch(query)
-            .withPage(currentPage)
-            .build();
-
-        const users = await tenantPrisma.user.findMany(queryArgs);
-        return users;
-    } catch (error) {
-        console.error('Database Error:', error);
-        throw new Error('Failed to fetch filtered users.');
-    }
-}
-
 export async function fetchUsersTotalPages(subdomain: string, query: string) {
     try {
         const tenantPrisma = getTenantPrismaClient(subdomain);
@@ -99,8 +108,6 @@ export async function fetchUserById(subdomain: string, id: string) {
     throw new Error('Failed to fetch user.');
   }
 }
-
-const ITEMS_PER_PAGE = 8;
 
 async function fetchUsersFromTenant(tenant, query) {
   try {

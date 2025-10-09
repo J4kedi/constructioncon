@@ -1,7 +1,13 @@
 import { LucideIcon } from 'lucide-react';
 import { InputHTMLAttributes } from 'react';
+import { cva } from 'class-variance-authority';
+import { clsx } from 'clsx';
 
-interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+const inputVariants = cva(
+  'w-full pl-10 pr-4 py-2 bg-secondary/20 border border-secondary/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all'
+);
+
+export interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
   name: string;
   label: string;
@@ -9,7 +15,7 @@ interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   errors?: string[];
 }
 
-export default function InputField({ id, name, label, Icon, errors, ...props }: InputFieldProps) {
+export default function InputField({ id, name, label, Icon, className, errors, ...props }: InputFieldProps) {
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-medium text-text mb-1">
@@ -20,8 +26,9 @@ export default function InputField({ id, name, label, Icon, errors, ...props }: 
         <input
           id={id}
           name={name}
+          data-testid={`input-${id}`}
           {...props}
-          className="w-full pl-10 pr-4 py-2 bg-secondary/20 border border-secondary/50 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          className={clsx(inputVariants({ className }))}
           aria-describedby={`${id}-error`}
         />
       </div>

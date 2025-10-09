@@ -1,23 +1,20 @@
 'use client';
 
 import { Mail, Lock, TriangleAlert } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useState } from "react"; // Corrigido
 import { useFormStatus } from 'react-dom';
 import { LoginState } from '@/app/lib/definitions';
 import { authenticate } from '@/app/actions/auth';
 import InputField from "./InputField";
+import { Button } from './Button';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-accent transition-all duration-300 shadow-lg hover:shadow-primary/40 disabled:bg-gray-500 disabled:cursor-not-allowed"
-    >
+    <Button type="submit" disabled={pending} className="w-full">
       {pending ? 'Entrando...' : 'Entrar'}
-    </button>
+    </Button>
   );
 }
 
@@ -25,10 +22,10 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   
   const initialState: LoginState = {};
-  const [state, dispatch] = useActionState(authenticate, initialState);
+  const [state, dispatch] = useActionState(authenticate, initialState); // Corrigido
 
   return (
-    <main className="bg-background flex items-center justify-center py-16 sm:py-24">
+    <main className="bg-background flex items-center justify-center py-16 sm:py-24 min-h-screen">
       <div className="bg-background dark:bg-gradient-to-br dark:from-secondary/50 dark:to-background rounded-2xl shadow-2xl w-full max-w-lg p-8 border border-secondary/20">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-text">Acesse sua Conta</h1>
@@ -57,7 +54,6 @@ export default function LoginForm() {
               required
             />
 
-            {/* Checkbox para mostrar senha */}
             <div className="flex items-center">
               <input
                 id="showPassword"
@@ -72,7 +68,6 @@ export default function LoginForm() {
             </div>
           </div>
 
-          {/* Exibição de Erro vindo da Server Action */}
           {state?.error && (
             <div className="flex items-center gap-2 mt-4 text-red-500 bg-red-500/10 p-3 rounded-lg">
                 <TriangleAlert className="h-5 w-5" />
@@ -80,7 +75,6 @@ export default function LoginForm() {
             </div>
           )}
 
-          {/* Botão Entrar */}
           <div className="mt-8">
             <SubmitButton />
           </div>

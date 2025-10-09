@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useEffect, useActionState } from 'react'; // Corrigido
 import { useFormStatus } from 'react-dom';
-import { TriangleAlert } from 'lucide-react';
 import { createObra } from '@/app/actions/obra.actions';
 import { User } from '@prisma/client';
 import { FormState } from '@/app/lib/action-handler';
+import { Button } from '@/app/ui/components/Button';
+import { toast } from 'sonner';
 
 interface CreateObraFormProps {
   customers: User[];
@@ -15,26 +16,31 @@ interface CreateObraFormProps {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:bg-gray-400">
+    <Button type="submit" disabled={pending}>
       {pending ? 'Criando Obra...' : 'Criar Obra'}
-    </button>
+    </Button>
   );
 }
 
 export default function CreateObraForm({ customers, onClose }: CreateObraFormProps) {
   const initialState: FormState = { errors: {}, message: null };
-  const [state, dispatch] = useActionState(createObra, initialState);
+  const [state, dispatch] = useActionState(createObra, initialState); // Corrigido
 
   useEffect(() => {
-    if (state.success && onClose) {
-      onClose();
+    if (state.success === true && state.message) {
+      toast.success(state.message);
+      if (onClose) {
+        onClose();
+      }
     }
-  }, [state.success, onClose]);
+    if (state.success === false && state.message) {
+      toast.error(state.message);
+    }
+  }, [state, onClose]);
 
   return (
     <form action={dispatch}>
       <div className="rounded-md bg-background p-4 md:p-6 space-y-4">
-        
         <div>
           <label htmlFor="obraType" className="mb-2 block text-sm font-medium text-text">Tipo da Obra</label>
           <select name="obraType" id="obraType" className="block w-full appearance-none rounded-md border border-secondary/20 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-50 py-2 px-3 text-sm">
@@ -68,13 +74,6 @@ export default function CreateObraForm({ customers, onClose }: CreateObraFormPro
             <input id="dataPrevistaFim" name="dataPrevistaFim" type="date" className="block w-full rounded-md border border-secondary/20 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-50 py-2 px-3 text-sm" />
           </div>
         </div>
-
-        {state.message && (
-          <div className="flex items-center gap-2 mt-2 text-sm text-red-500 bg-red-500/10 p-3 rounded-lg">
-            <TriangleAlert className="h-5 w-5" />
-            <p>{state.message}</p>
-          </div>
-        )}
 
         <div className="mt-6 flex justify-end gap-4">
           <SubmitButton />

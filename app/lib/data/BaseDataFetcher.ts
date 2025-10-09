@@ -1,5 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 
+interface ISearchableQueryBuilder {
+  withSearch(query?: string): this;
+  withPage(page: number): this;
+  sortBy(sort?: string): this;
+  build(): any;
+}
+
 export abstract class BaseDataFetcher<T> {
   protected prisma: PrismaClient;
 
@@ -15,7 +22,7 @@ export abstract class BaseDataFetcher<T> {
     }
     const dbModel = this.prisma[modelName as keyof PrismaClient];
 
-    const queryArgs = this.buildQueryArgs(searchParams);
+    const queryArgs = await this.buildQueryArgs(searchParams);
 
     const [data, totalCount] = await this.prisma.$transaction([
       (dbModel as any).findMany(queryArgs),
@@ -27,6 +34,25 @@ export abstract class BaseDataFetcher<T> {
     return { data: data as T[], totalPages };
   }
 
+  protected async buildQueryArgs(searchParams: { [key: string]: string | undefined }): Promise<any> {
+    const resolvedSearchParams = await Promise.resolve(searchParams);
+    const page = Number(resolvedSearchParams?.page) || 1;
+    const query = resolvedSearchParams?.query;
+    const sort = resolvedSearchParams?.sort;
+
+    const builder = this.getQueryBuilder();
+    const includeArgs = this.getIncludeArgs();
+
+    const queryArgs = builder
+      .withSearch(query)
+      .withPage(page)
+      .sortBy(sort)
+      .build();
+
+    return { ...queryArgs, ...includeArgs };
+  }
+
   protected abstract getModelName(): string;
-  protected abstract buildQueryArgs(searchParams: { [key: string]: string | undefined }): any;
+  protected abstract getQueryBuilder(): ISearchableQueryBuilder;
+  protected abstract getIncludeArgs(): object;
 }

@@ -1,32 +1,57 @@
 'use client';
 
+import { useState } from 'react';
 import { StatusObra } from '@prisma/client';
 import { Pencil } from 'lucide-react';
-import Link from 'next/link';
 import Table from '@/app/ui/components/Table';
-import Badge, { type BadgeVariant } from '@/app/ui/components/Badge';
+import { Badge, type VariantProps } from '@/app/ui/components/Badge';
+import Modal from '@/app/ui/components/Modal';
+import EditObraForm from './EditObraForm';
+import { getObraDetailsAction } from '@/app/actions/obra.actions';
+import { PlainObra } from '@/app/lib/definitions'; // Importado
 
-export type PlainObra = {
-    id: string;
-    nome: string;
-    endCustomerName: string;
-    status: StatusObra;
-    dataInicio: string;
-};
+type BadgeVariant = VariantProps<typeof Badge>['variant'];
+
+// O tipo PlainObra foi removido daqui
+
+type FullObraForForm = Awaited<ReturnType<typeof getObraDetailsAction>>;
 
 type ObrasTableProps = {
     obras: PlainObra[];
 };
 
 const statusVariantMap: Record<StatusObra, BadgeVariant> = {
-    PLANEJAMENTO: 'primary',
-    EM_ANDAMENTO: 'warning',
-    CONCLUIDA: 'success',
-    PAUSADA: 'neutral',
-    CANCELADA: 'danger',
+    PLANEJAMENTO: 'default',
+    EM_ANDAMENTO: 'secondary',
+    CONCLUIDA: 'default', 
+    PAUSADA: 'outline',
+    CANCELADA: 'destructive',
 };
 
 export default function ObrasTable({ obras }: ObrasTableProps) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedObra, setSelectedObra] = useState<FullObraForForm | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleEditClick = async (obraId: string) => {
+        setIsLoading(true);
+        try {
+            const obraDetails = await getObraDetailsAction(obraId);
+            setSelectedObra(obraDetails);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error("Failed to fetch obra details:", error);
+            alert("Não foi possível carregar os dados da obra.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedObra(null);
+    };
+
     const headers = ['Nome da Obra', 'Cliente', 'Status', 'Data de Início'];
 
     const renderRow = (obra: PlainObra) => (
@@ -38,23 +63,31 @@ export default function ObrasTable({ obras }: ObrasTableProps) {
                 {obra.endCustomerName}
             </td>
             <td className="whitespace-nowrap px-3 py-3">
-                <Badge 
-                    text={obra.status.replace('_', ' ').toLowerCase()} 
-                    variant={statusVariantMap[obra.status] || 'neutral'} 
-                />
+                <Badge variant={statusVariantMap[obra.status] || 'outline'}>
+                    {obra.status.replace('_', ' ').toLowerCase()}
+                </Badge>
             </td>
             <td className="whitespace-nowrap px-4 py-3">
                 {obra.dataInicio} 
             </td>
             <td className="whitespace-nowrap py-3 pl-6 pr-3">
                 <div className="flex justify-end gap-3">
-                    <Link href={`/dashboard/obras/${obra.id}/edit`} className="rounded-md p-2 hover:bg-secondary/20 cursor-pointer">
+                    <button onClick={() => handleEditClick(obra.id)} className="rounded-md p-2 hover:bg-secondary/20 cursor-pointer" disabled={isLoading}>
                         <Pencil className="w-4" />
-                    </Link>
+                    </button>
                 </div>
             </td>
         </tr>
     );
 
-    return <Table headers={headers} data={obras} renderRow={renderRow} hasActions={true} />;
+    return (
+        <>
+            <Table headers={headers} data={obras} renderRow={renderRow} hasActions={true} />
+            {selectedObra && (
+                <Modal isOpen={isModalOpen} onClose={closeModal} title={`Editar Obra: ${selectedObra.nome}`}>
+                    <EditObraForm obra={selectedObra} />
+                </Modal>
+            )}
+        </>
+    );
 }

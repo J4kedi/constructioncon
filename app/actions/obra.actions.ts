@@ -5,7 +5,16 @@ import { ObraSchema, UpdateObraSchema } from '@/app/lib/definitions';
 import { executeFormAction, FormState } from '@/app/lib/action-handler';
 import { z } from 'zod';
 import { findCompany } from '@/app/lib/data/tenant';
+import { fetchObraById } from '@/app/lib/data/obra.ts';
+import { getRequestContext } from '@/app/lib/server-utils.ts';
 
+export async function getObraDetailsAction(id: string) {
+    const { subdomain } = await getRequestContext();
+    if (!subdomain) {
+        throw new Error("Subdomínio não identificado.");
+    }
+    return await fetchObraById(id, subdomain);
+}
 
 type ObraData = z.infer<typeof ObraSchema>;
 

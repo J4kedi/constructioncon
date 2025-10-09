@@ -8,6 +8,15 @@ export abstract class BaseScript {
     this.prisma = getPublicPrismaClient();
   }
 
+  protected validateSubdomain(subdomain: string): void {
+    const subdomainRegex = /^[a-z0-9-]+$/;
+    if (!subdomainRegex.test(subdomain)) {
+      console.error('Erro: O subdomínio fornecido é inválido.');
+      console.error('O subdomínio deve conter apenas letras minúsculas, números e hífens (ex: minha-construtora).');
+      process.exit(1);
+    }
+  }
+
   public async execute(): Promise<void> {
     try {
       console.log(`--- Iniciando ${this.getScriptName()} ---`);

@@ -1,10 +1,9 @@
 'use client';
 
-import { useFormState } from 'react-dom';
 import { deleteUser } from '@/app/actions/user.actions';
 import { Trash2 } from 'lucide-react';
 import { FormState } from '@/app/lib/action-handler';
-import { useEffect } from 'react';
+import { useActionState, useEffect } from 'react';
 
 type DeleteUserProps = {
   id: string;
@@ -12,16 +11,12 @@ type DeleteUserProps = {
 
 export function DeleteUser({ id }: DeleteUserProps) {
   const initialState: FormState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(deleteUser, initialState);
+  const [state, dispatch] = useActionState(deleteUser, initialState);
 
   useEffect(() => {
     if (state.message && !state.success) {
       alert(`Erro: ${state.message}`);
     }
-    // Optionally, you could show a success message as well
-    // if (state.message && state.success) {
-    //   alert(state.message);
-    // }
   }, [state]);
 
   return (

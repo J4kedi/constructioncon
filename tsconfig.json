@@ -28,13 +28,14 @@
       "@/ui/*": ["ui/*"],
       "@/lib/*": ["lib/*"]
     },
+    "types": ["jest", "node"]
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "jest.config.mjs"  ],
   "exclude": [
     "node_modules"
   ]

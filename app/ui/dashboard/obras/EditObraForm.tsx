@@ -1,17 +1,27 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import React from 'react';
+import { useActionState } from 'react';
 import { updateObra } from '@/app/actions/obra.actions';
-import type { Obra } from '@prisma/client';
 import { FormState } from '@/app/lib/action-handler';
 
+// The prop is now a plain object, not a Prisma type, due to serialization
 interface EditObraFormProps {
-  obra: Obra;
+  obra: {
+    id: string;
+    nome: string;
+    endCustomerName: string;
+    orcamentoTotal: number;
+    // Dates are now strings
+    dataInicio: string;
+    dataPrevistaFim: string;
+    address: string | null;
+  };
 }
 
 export default function EditObraForm({ obra }: EditObraFormProps) {
   const initialState: FormState = { errors: {}, message: null };
-  const [state, dispatch] = useFormState(updateObra, initialState);
+  const [state, dispatch] = useActionState(updateObra, initialState);
 
   return (
     <form action={dispatch}>
@@ -67,7 +77,7 @@ export default function EditObraForm({ obra }: EditObraFormProps) {
             name="orcamentoTotal"
             type="number"
             step="0.01"
-            defaultValue={obra.orcamentoTotal.toNumber()}
+            defaultValue={obra.orcamentoTotal} // .toNumber() removed
             className="block w-full rounded-md border border-secondary/20 bg-input py-2 px-3 text-sm placeholder:text-gray-500"
             aria-describedby="orcamentoTotal-error"
           />

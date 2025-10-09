@@ -1,5 +1,4 @@
 import { BaseScript } from './BaseScript.ts';
-import { DEFAULT_FEATURE_KEYS } from '../app/lib/features.ts';
 import { runTenantSafeDeploy } from '../app/lib/migration-utils.ts';
 
 class ApplyMigrationsScript extends BaseScript {

@@ -1,6 +1,6 @@
 import { BaseDataFetcher } from './BaseDataFetcher';
-import { ObraQueryBuilder } from '../obraQueryBuilder';
 import { Prisma } from '@prisma/client';
+import { ObraQueryBuilder } from './query/ObraQueryBuilder';
 
 type ObraWithEtapas = Prisma.ObraGetPayload<{ include: { etapas: true } }>;
 
@@ -9,21 +9,11 @@ export class ObraFetcher extends BaseDataFetcher<ObraWithEtapas> {
     return 'obra';
   }
 
-  protected buildQueryArgs(searchParams: { [key: string]: string | undefined }): any {
-    const page = Number(searchParams?.page) || 1;
-    const query = searchParams?.query;
-    const sort = searchParams?.sort;
+  protected getQueryBuilder(): ObraQueryBuilder {
+    return new ObraQueryBuilder();
+  }
 
-    const obraQueryBuilder = new ObraQueryBuilder();
-
-    const queryArgs = obraQueryBuilder
-      .withSearch(query)
-      .withPage(page)
-      .sortBy(sort)
-      .build();
-      
-    queryArgs.include = { etapas: true };
-
-    return queryArgs;
+  protected getIncludeArgs(): object {
+    return { include: { etapas: true } };
   }
 }

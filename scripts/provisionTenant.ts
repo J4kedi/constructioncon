@@ -74,8 +74,12 @@ class ProvisionTenantScript extends BaseScript {
       console.error('Exemplo: ts-node scripts/provisionTenant.ts "Minha Construtora" minha-construtora');
       process.exit(1);
     }
+
+    const subdomain = args[1];
+    this.validateSubdomain(subdomain);
+
     this.name = args[0];
-    this.subdomain = args[1];
+    this.subdomain = subdomain;
     this.schemaName = `tenant_${this.subdomain}`;
   }
 }

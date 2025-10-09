@@ -44,7 +44,11 @@ class DeprovisionTenantScript extends BaseScript {
       console.error('Uso: ts-node scripts/deprovisionTenant.ts <subdominio>');
       process.exit(1);
     }
-    this.subdomain = args[0];
+
+    const subdomain = args[0];
+    this.validateSubdomain(subdomain);
+
+    this.subdomain = subdomain;
   }
 }
 

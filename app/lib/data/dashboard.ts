@@ -1,6 +1,24 @@
 import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { formatCurrency } from "../utils";
+import { fetchFinancialOverview } from './financeiro';
 
+// Função para os cards do topo do overview (nova)
+export async function fetchSummaryData(subdomain: string) {
+  const tenantPrisma = getTenantPrismaClient(subdomain);
+
+  const financialData = await fetchFinancialOverview(subdomain);
+  const activeObrasCount = await tenantPrisma.obra.count({
+    where: { status: 'EM_ANDAMENTO' },
+  });
+
+  return {
+    faturamento: financialData.faturamento,
+    lucroBruto: financialData.lucroBruto,
+    activeObrasCount,
+  };
+}
+
+// Função antiga, pode ser obsoleta
 export async function fetchDashboardData(subdomain: string) {
   try {
     const tenantPrisma = getTenantPrismaClient(subdomain);

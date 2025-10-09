@@ -1,6 +1,6 @@
 import { BaseDataFetcher } from './BaseDataFetcher';
-import { UserQueryBuilder } from '@/app/lib/queryBuilder';
 import { Prisma } from '@prisma/client';
+import { UserQueryBuilder } from './query/UserQueryBuilder';
 
 type UserWithCompany = Prisma.UserGetPayload<{ include: { company: true } }>;
 
@@ -9,21 +9,11 @@ export class UserFetcher extends BaseDataFetcher<UserWithCompany> {
     return 'user';
   }
 
-  protected buildQueryArgs(searchParams: { [key: string]: string | undefined }): any {
-    const page = Number(searchParams?.page) || 1;
-    const query = searchParams?.query;
-    const sort = searchParams?.sort;
+  protected getQueryBuilder(): UserQueryBuilder {
+    return new UserQueryBuilder();
+  }
 
-    const userQueryBuilder = new UserQueryBuilder();
-
-    const queryArgs = userQueryBuilder
-      .withSearch(query)
-      .withPage(page)
-      .sortBy(sort)
-      .build();
-
-    queryArgs.include = { company: true };
-
-    return queryArgs;
+  protected getIncludeArgs(): object {
+    return { include: { company: true } };
   }
 }

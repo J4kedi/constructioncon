@@ -10,7 +10,7 @@ import NextAuth, { AuthError } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { LoginState, UserRegistrationSchema } from '@/app/lib/definitions';
-import { getRequestContext } from '@/app/lib/utils';
+import { getRequestContext } from '@/app/lib/server-utils';
 import { executeFormAction, FormState } from '@/app/lib/action-handler';
 
 export const { auth, signIn, signOut } = NextAuth({

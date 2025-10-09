@@ -1,23 +1,24 @@
 'use client';
 
 import { Lock, Mail, TriangleAlert, User } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useState } from "react"; // Corrigido
 import { useFormStatus } from "react-dom";
 import { RegisterState } from "@/app/lib/definitions";
 import { registerUser } from "@/app/actions/auth";
 import InputField from "./InputField";
+import { Button } from "./Button";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button
+    <Button
       type="submit"
       disabled={pending}
-      className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-accent transition-all duration-300 shadow-lg hover:shadow-primary/40 disabled:bg-gray-400 disabled:cursor-not-allowed"
+      className="w-full"
     >
       {pending ? 'Registrando...' : 'Registrar Usuário'}
-    </button>
+    </Button>
   );
 }
 
@@ -25,7 +26,7 @@ export default function RegisterForm() {
     const [showPassword, setShowPassword] = useState(false);
 
     const initialState: RegisterState = {};
-    const [state, dispatch] = useActionState(registerUser, initialState);
+    const [state, dispatch] = useActionState(registerUser, initialState); // Corrigido
     
     return (
         <main className="bg-background flex items-center justify-center py-16 sm:py-24">
@@ -81,7 +82,6 @@ export default function RegisterForm() {
                             minLength={8}
                         />
 
-                        {/* Checkbox para mostrar senha */}
                         <div className="flex items-center">
                             <input
                                 id="showPassword"
@@ -96,7 +96,6 @@ export default function RegisterForm() {
                         </div>
 
                     </div>
-                    {/* Exibição de Erro */}
                     {state.error && (
                         <div className="flex items-center gap-2 mt-4 text-red-500 bg-red-500/10 p-3 rounded-lg">
                             <TriangleAlert className="h-5 w-5" />

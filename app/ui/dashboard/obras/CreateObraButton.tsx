@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import Modal from '@/app/ui/components/Modal';
 import CreateObraForm from './CreateObraForm';
 import { User } from '@prisma/client';
+import { Button } from '@/app/ui/components/Button';
 
 type CreateObraButtonProps = {
   customers: User[];
@@ -15,13 +16,10 @@ export default function CreateObraButton({ customers }: CreateObraButtonProps) {
 
   return (
     <>
-      <button
-        onClick={() => setModalOpen(true)}
-        className="flex items-center gap-2 bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors shadow-md"
-      >
+      <Button onClick={() => setModalOpen(true)}>
         <Plus size={20} />
         <span>Criar Nova Obra</span>
-      </button>
+      </Button>
 
       <Modal 
         isOpen={isModalOpen} 

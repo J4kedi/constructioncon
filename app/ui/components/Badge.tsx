@@ -1,28 +1,32 @@
-import React from 'react';
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { clsx } from 'clsx';
 
-export type BadgeVariant = 'primary' | 'accent' | 'success' | 'warning' | 'danger' | 'neutral';
+const badgeVariants = cva(
+  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+  {
+    variants: {
+      variant: {
+        default: 'border-transparent bg-primary text-primary-foreground',
+        secondary: 'border-transparent bg-secondary text-secondary-foreground',
+        destructive: 'border-transparent bg-destructive text-destructive-foreground',
+        outline: 'text-foreground',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+);
 
-interface BadgeProps {
-  text: string;
-  variant: BadgeVariant;
-  className?: string;
-}
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
 
-export default function Badge({ text, variant, className = '' }: BadgeProps) {
-  const baseClasses = "px-3 py-1 text-xs font-semibold rounded-full capitalize tracking-wider";
-  
-  const variantStyles: Record<BadgeVariant, string> = {
-    primary: "bg-blue-500/20 text-blue-400",
-    accent: "bg-purple-500/20 text-purple-400",
-    success: "bg-green-500/20 text-green-400",
-    warning: "bg-yellow-500/20 text-yellow-400",
-    danger: "bg-red-500/20 text-red-400",
-    neutral: "bg-gray-500/20 text-gray-400",
-  };
-
+function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <span className={`${baseClasses} ${variantStyles[variant]} ${className}`}>
-      {text}
-    </span>
+    <div className={clsx(badgeVariants({ variant }), className)} {...props} />
   );
 }
+
+export { Badge, badgeVariants };

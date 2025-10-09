@@ -1,5 +1,15 @@
 import { z } from "zod";
-import { UnidadeMedida } from "@prisma/client";
+import { UnidadeMedida, StatusObra } from "@prisma/client";
+
+// --- Tipos de Dados para Componentes ---
+
+export type PlainObra = {
+    id: string;
+    nome: string;
+    endCustomerName: string;
+    status: StatusObra;
+    dataInicio: string;
+};
 
 // --- Estados de Formulário para Server Actions ---
 export interface RegisterState {

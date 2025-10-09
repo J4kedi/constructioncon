@@ -1,15 +1,40 @@
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import { NextResponse } from 'next/server';
+import { UserRole } from '@prisma/client';
 
 const MAIN_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'localhost';
-const ESTOQUE_MFE_URL = process.env.NEXT_PUBLIC_ESTOQUE_MFE_URL || 'http://localhost:3001';
+
+const protectedRoutes: Record<string, UserRole[]> = {
+  '/dashboard/users': [UserRole.COMPANY_ADMIN, UserRole.SUPER_ADMIN],
+  '/dashboard/global-users': [UserRole.SUPER_ADMIN],
+  '/dashboard/tenants': [UserRole.SUPER_ADMIN],
+  '/dashboard/scripts': [UserRole.SUPER_ADMIN],
+  '/dashboard/status': [UserRole.SUPER_ADMIN],
+};
 
 export default NextAuth(authConfig).auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth?.user;
   const userRole = req.auth?.user?.role;
   const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
+  const isLoginPage = nextUrl.pathname.startsWith('/login');
+
+  if (isLoginPage && isLoggedIn) {
+    return NextResponse.redirect(new URL('/dashboard', nextUrl.origin));
+  }
+
+  if (isOnDashboard && isLoggedIn) {
+    const path = nextUrl.pathname;
+    const protectedRoute = Object.keys(protectedRoutes).find(r => path.startsWith(r));
+
+    if (protectedRoute) {
+      const requiredRoles = protectedRoutes[protectedRoute];
+      if (!userRole || !requiredRoles.includes(userRole)) {
+        return NextResponse.rewrite(new URL('/404', nextUrl));
+      }
+    }
+  }
 
   const host = req.headers.get("host");
   if (!host) return NextResponse.next();
@@ -17,8 +42,6 @@ export default NextAuth(authConfig).auth(async (req) => {
   const hostname = host.split(":")[0];
   const subdomain = hostname.endsWith(`.${MAIN_DOMAIN}`)
     ? hostname.replace(`.${MAIN_DOMAIN}`, ""): null;
-
-
 
   if (isOnDashboard && !isLoggedIn) {
     return NextResponse.redirect(new URL(`/login?callbackUrl=${nextUrl.href}`, nextUrl.origin));
@@ -51,7 +74,6 @@ export default NextAuth(authConfig).auth(async (req) => {
       console.error("Middleware fetch error:", error);
     }
   }
-
 
   return NextResponse.next({
     request: {
