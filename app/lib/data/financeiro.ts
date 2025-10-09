@@ -62,10 +62,10 @@ export async function fetchFinancialOverview(subdomain: string) {
     const lucroBruto = faturamento.sub(custosTotais);
 
     return {
-        faturamento: faturamento.toNumber(),
-        custosTotais: custosTotais.toNumber(),
-        lucroBruto: lucroBruto.toNumber(),
-        valorEstoque: valorEstoque.toNumber(),
+        faturamento: faturamento.mul(100).toNumber(),
+        custosTotais: custosTotais.mul(100).toNumber(),
+        lucroBruto: lucroBruto.mul(100).toNumber(),
+        valorEstoque: valorEstoque.mul(100).toNumber(),
         obrasStatus: obrasStatusData,
     };
 }
@@ -119,9 +119,9 @@ export async function fetchFinancialHistory(subdomain: string) {
         const lucro = data.faturamento.sub(data.custos);
         return {
             name: month,
-            Faturamento: data.faturamento.toNumber(),
-            Custos: data.custos.toNumber(),
-            Lucro: lucro.toNumber(),
+            Faturamento: data.faturamento.mul(100).toNumber(),
+            Custos: data.custos.mul(100).toNumber(),
+            Lucro: lucro.mul(100).toNumber(),
         };
     });
 

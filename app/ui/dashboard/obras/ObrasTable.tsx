@@ -4,28 +4,16 @@ import { useState } from 'react';
 import { StatusObra } from '@prisma/client';
 import { Pencil } from 'lucide-react';
 import Table from '@/app/ui/components/Table';
-import { Badge, type VariantProps } from '@/app/ui/components/Badge';
 import Modal from '@/app/ui/components/Modal';
 import EditObraForm from './EditObraForm';
 import { getObraDetailsAction } from '@/app/actions/obra.actions';
-import { PlainObra } from '@/app/lib/definitions'; // Importado
+import { PlainObra } from '@/app/lib/definitions';
+import StatusSelect from './StatusSelect'; // Importar o novo componente
 
-type BadgeVariant = VariantProps<typeof Badge>['variant'];
-
-// O tipo PlainObra foi removido daqui
-
-type FullObraForForm = Awaited<ReturnType<typeof getObraDetailsAction>>;
+type FullObraForForm = PlainObra | null;
 
 type ObrasTableProps = {
     obras: PlainObra[];
-};
-
-const statusVariantMap: Record<StatusObra, BadgeVariant> = {
-    PLANEJAMENTO: 'default',
-    EM_ANDAMENTO: 'secondary',
-    CONCLUIDA: 'default', 
-    PAUSADA: 'outline',
-    CANCELADA: 'destructive',
 };
 
 export default function ObrasTable({ obras }: ObrasTableProps) {
@@ -52,7 +40,7 @@ export default function ObrasTable({ obras }: ObrasTableProps) {
         setSelectedObra(null);
     };
 
-    const headers = ['Nome da Obra', 'Cliente', 'Status', 'Data de Início'];
+    const headers = ['Nome da Obra', 'Tipo', 'Cliente', 'Status', 'Data de Início'];
 
     const renderRow = (obra: PlainObra) => (
         <tr key={obra.id} className="w-full border-b border-secondary/20 py-3 text-sm last-of-type:border-none">
@@ -60,12 +48,13 @@ export default function ObrasTable({ obras }: ObrasTableProps) {
                 <p className="font-semibold">{obra.nome}</p>
             </td>
             <td className="whitespace-nowrap px-3 py-3">
+                {obra.type}
+            </td>
+            <td className="whitespace-nowrap px-3 py-3">
                 {obra.endCustomerName}
             </td>
             <td className="whitespace-nowrap px-3 py-3">
-                <Badge variant={statusVariantMap[obra.status] || 'outline'}>
-                    {obra.status.replace('_', ' ').toLowerCase()}
-                </Badge>
+                <StatusSelect obraId={obra.id} currentStatus={obra.status} />
             </td>
             <td className="whitespace-nowrap px-4 py-3">
                 {obra.dataInicio} 

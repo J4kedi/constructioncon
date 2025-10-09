@@ -3,17 +3,46 @@
 import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { ObraSchema, UpdateObraSchema } from '@/app/lib/definitions';
 import { executeFormAction, FormState } from '@/app/lib/action-handler';
-import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { StatusObra } from '@prisma/client';
+
+export async function updateObraStatus(obraId: string, status: StatusObra) {
+  try {
+    const { subdomain } = await getRequestContext();
+    if (!subdomain) {
+      throw new Error('Subdomínio não identificado.');
+    }
+
+    const tenantPrisma = getTenantPrismaClient(subdomain);
+    await tenantPrisma.obra.update({
+      where: { id: obraId },
+      data: { status },
+    });
+
+    revalidatePath('/dashboard/obras');
+    return { success: true, message: 'Status da obra atualizado com sucesso!' };
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+    return { success: false, message: errorMessage };
+  }
+}
+
 import { findCompany } from '@/app/lib/data/tenant';
 import { fetchObraById } from '@/app/lib/data/obra.ts';
 import { getRequestContext } from '@/app/lib/server-utils.ts';
+import { formatObraForUI } from '@/app/lib/utils.ts';
 
 export async function getObraDetailsAction(id: string) {
-    const { subdomain } = await getRequestContext();
-    if (!subdomain) {
-        throw new Error("Subdomínio não identificado.");
-    }
-    return await fetchObraById(id, subdomain);
+  const { subdomain } = await getRequestContext();
+  if (!subdomain) {
+    throw new Error('Subdomínio não identificado.');
+  }
+  const obra = await fetchObraById(id, subdomain);
+  if (!obra) {
+    return null;
+  }
+  return formatObraForUI(obra);
 }
 
 type ObraData = z.infer<typeof ObraSchema>;
@@ -23,6 +52,7 @@ async function createResidencialObra(data: ObraData, companyId: string, subdomai
   await tenantPrisma.obra.create({
     data: {
       nome: `[Residencial] ${data.nome}`,
+      type: 'RESIDENCIAL',
       endCustomerName: data.endCustomerName,
       orcamentoTotal: data.orcamentoTotal,
       dataInicio: new Date(data.dataInicio),
@@ -39,6 +69,7 @@ async function createComercialObra(data: ObraData, companyId: string, subdomain:
   await tenantPrisma.obra.create({
     data: {
       nome: `[Comercial] ${data.nome}`,
+      type: 'COMERCIAL',
       endCustomerName: data.endCustomerName,
       orcamentoTotal: data.orcamentoTotal * 1.1,
       dataInicio: new Date(data.dataInicio),
@@ -64,10 +95,10 @@ export async function createObra(prevState: FormState, formData: FormData) {
     redirectPath: '/dashboard/obras',
     logic: async (data, context) => {
       const company = await findCompany(context.subdomain!);
-      const strategy = creationStrategies[data.obraType];
+      const strategy = creationStrategies[data.type];
 
       if (!strategy) {
-        throw new Error(`Tipo de obra desconhecido: ${data.obraType}`);
+        throw new Error(`Tipo de obra desconhecido: ${data.type}`);
       }
 
       await strategy(data, company.id, context.subdomain!);

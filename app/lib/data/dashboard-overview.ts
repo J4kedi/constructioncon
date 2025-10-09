@@ -78,3 +78,14 @@ export async function fetchRecentActivity(subdomain: string) {
     timestamp: obra.updatedAt.toISOString(),
   }));
 }
+
+export async function fetchDashboardOverview(subdomain: string) {
+  const [deadlines, overruns, lowStock, feed] = await Promise.all([
+    fetchUpcomingDeadlines(subdomain),
+    fetchBudgetOverruns(subdomain),
+    fetchLowStockItems(subdomain),
+    fetchRecentActivity(subdomain),
+  ]);
+
+  return { deadlines, overruns, lowStock, feed };
+}

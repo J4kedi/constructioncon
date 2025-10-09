@@ -39,17 +39,37 @@ export async function createEntradaEstoque(prevState: FormState, formData: FormD
     requires: ['subdomain', 'user'],
     logic: async (data, context) => {
       const tenantPrisma = getTenantPrismaClient(context.subdomain!);
-      await tenantPrisma.estoqueMovimento.create({
-        data: {
-          catalogoItemId: data.catalogoItemId,
-          quantidade: data.quantidade,
-          supplierId: data.supplierId,
-          tipo: TipoMovimento.ENTRADA,
-          usuarioId: context.user!.id,
-        },
+
+      const itemCatalogo = await tenantPrisma.catalogoItem.findUniqueOrThrow({
+        where: { id: data.catalogoItemId },
+      });
+
+      const custoTotal = itemCatalogo.custoUnitario.mul(data.quantidade);
+
+      await tenantPrisma.$transaction(async (tx) => {
+        await tx.estoqueMovimento.create({
+          data: {
+            catalogoItemId: data.catalogoItemId,
+            quantidade: data.quantidade,
+            supplierId: data.supplierId,
+            tipo: TipoMovimento.ENTRADA,
+            usuarioId: context.user!.id,
+          },
+        });
+
+        await tx.despesa.create({
+          data: {
+            descricao: `Compra de material: ${itemCatalogo.nome}`,
+            valor: custoTotal,
+            categoria: 'MATERIAL',
+            approverId: context.user!.id, // O próprio usuário que registra a entrada aprova a despesa
+            supplierId: data.supplierId,
+            // obraId fica nulo, pois é uma despesa geral de estoque
+          },
+        });
       });
     },
-    revalidatePath: '/dashboard/estoque',
+    revalidatePaths: ['/dashboard/estoque', '/dashboard/financeiro'],
     successMessage: 'Entrada de estoque registrada com sucesso!',
   });
 }

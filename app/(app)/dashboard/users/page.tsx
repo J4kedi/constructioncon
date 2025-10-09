@@ -6,6 +6,7 @@ import { fetchFilteredUsers } from '@/app/lib/data/user';
 import UsersTable from '@/app/ui/dashboard/users/table';
 import Pagination from '@/app/ui/dashboard/pagination';
 import { auth } from '@/app/actions/auth';
+import CreateUserButton from '@/app/ui/dashboard/users/CreateUserButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,7 @@ export default async function Page({
     <div className="w-full">
       <div className="flex w-full items-center justify-between">
         <h1 className="text-2xl font-bold text-text">Usuários</h1>
+        <CreateUserButton />
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">

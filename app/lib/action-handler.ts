@@ -18,7 +18,8 @@ interface ActionConfig<T extends z.ZodType<any, any>> {
   schema: T;
   formData: FormData;
   logic: (data: z.infer<T>, context: RequestContext) => Promise<void>;
-  revalidatePath: string;
+  revalidatePath?: string; // Tornar opcional
+  revalidatePaths?: string[]; // Adicionar novo campo
   redirectPath?: string;
   requires?: RequiredContext[];
   successMessage?: string;
@@ -60,7 +61,11 @@ export async function executeFormAction<T extends z.ZodType<any, any>>(
     };
   }
 
-  revalidatePath(config.revalidatePath);
+  if (config.revalidatePaths) {
+    config.revalidatePaths.forEach(path => revalidatePath(path));
+  } else if (config.revalidatePath) {
+    revalidatePath(config.revalidatePath);
+  }
 
   if (config.redirectPath) {
     redirect(config.redirectPath);

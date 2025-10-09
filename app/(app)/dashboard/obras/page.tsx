@@ -5,43 +5,41 @@ import { ObrasTableSkeleton } from '@/app/ui/components/skeletons';
 import CreateObraButton from '@/app/ui/dashboard/obras/CreateObraButton';
 import { UserRole } from '@prisma/client';
 import Search from '@/app/ui/components/search';
-import { fetchFilteredObras } from '@/app/lib/data/obra';
 import ObrasTable from '@/app/ui/dashboard/obras/ObrasTable';
 import Pagination from '@/app/ui/dashboard/pagination';
-import { PlainObra } from '@/app/lib/definitions'; // Importação corrigida
+import { ObraFetcher } from '@/app/lib/data/ObraFetcher';
+import { formatObraForUI } from '@/app/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ObrasPage({
-  searchParams 
+  searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: { [key: string]: string | string[] | undefined };
 }) {
   const resolvedSearchParams = await Promise.resolve(searchParams);
-  const query = resolvedSearchParams?.query || '';
-  const currentPage = Number(resolvedSearchParams?.page) || 1;
-
   const headerList = headers();
   const subdomain = (await headerList).get('x-tenant-subdomain');
-  
+
   if (!subdomain) {
     return <p className="text-red-500">Subdomínio não identificado.</p>;
   }
 
-  const { obras, totalPages } = await fetchFilteredObras(subdomain, query, currentPage);
+  const obraFetcher = new ObraFetcher(subdomain);
+  const { data: obras, totalPages } = await obraFetcher.fetchPageData(
+    resolvedSearchParams,
+  );
 
-  const formattedObras: PlainObra[] = obras.map(obra => ({
-    ...obra,
-    orcamentoTotal: obra.orcamentoTotal.toNumber(),
-    currentCost: obra.currentCost.toNumber(),
-    dataInicio: new Date(obra.dataInicio).toLocaleDateString('pt-BR'),
-  }));
+  const formattedObras = obras.map(formatObraForUI);
 
   const prisma = getTenantPrismaClient(subdomain);
   const customers = await prisma.user.findMany({
     where: { role: UserRole.END_CUSTOMER },
     orderBy: { name: 'asc' },
   });
+
+  const query = (resolvedSearchParams?.query as string) || '';
+  const currentPage = Number(resolvedSearchParams?.page) || 1;
 
   return (
     <div className="w-full">

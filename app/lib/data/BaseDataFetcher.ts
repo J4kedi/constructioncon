@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { getTenantPrismaClient } from '@/app/lib/prisma';
 
 interface ISearchableQueryBuilder {
   withSearch(query?: string): this;
@@ -9,16 +10,22 @@ interface ISearchableQueryBuilder {
 
 export abstract class BaseDataFetcher<T> {
   protected prisma: PrismaClient;
+  protected subdomain: string;
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
+  constructor(subdomain: string) {
+    this.subdomain = subdomain;
+    this.prisma = getTenantPrismaClient(subdomain);
   }
 
-  public async fetchPageData(searchParams: { [key: string]: string | undefined }) {
+  public async fetchPageData(searchParams: {
+    [key: string]: string | string[] | undefined;
+  }) {
     const modelName = this.getModelName();
 
     if (!modelName || !(modelName in this.prisma)) {
-      throw new Error(`Modelo inválido ou não encontrado no Prisma Client: ${modelName}`);
+      throw new Error(
+        `Modelo inválido ou não encontrado no Prisma Client: ${modelName}`,
+      );
     }
     const dbModel = this.prisma[modelName as keyof PrismaClient];
 
@@ -34,11 +41,12 @@ export abstract class BaseDataFetcher<T> {
     return { data: data as T[], totalPages };
   }
 
-  protected async buildQueryArgs(searchParams: { [key: string]: string | undefined }): Promise<any> {
-    const resolvedSearchParams = await Promise.resolve(searchParams);
-    const page = Number(resolvedSearchParams?.page) || 1;
-    const query = resolvedSearchParams?.query;
-    const sort = resolvedSearchParams?.sort;
+  protected async buildQueryArgs(searchParams: {
+    [key: string]: string | string[] | undefined;
+  }): Promise<any> {
+    const page = Number(searchParams?.page) || 1;
+    const query = (searchParams?.query as string) || undefined;
+    const sort = (searchParams?.sort as string) || undefined;
 
     const builder = this.getQueryBuilder();
     const includeArgs = this.getIncludeArgs();

@@ -1,14 +1,24 @@
 import { z } from "zod";
-import { UnidadeMedida, StatusObra } from "@prisma/client";
+import { UnidadeMedida, StatusObra, ObraType } from "@prisma/client";
 
 // --- Tipos de Dados para Componentes ---
 
 export type PlainObra = {
     id: string;
     nome: string;
+    type: ObraType;
+    address: string | null;
     endCustomerName: string;
-    status: StatusObra;
+    orcamentoTotal: number;
+    currentCost: number;
+    progressPercentage: number;
     dataInicio: string;
+    dataPrevistaFim: string;
+    status: StatusObra;
+    companyId: string;
+    endCustomerId: string | null;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 // --- Estados de Formulário para Server Actions ---
@@ -57,7 +67,7 @@ export const UpdateUserSchema = z.object({
 
 export const ObraSchema = z.object({
     id: z.string().optional(),
-    obraType: z.enum(['RESIDENCIAL', 'COMERCIAL'], { error: "Tipo de obra inválido." }),
+    type: z.enum(['RESIDENCIAL', 'COMERCIAL'], { error: "Tipo de obra inválido." }),
     nome: z.string().min(3, { message: "O nome da obra deve ter pelo menos 3 caracteres." }),
     endCustomerName: z.string().min(3, { message: "O nome do cliente final deve ter pelo menos 3 caracteres." }),
     orcamentoTotal: z.coerce.number().gt(0, { message: "O orçamento deve ser maior que zero." }),
@@ -67,7 +77,7 @@ export const ObraSchema = z.object({
     endCustomerId: z.string().optional(),
 });
 
-export const UpdateObraSchema = ObraSchema.omit({ obraType: true }).partial().extend({
+export const UpdateObraSchema = ObraSchema.partial().extend({
     id: z.string(),
 });
 
