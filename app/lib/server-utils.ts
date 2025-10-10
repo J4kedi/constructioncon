@@ -1,8 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { auth } from '@/app/actions/auth.ts';
-import type { User } from 'next-auth';
+import { auth } from '@/app/actions/auth';
 import type { RequestContext } from './utils.ts';
 
 export async function getRequestContext(): Promise<RequestContext> {
