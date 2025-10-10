@@ -7,6 +7,7 @@ import { getRequestContext } from '@/app/lib/server-utils';
 import type { RequestContext } from '@/app/lib/utils.ts';
 
 export type FormState = {
+  data: boolean;
   errors?: Record<string, string[] | undefined>;
   message?: string | null;
   success?: boolean;
