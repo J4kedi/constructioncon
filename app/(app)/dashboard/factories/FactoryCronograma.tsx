@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, Card, Grid, Button } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import ptBrLocale from '@fullcalendar/core/locales/pt-br';
@@ -54,57 +53,32 @@ export default function FactoryCronograma() {
   }
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h4" fontWeight="bold" gutterBottom textAlign="center">
-        Calendário de Atividades
-      </Typography>
+    <div className="min-h-screen p-8 bg-background text-text transition-colors duration-300">
+      <h1 className="text-3xl font-bold text-center mb-6">Calendário de Atividades</h1>
 
-      <Grid container spacing={4}>
-        <Grid item xs={12}>
-          <Card sx={{ p: 2 }}>
-            <FullCalendar
-              plugins={[dayGridPlugin]}
-              initialView="dayGridMonth"
-              events={gerarEventosCalendar()}
-              locale={ptBrLocale}
-              height="auto"
-              headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,dayGridWeek',
-              }}
-            />
-          </Card>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="bg-white dark:bg-background rounded-lg shadow-md p-4">
+          <FullCalendar
+            plugins={[dayGridPlugin]}
+            initialView="dayGridMonth"
+            events={gerarEventosCalendar()}
+            locale={ptBrLocale}
+            height="auto"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,dayGridWeek',
+            }}
+          />
+        </div>
 
- <Button
-  variant="contained"
-  fullWidth
-  sx={{
-    mt: 3,
-    py: 3,
-    px: 4,
-    fontWeight: 'bold',
-    color: 'white',
-    backgroundColor: '#4f46e5', 
-    borderRadius: '0.5rem',
-    transition: 'all 0.3s ease',
-    boxShadow: 6,
-    '&:hover': {
-      backgroundColor: '#4f46e5',
-      boxShadow: '0 4px 20px rgba(186, 104, 200, 0.4)',
-    },
-    '&:disabled': {
-      backgroundColor: '#4f46e5',
-      cursor: 'not-allowed',
-    },
-  }}
-  onClick={handleAgendarEntrega}
->
-  Agendar Entrega do Projeto
-</Button>
-
-        </Grid>
-      </Grid>
-    </Box>
+        <button
+          className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-secondary transition-all duration-300 shadow-lg hover:shadow-accent disabled:bg-gray-400 disabled:cursor-not-allowed"
+          onClick={handleAgendarEntrega}
+        >
+          Agendar Entrega do Projeto
+        </button>
+      </div>
+    </div>
   );
 }
