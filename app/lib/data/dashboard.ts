@@ -11,10 +11,13 @@ export async function fetchSummaryData(subdomain: string) {
     where: { status: 'EM_ANDAMENTO' },
   });
 
+  const usersCount = await tenantPrisma.user.count();
+
   return {
     faturamento: financialData.faturamento,
     lucroBruto: financialData.lucroBruto,
     activeObrasCount,
+    usersCount,
   };
 }
 

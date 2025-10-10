@@ -63,8 +63,8 @@ export async function registerUser(prevState: FormState, formData: FormData): Pr
     return executeFormAction({
         formData,
         schema: UserRegistrationSchema,
-        revalidatePath: '/login',
-        redirectPath: '/login',
+        revalidatePath: '/dashboard/users',
+        redirectPath: '/dashboard/users',
         logic: async (data) => {
             const { email, name, password, role } = data;
             const tenantPrisma = getTenantPrismaClient(subdomain);

@@ -16,12 +16,18 @@ export function CardSkeleton() {
     <div
       className={`${shimmer} relative overflow-hidden rounded-xl bg-secondary/20 p-2 shadow-sm`}
     >
-      <div className="flex p-4">
-        <div className="h-5 w-5 rounded-md bg-secondary/40" />
-        <div className="ml-2 h-6 w-16 rounded-md bg-secondary/40" />
+      {/* CardHeader */}
+      <div className="flex flex-col space-y-1.5 p-4">
+        <div className="flex items-center">
+          <div className="h-5 w-5 rounded-md bg-secondary/40" /> {/* Icon */}
+          <div className="ml-2 h-6 w-24 rounded-md bg-secondary/40" /> {/* Title */}
+        </div>
       </div>
-      <div className="flex items-center justify-center truncate rounded-xl bg-background/50 px-4 py-8">
-        <div className="h-7 w-20 rounded-md bg-secondary/40" />
+      {/* CardContent */}
+      <div className="p-2 pt-0">
+        <div className="flex items-center justify-center truncate rounded-xl bg-background/50 px-4 py-8"> {/* Adjusted py-8 to py-4 */}
+          <div className="h-7 w-20 rounded-md bg-secondary/40" /> {/* Value */}
+        </div>
       </div>
     </div>
   );
@@ -91,20 +97,44 @@ export function InvoiceSkeleton() {
 }
 
 export default function DashboardSkeleton() {
+  const shimmer = 'before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/60 dark:before:via-white/10 before:to-transparent';
+
+  const SkeletonBlock = ({ className }: { className?: string }) => (
+    <div className={`${shimmer} relative overflow-hidden rounded-xl bg-secondary/20 ${className}`} />
+  );
+
   return (
     <>
-      <div
-        className={`${shimmer} relative mb-4 h-8 w-36 overflow-hidden rounded-md bg-secondary/40`}
-      />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <h1 className="text-3xl font-bold text-text mb-6">
+        <SkeletonBlock className="h-9 w-80" />
+      </h1>
+      
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <CardSkeleton />
         <CardSkeleton />
         <CardSkeleton />
         <CardSkeleton />
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
-        <RevenueChartSkeleton />
-        <LatestInvoicesSkeleton />
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Coluna Esquerda (2/3) */}
+        <div className="lg:col-span-2 space-y-6">
+          <SkeletonBlock className="h-64" />
+          <SkeletonBlock className="h-64" />
+        </div>
+
+        {/* Coluna Direita (1/3) */}
+        <div className="space-y-6">
+          <SkeletonBlock className="h-52" />
+          <SkeletonBlock className="h-52" />
+        </div>
+      </div>
+
+      {/* Feed Section */}
+      <div className="mt-6">
+        <SkeletonBlock className="h-72" />
       </div>
     </>
   );
@@ -213,37 +243,155 @@ function ObraTableRowSkeleton() {
 }
 
 export function ObrasTableSkeleton() {
+
   return (
+
     <div className={`${shimmer} relative w-full overflow-hidden`}>
+
       <div className="flow-root">
+
         <div className="overflow-x-auto">
+
           <div className="inline-block min-w-full align-middle">
+
             <div className="rounded-lg bg-secondary/20 p-2 md:pt-0">
+
               <table className="min-w-full text-text">
+
                 <thead className="rounded-lg text-left text-sm font-normal">
+
                   <tr>
+
                     <th scope="col" className="px-4 py-5 font-medium sm:pl-6">Nome da Obra</th>
+
                     <th scope="col" className="px-3 py-5 font-medium">Cliente</th>
+
                     <th scope="col" className="px-3 py-5 font-medium">Status</th>
+
                     <th scope="col" className="px-3 py-5 font-medium">Progresso</th>
+
                     <th scope="col" className="relative py-3 pl-6 pr-3">
+
                       <span className="sr-only">Edit</span>
+
                     </th>
+
                   </tr>
+
                 </thead>
+
                 <tbody className="bg-background">
+
                   <ObraTableRowSkeleton />
+
                   <ObraTableRowSkeleton />
+
                   <ObraTableRowSkeleton />
+
                   <ObraTableRowSkeleton />
+
                   <ObraTableRowSkeleton />
+
                   <ObraTableRowSkeleton />
+
                 </tbody>
+
               </table>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
+
   );
+
+}
+
+
+
+export function OverviewCardSkeleton() {
+
+	return (
+
+		<div className="bg-background border border-secondary/20 rounded-lg p-6">
+
+			<div className="h-5 w-32 bg-secondary/40 rounded mb-4" />
+
+			<div className="space-y-3">
+
+				<div className="h-4 bg-secondary/40 rounded w-3/4" />
+
+				<div className="h-4 bg-secondary/40 rounded w-1/2" />
+
+				<div className="h-4 bg-secondary/40 rounded w-5/6" />
+
+			</div>
+
+		</div>
+
+	);
+
+}
+
+
+
+export function OverviewPieChartSkeleton() {
+
+	return (
+
+		<div className="bg-background border border-secondary/20 rounded-lg p-6 flex flex-col items-center justify-center">
+
+			<div className="h-5 w-32 bg-secondary/40 rounded mb-4" />
+
+			<div className="w-40 h-40 bg-secondary/40 rounded-full" />
+
+		</div>
+
+	);
+
+}
+
+
+
+export function SummarySkeleton() {
+
+
+
+	return (
+
+
+
+		<>
+
+
+
+			<CardSkeleton />
+
+
+
+			<CardSkeleton />
+
+
+
+			<CardSkeleton />
+
+
+
+			<CardSkeleton />
+
+
+
+		</>
+
+
+
+	);
+
+
+
 }

@@ -68,7 +68,7 @@ export async function fetchRecentActivity(subdomain: string) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
   const recentObras = await tenantPrisma.obra.findMany({
     orderBy: { updatedAt: 'desc' },
-    take: 5,
+    take: 10,
     select: { id: true, nome: true, status: true, updatedAt: true },
   });
 

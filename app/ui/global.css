@@ -8,6 +8,16 @@
   --color-primary: #4f46e5;      /* indigo-600 */
   --color-secondary: #6366f1;    /* indigo-500 */
   --color-accent: #c7d2fe;       /* indigo-200 */
+
+  /* Cores de Status */
+  --color-destructive: #ef4444; /* red-500 */
+  --color-destructive-foreground: #f8fafc; /* slate-50 */
+  --color-success: #22c55e; /* green-500 */
+  --color-success-foreground: #f8fafc; /* slate-50 */
+  --color-warning: #f59e0b; /* amber-500 */
+  --color-warning-foreground: #f8fafc; /* slate-50 */
+  --color-white: #363131;
+  --color-white-foreground: #000;
 }
 
 @layer theme {
@@ -18,6 +28,16 @@
       --color-primary: #818cf8;      /* indigo-400 */
       --color-secondary: #3730a3;    /* indigo-800 */
       --color-accent: #4338ca;       /* indigo-700 */
+
+      /* Cores de Status (Dark) */
+      --color-destructive: #b91c1c; /* red-700 */
+      --color-destructive-foreground: #fef2f2; /* red-50 */
+      --color-success: #15803d; /* green-700 */
+      --color-success-foreground: #f0fdf4; /* green-50 */
+      --color-warning: #b45309; /* amber-700 */
+      --color-warning-foreground: #fffbeb; /* amber-50 */
+      --color-white: #363131;
+      --color-white-foreground: #000;
     }
   }
 }

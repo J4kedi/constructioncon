@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DollarSign, TrendingUp, Building } from 'lucide-react';
+import { DollarSign, TrendingUp, Building, User } from 'lucide-react';
 import { formatCurrency } from '@/app/lib/utils';
 import { Card } from '@/app/ui/dashboard/cards';
 import { getSummaryDataAction } from '@/app/actions/dashboard.actions';
@@ -31,6 +31,7 @@ export default function SummaryClient({ initialData }: { initialData: SummaryDat
             <Card title="Faturamento Total" value={formatCurrency(data.faturamento)} icon={<DollarSign className="h-5 w-5 text-primary" />} />
             <Card title="Lucro Bruto" value={formatCurrency(data.lucroBruto)} icon={<TrendingUp className="h-5 w-5 text-primary" />} />
             <Card title="Obras Ativas" value={data.activeObrasCount} icon={<Building className="h-5 w-5 text-primary" />} />
+            <Card title="Usuários totais" value={data.usersCount} icon={<User className="h-5 w-5 text-primary" />} />
         </>
     );
 }

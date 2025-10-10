@@ -17,7 +17,7 @@ const statusVariantMap: Record<StatusObra, BadgeProps['variant']> = {
     PLANEJAMENTO: 'default',
     EM_ANDAMENTO: 'warning',
     CONCLUIDA: 'success', 
-    PAUSADA: 'outline',
+    PAUSADA: 'white',
     CANCELADA: 'destructive',
 };
 
@@ -57,7 +57,7 @@ export default function StatusSelect({ obraId, currentStatus }: StatusSelectProp
           'h-full w-full pl-2.5 pr-6 py-0.5 text-xs font-semibold',
           'cursor-pointer focus:outline-none focus:ring-0'
         )}
-        style={{ color: 'inherit' }} // Herda a cor do texto do badge
+        style={{ color: 'inherit' }}
       >
         {Object.values(StatusObra).map((status) => (
           <option key={status} value={status} className="bg-background text-text">
