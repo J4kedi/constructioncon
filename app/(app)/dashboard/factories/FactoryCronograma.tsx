@@ -9,18 +9,21 @@ interface Atividade {
   id: string;
   descricao: string;
   responsavel: string;
-  inicio: Date;
-  fim: Date;
+  inicio: string; // ISO string
+  fim: string;    // ISO string
   duracaoDias: number;
-  predecessoras?: string[];
+  createdAt?: string;
 }
 
 export default function FactoryCronograma() {
   const [atividades, setAtividades] = useState<Atividade[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [descricao, setDescricao] = useState('');
-  const [data, setData] = useState('');
-  const [hora, setHora] = useState('');
+  const [responsavel, setResponsavel] = useState('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [horaInicio, setHoraInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
+  const [horaFim, setHoraFim] = useState('');
 
   function gerarEventosCalendar() {
     return atividades.map(atv => ({
@@ -32,65 +35,42 @@ export default function FactoryCronograma() {
   }
 
   async function handleAdicionarTarefa() {
-    if (!descricao || !data || !hora) {
+    if (!descricao || !responsavel || !dataInicio || !horaInicio || !dataFim || !horaFim) {
       alert('Preencha todos os campos.');
       return;
     }
 
-    const inicio = new Date(`${data}T${hora}`);
-    const fim = new Date(inicio);
-    fim.setHours(inicio.getHours() + 1);
+    const inicio = new Date(`${dataInicio}T${horaInicio}`);
+    const fim = new Date(`${dataFim}T${horaFim}`);
 
-    const novaAtividade: Atividade = {
-      id: crypto.randomUUID(),
+    const payload = {
       descricao,
-      responsavel: 'Responsável padrão',
-      inicio,
-      fim,
-      duracaoDias: 0,
+      responsavel,
+      inicio: inicio.toISOString(),
+      fim: fim.toISOString(),
     };
 
     try {
-      const response = await fetch('/api/Salvar_Atividade', {
+      const response = await fetch('app/api/Salvar_Atividade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(novaAtividade),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        setAtividades(prev => [...prev, novaAtividade]);
+        const atividadeSalva = await response.json();
+        setAtividades(prev => [...prev, atividadeSalva]);
         setDescricao('');
-        setData('');
-        setHora('');
+        setResponsavel('');
+        setDataInicio('');
+        setHoraInicio('');
+        setDataFim('');
+        setHoraFim('');
         setShowForm(false);
         alert('Tarefa adicionada com sucesso!');
       } else {
-        alert('Erro ao salvar tarefa.');
-      }
-    } catch (error) {
-      console.error('Erro ao conectar com o servidor:', error);
-      alert('Erro de conexão com o servidor.');
-    }
-  }
-
-  async function handleAgendarEntrega() {
-    const entrega = {
-      projeto: 'Projeto Exemplo',
-      dataEntrega: new Date().toISOString(),
-      atividades,
-    };
-
-    try {
-      const response = await fetch('/api/Gerar_Cronograma', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(entrega),
-      });
-
-      if (response.ok) {
-        alert('Entrega agendada com sucesso!');
-      } else {
-        alert('Erro ao agendar entrega.');
+        const erro = await response.json();
+        alert(`Erro ao salvar tarefa: ${erro.error}`);
       }
     } catch (error) {
       console.error('Erro ao conectar com o servidor:', error);
@@ -140,18 +120,44 @@ export default function FactoryCronograma() {
             />
 
             <input
-              type="date"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
+              type="text"
+              placeholder="Responsável"
+              value={responsavel}
+              onChange={(e) => setResponsavel(e.target.value)}
               className="w-full px-4 py-2 rounded-lg border border-secondary/20 bg-background text-text"
             />
 
-            <input
-              type="time"
-              value={hora}
-              onChange={(e) => setHora(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-secondary/20 bg-background text-text"
-            />
+            <label className="block font-semibold">Início</label>
+            <div className="flex gap-4">
+              <input
+                type="date"
+                value={dataInicio}
+                onChange={(e) => setDataInicio(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-secondary/20 bg-background text-text"
+              />
+              <input
+                type="time"
+                value={horaInicio}
+                onChange={(e) => setHoraInicio(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-secondary/20 bg-background text-text"
+              />
+            </div>
+
+            <label className="block font-semibold">Fim</label>
+            <div className="flex gap-4">
+              <input
+                type="date"
+                value={dataFim}
+                onChange={(e) => setDataFim(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-secondary/20 bg-background text-text"
+              />
+              <input
+                type="time"
+                value={horaFim}
+                onChange={(e) => setHoraFim(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-secondary/20 bg-background text-text"
+              />
+            </div>
 
             <div className="flex gap-4">
               <button

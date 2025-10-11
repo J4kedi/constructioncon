@@ -312,3 +312,15 @@ model EstoqueMovimento {
   supplierId      String?
   supplier        Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 }
+model Atividade_Cronograma {
+  id           String   @id @default(uuid())
+  descricao    String
+  responsavel  String
+  inicio       DateTime
+  fim          DateTime
+  duracaoDias  Int
+  createdAt    DateTime @default(now())
+}
+
+
+
