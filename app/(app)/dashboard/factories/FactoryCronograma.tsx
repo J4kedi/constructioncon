@@ -9,8 +9,8 @@ interface Atividade {
   id: string;
   descricao: string;
   responsavel: string;
-  inicio: string; // ISO string
-  fim: string;    // ISO string
+  inicio: string; 
+  fim: string;    
   duracaoDias: number;
   createdAt?: string;
 }
@@ -34,50 +34,53 @@ export default function FactoryCronograma() {
     }));
   }
 
-  async function handleAdicionarTarefa() {
-    if (!descricao || !responsavel || !dataInicio || !horaInicio || !dataFim || !horaFim) {
-      alert('Preencha todos os campos.');
-      return;
-    }
-
-    const inicio = new Date(`${dataInicio}T${horaInicio}`);
-    const fim = new Date(`${dataFim}T${horaFim}`);
-
-    const payload = {
-      descricao,
-      responsavel,
-      inicio: inicio.toISOString(),
-      fim: fim.toISOString(),
-    };
-
-    try {
-      const response = await fetch('app/api/Salvar_Atividade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        const atividadeSalva = await response.json();
-        setAtividades(prev => [...prev, atividadeSalva]);
-        setDescricao('');
-        setResponsavel('');
-        setDataInicio('');
-        setHoraInicio('');
-        setDataFim('');
-        setHoraFim('');
-        setShowForm(false);
-        alert('Tarefa adicionada com sucesso!');
-      } else {
-        const erro = await response.json();
-        alert(`Erro ao salvar tarefa: ${erro.error}`);
-      }
-    } catch (error) {
-      console.error('Erro ao conectar com o servidor:', error);
-      alert('Erro de conexão com o servidor.');
-    }
+ async function handleAdicionarTarefa() {
+  if (!descricao || !responsavel || !dataInicio || !horaInicio || !dataFim || !horaFim) {
+    alert('Preencha todos os campos.');
+    return;
   }
 
+  const inicio = new Date(`${dataInicio}T${horaInicio}`);
+  const fim = new Date(`${dataFim}T${horaFim}`);
+
+  const payload = {
+    descricao,
+    responsavel,
+    inicio: inicio.toISOString(),
+    fim: fim.toISOString(),
+  };
+
+  try {
+    const response = await fetch('/api/Salvar_Atividade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (response.ok && contentType?.includes('application/json')) {
+      const atividadeSalva = await response.json();
+      setAtividades(prev => [...prev, atividadeSalva]);
+      setDescricao('');
+      setResponsavel('');
+      setDataInicio('');
+      setHoraInicio('');
+      setDataFim('');
+      setHoraFim('');
+      setShowForm(false);
+      alert('Tarefa adicionada com sucesso!');
+    } else {
+      const erro = contentType?.includes('application/json')
+        ? await response.json()
+        : await response.text();
+      console.error('Erro ao salvar tarefa:', erro);
+      alert('Erro ao salvar tarefa.');
+    }
+  } catch (error) {
+    console.error('Erro ao conectar com o servidor:', error);
+    alert('Erro de conexão com o servidor.');
+  }
+}
   return (
     <div className="min-h-screen p-8 bg-background text-text transition-colors duration-300">
       <h1 className="text-3xl font-bold text-center mb-6">Calendário de Atividades</h1>

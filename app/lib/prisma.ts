@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-
+export const prisma = new PrismaClient();
 // Adiciona o cache e o cliente público ao objeto global do Node.js
 const globalForPrisma = globalThis as unknown as {
   prismaClientCache: Map<string, PrismaClient> | undefined;
