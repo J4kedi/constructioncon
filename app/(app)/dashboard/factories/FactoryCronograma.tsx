@@ -190,32 +190,44 @@ export const Index = () => {
 </h1>
 
         </div>
-        <p style={{ color: 'var(--color-text)' }} className="text-lg opacity-70">
+        <p style={{ color: 'var(--color-text--black)' }} className="text-lg opacity-70">
           Gerencie suas tarefas de forma eficiente
         </p>
       </header>
+      <div className="flex justify-center">
+  <div className="w-full max-w-5xl">
+    <Card
+      className="shadow-lg"
+      style={{
+        backgroundColor: 'var(--color-white)',
+        color: 'var(--color-black)',
+      }}
+    >
+      <CardContent className="p-6">
+        <FullCalendar
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          events={gerarEventosCalendar()}
+          locale={ptBrLocale}
+          height="auto"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: '',
+          }}
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }}
+          displayEventEnd={true}
+        />
+      </CardContent>
+    </Card>
+  </div>
+</div>
 
-      <Card className="shadow-lg" style={{ backgroundColor: 'var(--color-white)', color: 'var(--color-text)' }}>
-        <CardContent className="p-6">
-          <FullCalendar
-            plugins={[dayGridPlugin]}
-            initialView="dayGridMonth"
-            events={gerarEventosCalendar()}
-            locale={ptBrLocale}
-            height="auto"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,dayGridWeek',
-            }}
-            eventTimeFormat={{
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-            }}
-          />
-        </CardContent>
-      </Card>
+
 
       {atividades.length > 0 && (
         <Card className="shadow-lg" style={{ backgroundColor: 'var(--color-white)', color: 'var(--color-text)' }}>
