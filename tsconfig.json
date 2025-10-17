@@ -38,5 +38,12 @@
 , "jest.config.mjs"  ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+
+  "baseUrl": ".",
+"paths": {
+  "@/*": ["./*"],
+  "@/lib/*": ["lib/*"]
+}
+
 }
