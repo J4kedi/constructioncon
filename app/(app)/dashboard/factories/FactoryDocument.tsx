@@ -1,29 +1,57 @@
 'use client';
 
 import { useState } from 'react';
-import { Documento, Tipos_Documentos } from '../../lib/documento';
+import { Documento, Tipos_Documentos } from '../../../lib/documento';
 import { Document_Factory } from '../factories/Document_Factory';
 
+const tiposPermitidos: Tipos_Documentos[] = ['contrato', 'orçamento', 'certidão', 'relatórios'];
+const extensoesPermitidas = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'];
 
-export default function FactoryDocument() {
+export default function DocumentosDashboard() {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [tipo, setTipo] = useState<Tipos_Documentos>('contrato');
-  const [dataEmissao, setDataEmissao] = useState('');
   const [conteudo, setConteudo] = useState('');
   const [autor, setAutor] = useState('');
+  const [dataEmissao, setDataEmissao] = useState('');
   const [anexos, setAnexos] = useState<FileList | null>(null);
+  const [erroAnexo, setErroAnexo] = useState<string | null>(null);
 
   const handleAnexosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAnexos(e.target.files);
+    const arquivos = e.target.files;
+    if (!arquivos) return;
+
+    const arquivosValidos: File[] = [];
+    let erroDetectado = false;
+
+    Array.from(arquivos).forEach((file) => {
+      const extensao = file.name.split('.').pop()?.toLowerCase();
+      if (extensao && extensoesPermitidas.includes(extensao)) {
+        arquivosValidos.push(file);
+      } else {
+        erroDetectado = true;
+      }
+    });
+
+    if (erroDetectado) {
+      setErroAnexo('Só são aceitos arquivos PDF, Word, Excel ou imagens (PNG, JPG).');
+      setAnexos(null);
+    } else {
+      setErroAnexo(null);
+      const dt = new DataTransfer();
+      arquivosValidos.forEach((file) => dt.items.add(file));
+      setAnexos(dt.files);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!tiposPermitidos.includes(tipo)) {
+      alert('Tipo de documento inválido. Escolha entre contrato, orçamento, certidão ou relatórios.');
+      return;
+    }
+
     const listaDeAnexos = anexos ? Array.from(anexos) : undefined;
-    
     const dataCorrigida = new Date(`${dataEmissao}T00:00:00`);
 
     const novoDocumento = Document_Factory.criarDocumento(
@@ -37,118 +65,122 @@ export default function FactoryDocument() {
     setDocumentos([...documentos, novoDocumento]);
 
     setTipo('contrato');
-    setDataEmissao('');
     setConteudo('');
     setAutor('');
-    setAnexos(null); 
-    e.currentTarget.reset();
+    setDataEmissao('');
+    setAnexos(null);
+    setErroAnexo(null);
+    (e.target as HTMLFormElement).reset();
   };
 
-  const handleDelete = (id: number) => {
-    setDocumentos(documentos.filter(doc => doc.id !== id));
-  };
+  return (
+    <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] p-6">
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-[var(--color-primary)]">Painel de Documentos</h1>
+        <p className="text-sm text-[var(--color-secondary)]">Crie documentos com anexos válidos</p>
+      </header>
 
-return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Gerador de Documentos</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="tipo" className="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-              <select
-                id="tipo"
-                value={tipo}
-                onChange={(e) => setTipo(e.target.value as Tipos_Documentos)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="contrato">Contrato</option>
-                <option value="orçamento">Orçamento</option>
-                <option value="certidão">Certidão</option>
-                <option value="relatórios">Relatórios</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="dataEmissao" className="block text-sm font-medium text-gray-700">Data de Emissão</label>
-              <input
-                type="date"
-                id="dataEmissao"
-                value={dataEmissao}
-                onChange={(e) => setDataEmissao(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="conteudo" className="block text-sm font-medium text-gray-700">Conteúdo</label>
-              <textarea
-                id="conteudo"
-                value={conteudo}
-                onChange={(e) => setConteudo(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="autor" className="block text-sm font-medium text-gray-700">Autor</label>
-              <input
-                type="text"
-                id="autor"
-                value={autor}
-                onChange={(e) => setAutor(e.target.value)}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              />
-            </div>
-           <div>
-              <label htmlFor="anexos" className="block text-sm font-medium text-gray-700">Anexos</label>
-              <input
-                type="file"
-                id="anexos"
-                multiple
-                onChange={handleAnexosChange}
-                className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full inline-flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium">Tipo</label>
+            <select
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value as Tipos_Documentos)}
+              className="w-full border rounded px-3 py-2"
             >
-              Criar Documento
-            </button>
-          </form>
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Documentos Criados</h2>
-          <div className="space-y-4">
-            {documentos.map((doc) => (
-              <div key={doc.id} className="p-4 border border-gray-200 rounded-lg shadow-sm">
-                <h3 className="text-lg font-bold">{doc.titulo_documento}</h3>
-                <p className="text-sm text-gray-600">ID: {doc.id}</p>
-                <p className="text-sm text-gray-600">Tipo: {doc.tipo}</p>
-                <p className="text-sm text-gray-600">Data de Emissão: {new Date(doc.data_emissão).toLocaleDateString()}</p>
-                <p className="mt-2">{doc.conteudo}</p>
-                <p className="text-sm font-medium mt-2">Autor: {doc.autor}</p>
-                {doc.anexos && doc.anexos.length > 0 && (
-                  <div className="mt-2">
-                    <h4 className="text-sm font-semibold text-gray-800">Anexos:</h4>
-                      <ul className="list-disc list-inside text-gray-600">
-                        {doc.anexos.map((anexo, index) => (
-                          <li key={index} className="text-sm">
-                            {anexo.name} ({Math.round(anexo.size / 1024)} KB)
-                          </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ))}
-            {documentos.length === 0 && (
-              <p className="text-gray-500">Nenhum documento criado ainda.</p>
+              {tiposPermitidos.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Data de Emissão</label>
+            <input
+              type="date"
+              value={dataEmissao}
+              onChange={(e) => setDataEmissao(e.target.value)}
+              required
+              className="w-full border rounded px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Autor</label>
+            <input
+              type="text"
+              value={autor}
+              onChange={(e) => setAutor(e.target.value)}
+              required
+              className="w-full border rounded px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Conteúdo</label>
+            <textarea
+              value={conteudo}
+              onChange={(e) => setConteudo(e.target.value)}
+              required
+              className="w-full border rounded px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Anexos</label>
+            <input
+              type="file"
+              multiple
+              onChange={handleAnexosChange}
+              className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-[var(--color-accent)] file:text-[var(--color-white)] hover:file:bg-indigo-300"
+            />
+            {erroAnexo && (
+              <p className="text-sm text-[var(--color-destructive)] mt-1">{erroAnexo}</p>
             )}
           </div>
+
+          <button
+            type="submit"
+            disabled={!!erroAnexo}
+            className={`px-4 py-2 rounded transition ${
+              erroAnexo
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-[var(--color-success)] text-[var(--color-success-foreground)] hover:bg-green-600'
+            }`}
+          >
+            Criar Documento
+          </button>
         </div>
-      </div>
-    </div>
+      </form>
+
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {documentos.map((doc) => (
+          <div key={doc.id} className="bg-white text-black border rounded-lg shadow p-4">
+            <h2 className="text-xl font-semibold text-[var(--color-primary)]">{doc.titulo_documento}</h2>
+            <p className="text-sm text-gray-600">Tipo: {doc.tipo}</p>
+            <p className="text-sm text-gray-600">
+              Emissão: {new Date(doc.data_emissão).toLocaleDateString()}
+            </p>
+            <p className="mt-2">{doc.conteudo}</p>
+            <p className="text-sm mt-2 font-medium text-[var(--color-secondary)]">Autor: {doc.autor}</p>
+            {doc.anexos && doc.anexos.length > 0 && (
+              <ul className="mt-2 list-disc list-inside text-sm text-gray-700">
+                {doc.anexos.map((file, index) => (
+                  <li key={index}>
+                    {file.name} ({Math.round(file.size / 1024)} KB)
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+        {documentos.length === 0 && (
+          <p className="text-[var(--color-warning)] text-sm">Nenhum documento criado ainda.</p>
+        )}
+      </section>
+    </main>
   );
-};
+}
