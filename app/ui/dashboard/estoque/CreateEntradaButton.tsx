@@ -5,15 +5,7 @@ import Modal from '@/app/ui/components/Modal';
 import CreateEntradaForm from './CreateEntradaForm';
 import { ArrowDown } from 'lucide-react';
 import type { Supplier } from '@prisma/client';
-
-// Tipo "puro" para o item de catálogo, seguro para passar para client components
-export type PlainCatalogoItem = {
-  id: string;
-  nome: string;
-  custoUnitario: number;
-  nivelMinimo: number;
-  // Adicione outros campos se necessário no futuro
-};
+import { PlainCatalogoItem } from '@/app/lib/definitions';
 
 interface CreateEntradaButtonProps {
   catalogoItens: PlainCatalogoItem[];

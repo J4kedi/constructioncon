@@ -1,11 +1,12 @@
 'use client';
 
-import { Lock, Mail, TriangleAlert, User } from "lucide-react";
+import { Lock, Mail, Shield, User } from "lucide-react";
 import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { registerUser } from "@/app/actions/auth";
-import InputField from "./InputField";
-import { Button } from "./Button";
+import InputField from "@/app/ui/components/InputField";
+import SelectField from "@/app/ui/components/SelectField";
+import { Button } from "@/app/ui/components/Button";
 import { toast } from "sonner";
 
 interface RegisterFormProps {
@@ -32,8 +33,8 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
         onClose();
       }
     }
-    if (state.error) {
-      toast.error(state.error);
+    if (state.errors) {
+      toast.error(state.message);
     }
   }, [state, onClose]);
 
@@ -47,7 +48,7 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
       <form action={dispatch}>
         <div className="space-y-4">
           <InputField
-            id="name" // Corrigido de fullName para name
+            id="name"
             name="name"
             label="Nome do Usuário"
             Icon={User}
@@ -66,20 +67,18 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
             required
           />
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label htmlFor="role" className="mb-2 block text-sm font-medium text-text">Função</label>
-              <select 
-                id="role" 
-                name="role" 
-                className="block w-full appearance-none rounded-md border border-secondary/20 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-50 py-2 px-3 text-sm"
-              >
-                <option value="USER">Usuário</option>
-                <option value="COMPANY_ADMIN">Administrador</option>
-                <option value="END_CUSTOMER">Cliente Final</option>
-              </select>
-            </div>
-          </div>
+          <SelectField
+            id="role"
+            name="role"
+            label="Função"
+            Icon={Shield}
+            defaultValue="USER"
+            required
+          >
+            <option value="USER">Usuário</option>
+            <option value="COMPANY_ADMIN">Administrador</option>
+            <option value="END_CUSTOMER">Cliente Final</option>
+          </SelectField>
 
           <InputField
             id="password"

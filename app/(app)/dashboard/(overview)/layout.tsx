@@ -9,6 +9,7 @@ export default async function OverviewLayout({
   status,
   stock,
   feed,
+  performance,
 }: {
   children: React.ReactNode;
   summary: React.ReactNode;
@@ -17,12 +18,13 @@ export default async function OverviewLayout({
   status: React.ReactNode;
   stock: React.ReactNode;
   feed: React.ReactNode;
+  performance: React.ReactNode;
 }) {
   const { user, subdomain } = await getRequestContext();
 
-  if (user?.role === UserRole.SUPER_ADMIN && !subdomain) {
-    return <SuperAdminDashboard />;
-  }
+    if (user?.role === UserRole.SUPER_ADMIN && !subdomain) {
+      return <SuperAdminDashboard />;
+    }
 
   return (
     <>
@@ -30,6 +32,10 @@ export default async function OverviewLayout({
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         {summary}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {performance}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

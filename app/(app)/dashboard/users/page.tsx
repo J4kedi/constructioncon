@@ -2,11 +2,12 @@ import { Suspense } from 'react';
 import { headers } from 'next/headers';
 import { UsersTableSkeleton } from '@/app/ui/components/skeletons';
 import Search from '@/app/ui/components/search';
-import { fetchFilteredUsers } from '@/app/lib/data/user';
 import UsersTable from '@/app/ui/dashboard/users/table';
 import Pagination from '@/app/ui/dashboard/pagination';
 import { auth } from '@/app/actions/auth';
 import CreateUserButton from '@/app/ui/dashboard/users/CreateUserButton';
+import { UserFetcher } from '@/app/lib/data/UserFetcher';
+import PageHeader from '@/app/ui/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,24 +23,19 @@ export default async function Page({
   const headerList = headers();
   const subdomain = (await headerList).get('x-tenant-subdomain');
 
-  if (!subdomain) {
-    return <p className="text-red-500">Subdomínio não identificado.</p>;
-  }
+  const userFetcher = new UserFetcher(subdomain, { includeCompany: false });
+  const { data: users, totalPages } = await userFetcher.fetchPageData(resolvedSearchParams ?? {});
 
-  const { users, totalPages } = await fetchFilteredUsers(subdomain, query, currentPage);
   const session = await auth();
   const currentUserRole = session?.user?.role;
 
   return (
     <div className="w-full">
-      <div className="flex w-full items-center justify-between">
-        <h1 className="text-2xl font-bold text-text">Usuários</h1>
-        <CreateUserButton />
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-        <Search placeholder="Buscar usuários..." />
-      </div>
+      <PageHeader 
+        title="Usuários"
+        actionButtons={<CreateUserButton />}
+        searchPlaceholder="Buscar usuários..."
+      />
 
       <Suspense key={query + currentPage} fallback={<UsersTableSkeleton />}>
         <UsersTable users={users} currentUserRole={currentUserRole} />

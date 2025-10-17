@@ -1,104 +1,66 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { getFinancialOverviewAction, getFinancialHistoryAction } from '@/app/actions/financeiro.actions';
-import { Card, CardsSkeleton } from '@/app/ui/dashboard/cards';
+import { Suspense } from 'react';
+import { getRequestContext } from '@/app/lib/server-utils.ts';
+import { fetchDashboardData } from '@/app/lib/data/dashboard';
+import { getFinancialHistoryAction } from '@/app/actions/financeiro.actions';
+import { Card } from '@/app/ui/dashboard/cards';
 import FinancialHistoryChart from '@/app/ui/dashboard/financeiro/FinancialHistoryChart';
 import { formatCurrency } from '@/app/lib/utils';
 import { DollarSign, TrendingDown, TrendingUp, Archive } from 'lucide-react';
+import { CardsSkeleton, TransactionsTableSkeleton } from '@/app/ui/components/skeletons';
+import AddDespesa from '@/app/ui/dashboard/financeiro/AddDespesa';
+import RecentTransactions from '@/app/ui/dashboard/financeiro/RecentTransactions';
+import PageHeader from '@/app/ui/components/PageHeader';
 
-type OverviewData = {
-    faturamento: number;
-    custosTotais: number;
-    lucroBruto: number;
-    valorEstoque: number;
-};
+async function FinancialCards() {
+  const { subdomain } = await getRequestContext();
+  const overviewData = await fetchDashboardData(subdomain!);
 
-type HistoryData = {
-    name: string;
-    Faturamento: number;
-    Custos: number;
-    Lucro: number;
-}[];
-
-function FinancialPageSkeleton() {
-    const shimmer = 'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 dark:before:via-white/10 before:to-transparent';
-
-    return (
-        <div>
-            <h1 className="text-3xl font-bold text-text mb-6">Painel Financeiro</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-              <CardsSkeleton />
-            </div>
-            <div className="mt-6 grid grid-cols-1 gap-6">
-                <div className={`${shimmer} relative w-full overflow-hidden rounded-xl bg-secondary/20 p-4 h-96`}>
-                    <div className="mb-4 h-8 w-36 rounded-md bg-secondary/40" />
-                    <div className="rounded-xl bg-background/50 p-4 h-full" />
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <Card title="Faturamento Total" value={formatCurrency(overviewData.faturamento)} icon={<DollarSign className="h-5 w-5 text-primary" />} />
+      <Card title="Custos Totais" value={formatCurrency(overviewData.custosTotais)} icon={<TrendingDown className="h-5 w-5 text-primary" />} />
+      <Card title="Lucro Bruto" value={formatCurrency(overviewData.lucroBruto)} icon={<TrendingUp className="h-5 w-5 text-primary" />} />
+      <Card title="Custo de Materiais" value={formatCurrency(overviewData.custoMateriais)} icon={<Archive className="h-5 w-5 text-primary" />} />
+    </div>
+  );
 }
 
-export default function Page() {
-    const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
-    const [historyData, setHistoryData] = useState<HistoryData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+async function FinancialChart() {
+  const historyData = await getFinancialHistoryAction();
+  return (
+    <div className="bg-background border border-secondary/20 rounded-lg p-6 mt-6">
+      <h2 className="text-xl font-bold text-text mb-4">Histórico Financeiro Mensal</h2>
+      <FinancialHistoryChart data={historyData} />
+    </div>
+  );
+}
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [overviewResult, historyResult] = await Promise.all([
-                    getFinancialOverviewAction(),
-                    getFinancialHistoryAction()
-                ]);
-                setOverviewData(overviewResult);
-                setHistoryData(historyResult);
-                setError(null);
-            } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro.';
-                setError(errorMessage);
-                console.error(errorMessage);
-            } finally {
-                if (isLoading) setIsLoading(false);
-            }
-        };
+export default async function Page() {
+  return (
+    <div className="w-full">
+      <PageHeader 
+        title="Painel Financeiro"
+        searchPlaceholder="Buscar transações..."
+        actionButtons={<AddDespesa />}
+      />
+      
+      <Suspense fallback={<CardsSkeleton />}>
+        <FinancialCards />
+      </Suspense>
 
-        fetchData();
-
-        const intervalId = setInterval(fetchData, 3000);
-
-        return () => clearInterval(intervalId);
-    }, []);
-
-    if (isLoading) {
-        return <FinancialPageSkeleton />;
-    }
-
-    if (error) {
-        return <div className="text-red-500">Erro ao carregar dados: {error}</div>;
-    }
-
-    if (!overviewData || !historyData) {
-        return <div>Nenhum dado financeiro encontrado.</div>;
-    }
-
-    return (
-        <div>
-            <h1 className="text-3xl font-bold text-text mb-6">Painel Financeiro</h1>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <Card title="Faturamento Total" value={formatCurrency(overviewData.faturamento)} icon={<DollarSign className="h-5 w-5 text-primary" />} />
-                <Card title="Custos Totais" value={formatCurrency(overviewData.custosTotais)} icon={<TrendingDown className="h-5 w-5 text-primary" />} />
-                <Card title="Lucro Bruto" value={formatCurrency(overviewData.lucroBruto)} icon={<TrendingUp className="h-5 w-5 text-primary" />} />
-                <Card title="Valor em Estoque" value={formatCurrency(overviewData.valorEstoque)} icon={<Archive className="h-5 w-5 text-primary" />} />
-            </div>
-
-            <div className="bg-background border border-secondary/20 rounded-lg p-6 mt-6">
-                <h2 className="text-xl font-bold text-text mb-4">Histórico Financeiro Mensal</h2>
-                <FinancialHistoryChart data={historyData} />
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+        <div className="lg:col-span-3">
+          <Suspense fallback={<CardsSkeleton />}>
+            <FinancialChart />
+          </Suspense>
         </div>
-    );
+      </div>
+      
+      <div className="lg:col-span-2">
+        <Suspense fallback={<TransactionsTableSkeleton />}>
+          <RecentTransactions />
+        </Suspense>
+      </div>
+    </div>
+  );
 }

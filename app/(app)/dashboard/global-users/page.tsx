@@ -7,8 +7,9 @@ export default async function Page({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
-  const query = searchParams?.query || '';
-  const currentPage = Number(searchParams?.page) || 1;
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const query = resolvedSearchParams?.query || '';
+  const currentPage = Number(resolvedSearchParams?.page) || 1;
 
   return (
     <Suspense key={query + currentPage} fallback={<InvoiceSkeleton />}>

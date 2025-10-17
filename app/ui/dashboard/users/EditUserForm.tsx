@@ -1,24 +1,25 @@
-'use client';
-
-import { useActionState, useEffect } from 'react';
-import { User, Briefcase, Pencil } from 'lucide-react';
+import { Briefcase, User, Shield } from 'lucide-react';
 import { Prisma, UserRole } from '@prisma/client';
 import InputField from '@/app/ui/components/InputField';
+import SelectField from '@/app/ui/components/SelectField';
 import { updateUser } from '@/app/actions/user.actions';
+import { toast } from 'sonner';
+import { PlainUser } from '@/app/lib/definitions';
 
-type UserPayload = Prisma.UserGetPayload<{}>;
-
-export default function EditUserForm({ user, onClose }: { user: UserPayload, onClose: () => void }) {
+export default function EditUserForm({ user, onClose }: { user: PlainUser, onClose: () => void }) {
   
   const initialState = { message: null, errors: {}, success: false };
-  const updateUserWithId = updateUser.bind(null);
-  const [state, dispatch] = useActionState(updateUserWithId, initialState);
+  const [state, dispatch] = useActionState(updateUser, initialState);
 
   useEffect(() => {
     if (state.success) {
+      toast.success(state.message || 'Usuário atualizado com sucesso!');
       onClose();
     }
-  }, [state.success, onClose]);
+    if (state.message && !state.success) {
+      toast.error(state.message);
+    }
+  }, [state, onClose]);
 
   return (
     <form action={dispatch}>
@@ -43,20 +44,18 @@ export default function EditUserForm({ user, onClose }: { user: UserPayload, onC
           defaultValue={user.jobTitle || ''}
         />
 
-        <div>
-          <label htmlFor="role" className="mb-2 block text-sm font-medium">Função</label>
-          <select
-            id="role"
-            name="role"
-            className="peer block w-full cursor-pointer rounded-md border border-secondary/30 bg-background py-2 pl-4 text-sm outline-none placeholder:text-text/60 focus:border-primary focus:ring-1 focus:ring-primary/50"
-            defaultValue={user.role}
-            aria-describedby="role-error"
-          >
-            {Object.values(UserRole).map(role => (
-              <option key={role} value={role}>{role.replace('_', ' ').toLowerCase()}</option>
-            ))}
-          </select>
-        </div>
+        <SelectField
+          id="role"
+          name="role"
+          label="Função"
+          Icon={Shield}
+          defaultValue={user.role}
+          required
+        >
+          {Object.values(UserRole).map(role => (
+            <option key={role} value={role}>{role.replace('_', ' ').toLowerCase()}</option>
+          ))}
+        </SelectField>
 
         {state.message && (
           <div aria-live="polite" className="text-sm text-red-500">

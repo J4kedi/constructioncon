@@ -18,6 +18,12 @@ enum UserRole {
   END_CUSTOMER
 }
 
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
 enum StatusObra {
   PLANEJAMENTO
   EM_ANDAMENTO
@@ -93,6 +99,8 @@ model Feature {
   key         String   @unique
   name        String
   description String?
+  href        String   @default("")
+  icon        String   @default("")
 
   tenants     Tenant[]
 }

@@ -57,7 +57,7 @@ export default NextAuth(authConfig).auth(async (req) => {
 
   const headers = new Headers(req.headers);
 
-  if (subdomain && subdomain !== 'www') {
+  if (subdomain && subdomain !== 'www' && !headers.has('x-tenant-id')) {
     try {
       const tenantApiUrl = new URL(`/api/tenant/${subdomain}`, nextUrl.origin);
       const response = await fetch(tenantApiUrl);
@@ -83,5 +83,8 @@ export default NextAuth(authConfig).auth(async (req) => {
 });
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    
+    '/((?!api|_next/static|_next/image|.*\\..*).*)',
+  ],
 };

@@ -1,4 +1,4 @@
-import { getTenantPrismaClient } from '@/app/lib/prisma.ts';
+import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
 
 export async function fetchObrasStatus(subdomain: string) {
@@ -10,66 +10,6 @@ export async function fetchObrasStatus(subdomain: string) {
   return obrasStatusData.map(item => ({ name: item.status, value: item._count.id }));
 }
 
-export async function fetchFinancialOverview(subdomain: string) {
-    const tenantPrisma = getTenantPrismaClient(subdomain);
-
-    const [faturamentoData, custosObrasData, obrasStatusData] = await Promise.all([
-        tenantPrisma.obra.aggregate({
-            _sum: { orcamentoTotal: true },
-            where: { status: { not: 'CANCELADA' } },
-        }),
-        tenantPrisma.obra.aggregate({
-            _sum: { currentCost: true },
-        }),
-        fetchObrasStatus(subdomain), // Reutilizando a nova função
-    ]);
-
-    const faturamento = faturamentoData._sum.orcamentoTotal ?? new Decimal(0);
-    const custosObras = custosObrasData._sum.currentCost ?? new Decimal(0);
-
-    const saidas = await tenantPrisma.estoqueMovimento.findMany({
-        where: { tipo: 'SAIDA' },
-        include: { catalogoItem: { select: { custoUnitario: true } } },
-    });
-
-    const custosEstoque = saidas.reduce((acc, saida) => {
-        const custoMovimento = saida.catalogoItem.custoUnitario.mul(saida.quantidade * -1);
-        return acc.add(custoMovimento);
-    }, new Decimal(0));
-
-    const stockLevels = await tenantPrisma.estoqueMovimento.groupBy({
-        by: ['catalogoItemId'],
-        _sum: { quantidade: true },
-    });
-
-    const itemsInStock = await tenantPrisma.catalogoItem.findMany({
-        where: { id: { in: stockLevels.map(s => s.catalogoItemId) } },
-        select: { id: true, custoUnitario: true },
-    });
-
-    const itemCustoMap = new Map(itemsInStock.map(i => [i.id, i.custoUnitario]));
-
-    const valorEstoque = stockLevels.reduce((acc, level) => {
-        const custo = itemCustoMap.get(level.catalogoItemId);
-        const quantidade = level._sum.quantidade;
-        if (custo && quantidade) {
-            return acc.add(custo.mul(quantidade));
-        }
-        return acc;
-    }, new Decimal(0));
-
-    const custosTotais = custosObras.add(custosEstoque);
-    const lucroBruto = faturamento.sub(custosTotais);
-
-    return {
-        faturamento: faturamento.mul(100).toNumber(),
-        custosTotais: custosTotais.mul(100).toNumber(),
-        lucroBruto: lucroBruto.mul(100).toNumber(),
-        valorEstoque: valorEstoque.mul(100).toNumber(),
-        obrasStatus: obrasStatusData,
-    };
-}
-
 export async function fetchFinancialHistory(subdomain: string) {
     const tenantPrisma = getTenantPrismaClient(subdomain);
 
@@ -79,37 +19,38 @@ export async function fetchFinancialHistory(subdomain: string) {
             currentCost: true, 
             createdAt: true 
         },
+        where: { status: { not: 'CANCELADA' } }
     });
 
     const saidasEstoque = await tenantPrisma.estoqueMovimento.findMany({
         where: { tipo: 'SAIDA' },
-        include: { catalogoItem: { select: { custoUnitario: true } } },
+        select: { 
+            quantidade: true, 
+            data: true,
+            catalogoItem: { select: { custoUnitario: true } } 
+        },
     });
 
     const monthlyData = new Map<string, { faturamento: Decimal, custos: Decimal }>();
 
     obras.forEach(obra => {
-        if (obra.createdAt) {
-            const month = obra.createdAt.toISOString().slice(0, 7); // YYYY-MM
-            const monthEntry = monthlyData.get(month) ?? { faturamento: new Decimal(0), custos: new Decimal(0) };
-            
-            monthEntry.faturamento = monthEntry.faturamento.add(obra.orcamentoTotal ?? 0);
-            monthEntry.custos = monthEntry.custos.add(obra.currentCost ?? 0);
+        const month = obra.createdAt.toISOString().slice(0, 7);
+        const monthEntry = monthlyData.get(month) ?? { faturamento: new Decimal(0), custos: new Decimal(0) };
+        
+        monthEntry.faturamento = monthEntry.faturamento.add(obra.orcamentoTotal ?? 0);
+        monthEntry.custos = monthEntry.custos.add(obra.currentCost ?? 0);
 
-            monthlyData.set(month, monthEntry);
-        }
+        monthlyData.set(month, monthEntry);
     });
 
     saidasEstoque.forEach(saida => {
-        if (saida.createdAt) {
-            const month = saida.createdAt.toISOString().slice(0, 7); // YYYY-MM
-            const monthEntry = monthlyData.get(month) ?? { faturamento: new Decimal(0), custos: new Decimal(0) };
+        const month = saida.data.toISOString().slice(0, 7);
+        const monthEntry = monthlyData.get(month) ?? { faturamento: new Decimal(0), custos: new Decimal(0) };
 
-            const custoMovimento = saida.catalogoItem.custoUnitario.mul(saida.quantidade * -1);
-            monthEntry.custos = monthEntry.custos.add(custoMovimento);
+        const custoMovimento = saida.catalogoItem.custoUnitario.mul(saida.quantidade);
+        monthEntry.custos = monthEntry.custos.add(custoMovimento);
 
-            monthlyData.set(month, monthEntry);
-        }
+        monthlyData.set(month, monthEntry);
     });
 
     const sortedMonths = Array.from(monthlyData.keys()).sort();
@@ -119,11 +60,47 @@ export async function fetchFinancialHistory(subdomain: string) {
         const lucro = data.faturamento.sub(data.custos);
         return {
             name: month,
-            Faturamento: data.faturamento.mul(100).toNumber(),
-            Custos: data.custos.mul(100).toNumber(),
-            Lucro: lucro.mul(100).toNumber(),
+            Faturamento: data.faturamento.toNumber(),
+            Custos: data.custos.toNumber(),
+            Lucro: lucro.toNumber(),
         };
     });
 
     return formattedData;
+}
+
+export async function fetchRecentTransactions(subdomain: string, limit: number = 10) {
+    const tenantPrisma = getTenantPrismaClient(subdomain);
+
+    const despesas = await tenantPrisma.despesa.findMany({
+        take: limit,
+        orderBy: { data: 'desc' },
+        select: {
+            id: true,
+            descricao: true,
+            valor: true,
+            categoria: true,
+            data: true,
+            obra: { select: { nome: true } }
+        }
+    });
+
+    const receitas = await tenantPrisma.receita.findMany({
+        take: limit,
+        orderBy: { data: 'desc' },
+        select: {
+            id: true,
+            descricao: true,
+            valor: true,
+            data: true,
+            obra: { select: { nome: true } }
+        }
+    });
+
+    const transactions = [
+        ...despesas.map(d => ({ ...d, valor: d.valor.toNumber(), tipo: 'DESPESA' as const })),
+        ...receitas.map(r => ({ ...r, valor: r.valor.toNumber(), tipo: 'RECEITA' as const, categoria: 'N/A' }))
+    ];
+
+    return transactions.sort((a, b) => b.data.getTime() - a.data.getTime()).slice(0, limit);
 }

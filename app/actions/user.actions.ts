@@ -1,36 +1,62 @@
-'use server';
+'use server'
 
-import { getTenantPrismaClient } from '@/app/lib/prisma';
-import { revalidatePath } from 'next/cache';
-import { UpdateUserSchema, DeleteUserSchema } from '@/app/lib/definitions';
+import { UpdateUserSchema, DeleteUserSchema, UpdateProfileSchema, FormState } from '@/app/lib/definitions';
+import { auth } from '@/app/actions/auth';
+import { executeFormAction } from '@/app/lib/action-handler';
+import fs from 'fs/promises';
+import path from 'path';
+import { createGenericDeleteAction, createGenericUpdateAction } from '@/app/lib/action-factories';
+import { getTenantPrismaClient } from '../lib/prisma';
 
-import { executeFormAction, FormState } from '@/app/lib/action-handler';
+async function _handleImageUpload(formData: FormData, dataToUpdate: any) {
+  const imageFile = formData.get('image') as File;
+  if (imageFile && imageFile.size > 0) {
+    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const filename = `${Date.now()}-${imageFile.name.replace(/\s/g, '_')}`;
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    await fs.mkdir(uploadsDir, { recursive: true });
+    await fs.writeFile(path.join(uploadsDir, filename), buffer);
+    dataToUpdate.avatarUrl = `/uploads/${filename}`;
+  }
+}
 
-export async function updateUser(prevState: FormState, formData: FormData): Promise<FormState> {
+export async function updateProfile(prevState: FormState, formData: FormData): Promise<FormState> {
   return executeFormAction({
     formData,
-    schema: UpdateUserSchema,
-    requires: ['subdomain'],
-    revalidatePath: '/dashboard/users',
+    schema: UpdateProfileSchema,
+    revalidatePath: '/dashboard',
     logic: async (data, context) => {
-      const { id, ...dataToUpdate } = data;
-      const tenantPrisma = getTenantPrismaClient(context.subdomain!);
-      await tenantPrisma.user.update({ where: { id }, data: dataToUpdate });
+      const session = await auth();
+      if (!session?.user?.id) {
+        throw new Error("Usuário não autenticado.");
+      }
+
+      const dataToUpdate: { name?: string; avatarUrl?: string } = {};
+      if (data.name) {
+        dataToUpdate.name = data.name;
+      }
+
+      await _handleImageUpload(formData, dataToUpdate);
+
+      if (Object.keys(dataToUpdate).length > 0) {
+        const tenantPrisma = getTenantPrismaClient(context.subdomain);
+        await tenantPrisma.user.update({ where: { id: session.user.id }, data: dataToUpdate });
+      }
     },
-    successMessage: 'Usuário atualizado com sucesso!',
+    successMessage: 'Perfil atualizado com sucesso!',
   });
 }
 
-export async function deleteUser(prevState: FormState, formData: FormData): Promise<FormState> {
-  return executeFormAction({
-    formData,
-    schema: DeleteUserSchema,
-    requires: ['subdomain'],
-    revalidatePath: '/dashboard/users',
-    logic: async (data, context) => {
-      const tenantPrisma = getTenantPrismaClient(context.subdomain!);
-      await tenantPrisma.user.delete({ where: { id: data.id } });
-    },
-    successMessage: 'Usuário deletado com sucesso.',
-  });
-}
+export const updateUser = createGenericUpdateAction(
+    'user',
+    UpdateUserSchema,
+    '/dashboard/users',
+    'Usuário atualizado com sucesso!'
+);
+
+export const deleteUser = createGenericDeleteAction(
+    'user',
+    DeleteUserSchema,
+    '/dashboard/users',
+    'Usuário deletado com sucesso.'
+);

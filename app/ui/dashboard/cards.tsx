@@ -1,24 +1,7 @@
 import React from "react";
 import { Card as GenericCard, CardContent, CardHeader } from "@/app/ui/components/Card";
 import { roboto } from "@/app/ui/fonts";
-import { CardSkeleton } from "@/app/ui/components/skeletons";
-
-export function CardsSkeleton() {
-  return (
-    <>
-      <CardSkeleton />
-      <CardSkeleton />
-      <CardSkeleton />
-      <CardSkeleton />
-    </>
-  );
-}
-
-type CardProps = {
-  title: string;
-  value: number | string;
-  icon: React.ReactNode;
-};
+import { CardProps } from "@/app/lib/definitions";
 
 export function Card({ title, value, icon }: CardProps) {
   return (

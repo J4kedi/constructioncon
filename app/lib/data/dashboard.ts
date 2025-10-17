@@ -1,67 +1,54 @@
 import { getTenantPrismaClient } from '@/app/lib/prisma';
-import { formatCurrency } from "../utils";
-import { fetchFinancialOverview } from './financeiro';
+import { Decimal } from '@prisma/client/runtime/library';
+import { unstable_cache as cache } from 'next/cache';
 
-// Função para os cards do topo do overview (nova)
-export async function fetchSummaryData(subdomain: string) {
+async function _fetchDashboardData(subdomain: string) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
 
-  const financialData = await fetchFinancialOverview(subdomain);
-  const activeObrasCount = await tenantPrisma.obra.count({
-    where: { status: 'EM_ANDAMENTO' },
-  });
+  const [faturamentoData, custosData, activeObrasCount, usersCount, saidasData] = await tenantPrisma.$transaction([
+    // 1. Faturamento
+    tenantPrisma.obra.aggregate({
+      _sum: { orcamentoTotal: true },
+      where: { status: { not: 'CANCELADA' } },
+    }),
+    // 2. Custos Totais
+    tenantPrisma.despesa.aggregate({
+      _sum: { valor: true },
+    }),
+    // 3. Obras Ativas
+    tenantPrisma.obra.count({
+      where: { status: 'EM_ANDAMENTO' },
+    }),
+    // 4. Contagem de Usuários
+    tenantPrisma.user.count(),
+    // 5. Custo de Materiais (Saídas de Estoque)
+    tenantPrisma.estoqueMovimento.findMany({
+        where: { tipo: 'SAIDA' },
+        include: { catalogoItem: { select: { custoUnitario: true } } },
+    }),
+  ]);
 
-  const usersCount = await tenantPrisma.user.count();
+  const faturamento = faturamentoData._sum.orcamentoTotal ?? new Decimal(0);
+  const custosTotais = custosData._sum.valor ?? new Decimal(0);
+  const lucroBruto = faturamento.sub(custosTotais);
+
+  const custoMateriais = saidasData.reduce((acc, saida) => {
+    const custoMovimento = saida.catalogoItem.custoUnitario.mul(saida.quantidade);
+    return acc.add(custoMovimento);
+  }, new Decimal(0));
 
   return {
-    faturamento: financialData.faturamento,
-    lucroBruto: financialData.lucroBruto,
+    faturamento: faturamento.toNumber(),
+    custosTotais: custosTotais.toNumber(),
+    lucroBruto: lucroBruto.toNumber(),
     activeObrasCount,
     usersCount,
+    custoMateriais: custoMateriais.toNumber(),
   };
 }
 
-// Função antiga, pode ser obsoleta
-export async function fetchDashboardData(subdomain: string) {
-  try {
-    const tenantPrisma = getTenantPrismaClient(subdomain);
-
-    const obrasCountPromise = tenantPrisma.obra.count();
-    const usersCountPromise = tenantPrisma.user.count();
-    const budgetPromise = tenantPrisma.obra.aggregate({
-      _sum: {
-        orcamentoTotal: true,
-      },
-    });
-    const costPromise = tenantPrisma.obra.aggregate({
-      _sum: {
-        currentCost: true,
-      },
-    });
-
-    const [
-      numberOfObras,
-      numberOfUsers,
-      budgetData,
-      costData
-    ] = await Promise.all([
-      obrasCountPromise,
-      usersCountPromise,
-      budgetPromise,
-      costPromise,
-    ]);
-
-    const totalBudget = formatCurrency(budgetData._sum.orcamentoTotal?.toNumber() ?? 0);
-    const totalCost = formatCurrency(costData._sum.currentCost?.toNumber() ?? 0);
-
-    return {
-      numberOfObras,
-      numberOfUsers,
-      totalBudget,
-      totalCost,
-    };
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch dashboard card data.');
-  }
-}
+export const fetchDashboardData = cache(
+    _fetchDashboardData,
+    ['dashboard-data'],
+    { tags: ['dashboard-data'] }
+);

@@ -62,5 +62,7 @@ export abstract class BaseDataFetcher<T> {
 
   protected abstract getModelName(): string;
   protected abstract getQueryBuilder(): ISearchableQueryBuilder;
-  protected abstract getIncludeArgs(): object;
+  protected getIncludeArgs(): object {
+    return {};
+  }
 }

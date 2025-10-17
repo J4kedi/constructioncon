@@ -1,0 +1,26 @@
+import {
+    BarChart3,
+    Wallet,
+    Users,
+    Warehouse,
+    FileText,
+    HardHat,
+    LucideIcon,
+    LayoutDashboard,
+    Building2,
+    TerminalSquare,
+    Server,
+} from 'lucide-react';
+
+export const ICON_MAP: Record<string, LucideIcon> = {
+    'BarChart3': BarChart3,
+    'HardHat': HardHat,
+    'Wallet': Wallet,
+    'Users': Users,
+    'Warehouse': Warehouse,
+    'FileText': FileText,
+    'LayoutDashboard': LayoutDashboard,
+    'Building2': Building2,
+    'TerminalSquare': TerminalSquare,
+    'Server': Server,
+};

@@ -1,0 +1,39 @@
+# Resumo das Funcionalidades da Visão Geral (Overview) do Tenant
+
+Este documento detalha as funcionalidades presentes na tela de visão geral de cada tenant no sistema ConstructionCon.
+
+## 1. Prazos Próximos (Upcoming Deadlines)
+
+- **O que faz:** Esta funcionalidade busca e exibe as 5 obras que têm o prazo de conclusão mais próximo, dentro dos próximos 7 dias.
+- **Lógica:** Ela consulta todas as obras que ainda não foram marcadas como "CONCLUIDA" ou "CANCELADA" e cuja data de `dataPrevistaFim` está no futuro, mas a menos de uma semana de distância. As obras são ordenadas pela data de finalização mais próxima.
+- **Utilidade:** Ajuda os gestores a priorizar e focar nas obras que precisam de atenção imediata para evitar atrasos.
+
+## 2. Obras Acima do Orçamento (Budget Overruns)
+
+- **O que faz:** Identifica e lista as 5 obras cujo custo atual (`currentCost`) já ultrapassou o orçamento planejado (`orcamentoTotal`).
+- **Lógica:** A funcionalidade executa uma query diretamente no banco de dados para calcular a diferença entre o custo e o orçamento (`overrun`). Ela filtra apenas as obras ativas (não "CONCLUIDA" ou "CANCELADA") e as ordena pelo valor do estouro de orçamento, da maior para a menor.
+- **Utilidade:** Fornece uma visão clara e imediata de quais projetos estão com problemas financeiros, permitindo uma ação corretiva rápida para mitigar perdas.
+
+## 3. Itens com Estoque Baixo (Low Stock Items)
+
+- **O que faz:** Mostra os 5 itens do catálogo de materiais cujo estoque atual está abaixo do nível mínimo definido.
+- **Lógica:** A funcionalidade primeiro calcula o estoque atual de cada item somando todos os movimentos de entrada e saída no `EstoqueMovimento`. Em seguida, compara essa quantidade com o `nivelMinimo` definido no `CatalogoItem` e filtra os que estão abaixo do limite. A lista é ordenada para mostrar os itens mais críticos primeiro (maior diferença entre o mínimo e o atual).
+- **Utilidade:** É uma ferramenta proativa de gestão de inventário que ajuda a evitar a falta de materiais essenciais, o que poderia paralisar uma obra. Permite que o time de compras atue antes que o estoque se esgote.
+
+## 4. Atividade Recente (Recent Activity)
+
+- **O que faz:** Exibe uma lista das 10 últimas atividades relevantes que ocorreram no sistema, focando em atualizações de obras.
+- **Lógica:** Busca as 10 obras que foram atualizadas mais recentemente (com base no campo `updatedAt`). Para cada uma, ela gera uma descrição amigável, como "Obra 'Nome da Obra' atualizada para em andamento.".
+- **Utilidade:** Oferece um feed de notícias rápido sobre o que está acontecendo nos projetos, mantendo a equipe informada sobre o progresso e as mudanças de status mais recentes.
+
+## 5. KPIs de Desempenho de Projeto (SPI & CPI)
+
+- **O que faz:** Exibe um ranking das 5 obras com melhor e pior performance combinada de prazo e custo, utilizando os índices de performance de prazo (SPI) e de custo (CPI) do método do valor agregado (EVM - Earned Value Management).
+- **Lógica:**
+    - **Valor Agregado (VA):** Percentual de conclusão da obra multiplicado pelo `orcamentoTotal`. O percentual de conclusão pode ser derivado das tarefas/etapas concluídas.
+    - **Custo Real (CR):** `currentCost`.
+    - **Valor Planejado (VP):** O valor do orçamento que deveria ter sido gasto até a data atual, baseado no cronograma.
+    - **Cálculo dos Índices:**
+        - **CPI (Cost Performance Index):** CPI = VA / CR. Se < 1, está acima do custo. Se > 1, está abaixo.
+        - **SPI (Schedule Performance Index):** SPI = VA / VP. Se < 1, está atrasado. Se > 1, está adiantado.
+- **Utilidade:** Oferece uma métrica padronizada e preditiva. Um CPI ou SPI consistentemente abaixo de 0.9 indica um projeto que precisa de intervenção imediata, mesmo que ainda não tenha estourado o orçamento ou o prazo final. É uma visão muito mais gerencial e proativa.

@@ -1,14 +1,17 @@
 import { auth } from '@/app/actions/auth';
 import { fetchNavLinks } from '@/app/lib/data/nav';
-import SideNavContent from './SideNavContent';
+import { superAdminLinks } from '@/app/lib/data/super-admin-links';
+import SideNavLayout from './SideNavLayout';
+import { UserRole } from '@prisma/client';
 
 export default async function SideNav() {
   const session = await auth();
-  const navLinks = await fetchNavLinks();
-
   if (!session?.user) {
-    return null; 
+    return null;
   }
 
-  return <SideNavContent user={session.user} navLinks={navLinks} />;
+  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
+  const navLinks = isSuperAdmin ? superAdminLinks : await fetchNavLinks();
+
+  return <SideNavLayout user={session.user} navLinks={navLinks} isSuperAdmin={isSuperAdmin} />;
 }

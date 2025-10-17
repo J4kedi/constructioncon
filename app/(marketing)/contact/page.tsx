@@ -1,6 +1,6 @@
-import Footer from "../ui/components/Footer";
-import Header from "../ui/components/Header";
-import ContactForm from "../ui/landing/ContactForm";
+import Footer from "@/app/ui/components/Footer";
+import ContactForm from "@/app/ui/landing/ContactForm";
+import Header from "@/app/ui/landing/Header";
 
 export default function Page() {
     return (

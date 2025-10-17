@@ -6,14 +6,14 @@ import UsersTable from '@/app/ui/dashboard/users/table';
 import Modal from '@/app/ui/components/Modal';
 import CreateUserForm from '@/app/ui/dashboard/users/CreateUserForm';
 import { Plus } from 'lucide-react';
-import { Prisma, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import Search from '@/app/ui/components/search';
 import Pagination from '@/app/ui/dashboard/pagination';
 
-type User = Prisma.UserGetPayload<{}>;
+import type { PlainUser } from '@/app/lib/definitions';
 
 interface UsersPageContentProps {
-  initialUsers: User[];
+  initialUsers: PlainUser[];
   totalPages: number;
   currentUserRole?: UserRole;
 }

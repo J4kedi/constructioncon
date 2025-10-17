@@ -1,8 +1,6 @@
 import { BaseDataFetcher } from './BaseDataFetcher';
-import { Prisma } from '@prisma/client';
+import type { ObraWithEtapas } from '@/app/lib/definitions';
 import { ObraQueryBuilder } from './query/ObraQueryBuilder';
-
-type ObraWithEtapas = Prisma.ObraGetPayload<{ include: { etapas: true } }>;
 
 export class ObraFetcher extends BaseDataFetcher<ObraWithEtapas> {
   constructor(subdomain: string) {

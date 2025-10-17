@@ -1,12 +1,12 @@
 'use client';
 
 import { Mail, Lock, TriangleAlert } from "lucide-react";
-import { useActionState, useState } from "react"; // Corrigido
+import { useActionState, useState } from "react";
 import { useFormStatus } from 'react-dom';
 import { LoginState } from '@/app/lib/definitions';
 import { authenticate } from '@/app/actions/auth';
-import InputField from "./InputField";
-import { Button } from './Button';
+import InputField from "@/app/ui/components/InputField";
+import { Button } from '@/app/ui/components/Button';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -22,7 +22,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   
   const initialState: LoginState = {};
-  const [state, dispatch] = useActionState(authenticate, initialState); // Corrigido
+  const [state, dispatch] = useActionState(authenticate, initialState);
 
   return (
     <main className="bg-background flex items-center justify-center py-16 sm:py-24 min-h-screen">

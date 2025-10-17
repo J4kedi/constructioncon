@@ -2,8 +2,9 @@ import { fetchFilteredGlobalUsers, fetchGlobalUsersTotalPages } from '@/app/lib/
 import GlobalUsersPageContent from '@/app/ui/dashboard/super-admin/global-users-page';
 
 export default async function GlobalUserDataFetcher({ searchParams }: { searchParams: { [key: string]: string | undefined } }) {
-    const query = searchParams?.query || '';
-    const currentPage = Number(searchParams?.page) || 1;
+    const resolvedSearchParams = await Promise.resolve(searchParams);
+    const query = resolvedSearchParams?.query || '';
+    const currentPage = Number(resolvedSearchParams?.page) || 1;
 
     const [users, totalPages] = await Promise.all([
         fetchFilteredGlobalUsers(query, currentPage),

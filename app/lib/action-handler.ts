@@ -4,22 +4,14 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { getRequestContext } from '@/app/lib/server-utils';
-import type { RequestContext } from '@/app/lib/utils.ts';
-
-export type FormState = {
-  errors?: Record<string, string[] | undefined>;
-  message?: string | null;
-  success?: boolean;
-};
-
-type RequiredContext = 'subdomain' | 'user';
+import type { RequestContext, FormState, RequiredContext } from '@/app/lib/definitions';
 
 interface ActionConfig<T extends z.ZodType<any, any>> {
   schema: T;
   formData: FormData;
   logic: (data: z.infer<T>, context: RequestContext) => Promise<void>;
-  revalidatePath?: string; // Tornar opcional
-  revalidatePaths?: string[]; // Adicionar novo campo
+  revalidatePath?: string;
+  revalidatePaths?: string[];
   redirectPath?: string;
   requires?: RequiredContext[];
   successMessage?: string;

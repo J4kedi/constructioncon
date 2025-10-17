@@ -1,8 +1,13 @@
 import { Suspense } from 'react';
-import Search from '@/app/ui/components/search';
+import { getRequestContext } from '@/app/lib/server-utils.ts';
+import { fetchEstoquePageData } from '@/app/lib/data/estoque.ts';
 import { EstoqueDashboardSkeleton } from '@/app/ui/components/skeletons';
 import EstoqueDataWrapper from './EstoqueDataWrapper';
-import ActionButtons from './ActionButtons';
+import CreateItemButton from '@/app/ui/dashboard/estoque/CreateItemButton';
+import CreateEntradaButton from '@/app/ui/dashboard/estoque/CreateEntradaButton';
+import CreateSaidaButton from '@/app/ui/dashboard/estoque/CreateSaidaButton';
+import PageHeader from '@/app/ui/components/PageHeader';
+import { formatObraForUI } from '@/app/lib/utils';
 
 export default async function EstoquePage({
   searchParams,
@@ -14,20 +19,26 @@ export default async function EstoquePage({
   const resolvedSearchParams = await Promise.resolve(searchParams);
   const query = resolvedSearchParams?.query || '';
 
+  const { subdomain } = await getRequestContext();
+  const { catalogoItens, suppliers, obras } = await fetchEstoquePageData(subdomain);
+
   return (
     <div className="w-full">
-      <div className="flex w-full items-center justify-between">
-        <h1 className="text-2xl font-bold text-text">Dashboard de Estoque</h1>
-        <ActionButtons />
-      </div>
-
-      <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-        <Search placeholder="Buscar itens..." />
-      </div>
+      <PageHeader 
+        title="Dashboard de Estoque"
+        searchPlaceholder="Buscar itens..."
+        actionButtons={(
+          <div className="flex items-center gap-4">
+            <CreateItemButton />
+            <CreateEntradaButton catalogoItens={catalogoItens} suppliers={suppliers} />
+            <CreateSaidaButton catalogoItens={catalogoItens} obras={obras} />
+          </div>
+        )}
+      />
 
       <div className="mt-6">
         <Suspense key={query} fallback={<EstoqueDashboardSkeleton />}>
-          <EstoqueDataWrapper />
+          <EstoqueDataWrapper query={query} />
         </Suspense>
       </div>
     </div>

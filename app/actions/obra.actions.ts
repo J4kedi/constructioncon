@@ -1,17 +1,19 @@
 'use server';
 
-import { getTenantPrismaClient } from '@/app/lib/prisma';
-import { ObraSchema, UpdateObraSchema } from '@/app/lib/definitions';
-import { executeFormAction, FormState } from '@/app/lib/action-handler';
+import { ObraSchema, DeleteObraSchema, ObraData, FormState } from "@/app/lib/definitions";
+import { executeFormAction } from '@/app/lib/action-handler';
 import { revalidatePath } from 'next/cache';
 import { StatusObra } from '@prisma/client';
+import { findCompany } from '@/app/lib/data/tenant';
+import { getRequestContext } from '../lib/server-utils';
+import { fetchObraById } from '../lib/data/obra';
+import { formatObraForUI } from '../lib/utils';
+import { createGenericDeleteAction, createGenericUpdateAction } from '@/app/lib/action-factories';
+import { getTenantPrismaClient } from "../lib/prisma";
 
 export async function updateObraStatus(obraId: string, status: StatusObra) {
   try {
     const { subdomain } = await getRequestContext();
-    if (!subdomain) {
-      throw new Error('Subdomínio não identificado.');
-    }
 
     const tenantPrisma = getTenantPrismaClient(subdomain);
     await tenantPrisma.obra.update({
@@ -28,16 +30,9 @@ export async function updateObraStatus(obraId: string, status: StatusObra) {
   }
 }
 
-import { findCompany } from '@/app/lib/data/tenant';
-import { fetchObraById } from '@/app/lib/data/obra.ts';
-import { getRequestContext } from '@/app/lib/server-utils.ts';
-import { formatObraForUI } from '@/app/lib/utils.ts';
 
 export async function getObraDetailsAction(id: string) {
   const { subdomain } = await getRequestContext();
-  if (!subdomain) {
-    throw new Error('Subdomínio não identificado.');
-  }
   const obra = await fetchObraById(id, subdomain);
   if (!obra) {
     return null;
@@ -45,7 +40,7 @@ export async function getObraDetailsAction(id: string) {
   return formatObraForUI(obra);
 }
 
-type ObraData = z.infer<typeof ObraSchema>;
+
 
 async function createResidencialObra(data: ObraData, companyId: string, subdomain: string) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
@@ -107,28 +102,16 @@ export async function createObra(prevState: FormState, formData: FormData) {
   });
 }
 
-export async function updateObra(prevState: FormState, formData: FormData) {
-  return executeFormAction({
-    formData,
-    schema: UpdateObraSchema,
-    requires: ['subdomain'],
-    revalidatePath: '/dashboard/obras',
-    redirectPath: '/dashboard/obras',
-    logic: async (data, context) => {
-      const { id, dataInicio, dataPrevistaFim, ...rest } = data;
-      const tenantPrisma = getTenantPrismaClient(context.subdomain!);
-      
-      await tenantPrisma.obra.update({
-        where: { id },
-        data: {
-          ...rest,
-          dataInicio: dataInicio ? new Date(dataInicio) : undefined,
-          dataPrevistaFim: dataPrevistaFim
-            ? new Date(dataPrevistaFim)
-            : undefined,
-        },
-      });
-    },
-    successMessage: 'Obra atualizada com sucesso!',
-  });
-}
+export const updateObra = createGenericUpdateAction(
+    'obra',
+    ObraSchema,
+    '/dashboard/obras',
+    'Obra atualizada com sucesso!'
+);
+
+export const deleteObra = createGenericDeleteAction(
+    'obra',
+    DeleteObraSchema,
+    '/dashboard/obras',
+    'Obra deletada com sucesso!'
+);

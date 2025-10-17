@@ -1,8 +1,23 @@
 import { getTenantPrismaClient } from '../prisma';
-import { Decimal } from '@prisma/client/runtime/library';
+import { unstable_cache as cache } from 'next/cache';
+import { PrismaClient } from '@prisma/client';
 
-export async function fetchUpcomingDeadlines(subdomain: string) {
-  const tenantPrisma = getTenantPrismaClient(subdomain);
+// --- Higher-Order Function for Tenant Prisma Client ---
+
+function withTenantPrisma<T>(fetcher: (prisma: PrismaClient, subdomain: string) => Promise<T>) {
+  return async (subdomain: string): Promise<T> => {
+    const tenantPrisma = getTenantPrismaClient(subdomain);
+    return fetcher(tenantPrisma, subdomain);
+  };
+}
+
+// --- Utility for Schema Name ---
+
+const getSchemaName = (subdomain: string) => `tenant_${subdomain.replace(/-/g, '-')}`;
+
+// --- Data Fetching Functions ---
+
+const _fetchUpcomingDeadlines = withTenantPrisma(async (tenantPrisma) => {
   const umaSemanaAtras = new Date();
   umaSemanaAtras.setDate(umaSemanaAtras.getDate() + 7);
 
@@ -17,55 +32,64 @@ export async function fetchUpcomingDeadlines(subdomain: string) {
   });
 
   return deadlines.map(obra => ({ ...obra, dataPrevistaFim: obra.dataPrevistaFim.toISOString() }));
-}
+});
 
-export async function fetchBudgetOverruns(subdomain: string) {
-  const tenantPrisma = getTenantPrismaClient(subdomain);
-  const allActiveObras = await tenantPrisma.obra.findMany({
-    where: { status: { notIn: ['CONCLUIDA', 'CANCELADA'] } },
-    select: { id: true, nome: true, orcamentoTotal: true, currentCost: true }
-  });
+const _fetchBudgetOverruns = withTenantPrisma(async (tenantPrisma, subdomain) => {
+  const schemaName = getSchemaName(subdomain);
 
-  return allActiveObras.filter(obra => 
-    obra.currentCost.gt(obra.orcamentoTotal)
-  ).map(obra => ({
-    id: obra.id,
-    nome: obra.nome,
-    overrun: obra.currentCost.sub(obra.orcamentoTotal).toNumber(),
-  })).sort((a, b) => b.overrun - a.overrun).slice(0, 5);
-}
+  const overruns = await tenantPrisma.$queryRawUnsafe<{
+    id: string;
+    nome: string;
+    overrun: number;
+  }[]>(`
+    SELECT 
+      id, 
+      nome, 
+      ("currentCost" - "orcamentoTotal") as overrun
+    FROM "${schemaName}"."Obra"
+    WHERE "currentCost" > "orcamentoTotal"
+    AND status NOT IN ('CONCLUIDA', 'CANCELADA')
+    ORDER BY overrun DESC
+    LIMIT 5;
+  `);
 
-export async function fetchLowStockItems(subdomain: string) {
-  const tenantPrisma = getTenantPrismaClient(subdomain);
-  const stockLevels = await tenantPrisma.estoqueMovimento.groupBy({
-    by: ['catalogoItemId'],
-    _sum: { quantidade: true },
-  });
+  return overruns;
+});
 
-  const items = await tenantPrisma.catalogoItem.findMany({
-    where: { id: { in: stockLevels.map(s => s.catalogoItemId) } },
-    select: { id: true, nivelMinimo: true, nome: true, unidade: true },
-  });
+const _fetchLowStockItems = withTenantPrisma(async (tenantPrisma, subdomain) => {
+  const schemaName = getSchemaName(subdomain);
 
-  const itemMap = new Map(items.map(i => [i.id, i]));
+  const lowStockItems = await tenantPrisma.$queryRawUnsafe<{
+    id: string;
+    nome: string;
+    unidade: string;
+    currentStock: number;
+    nivelMinimo: number;
+  }[]>(`
+    WITH "StockSummary" AS (
+      SELECT
+        "catalogoItemId",
+        SUM(quantidade) as "currentStock"
+      FROM "${schemaName}"."EstoqueMovimento"
+      GROUP BY "catalogoItemId"
+    )
+    SELECT 
+      ci.id,
+      ci.nome,
+      ci.unidade,
+      ss."currentStock",
+      ci."nivelMinimo"
+    FROM "${schemaName}"."CatalogoItem" ci
+    JOIN "StockSummary" ss ON ci.id = ss."catalogoItemId"
+    WHERE ss."currentStock" < ci."nivelMinimo"
+    ORDER BY (ci."nivelMinimo" - ss."currentStock") DESC
+    LIMIT 5;
+  `);
 
-  return stockLevels.map(level => {
-    const item = itemMap.get(level.catalogoItemId)!;
-    const currentStock = level._sum.quantidade ?? new Decimal(0);
-    return { ...item, currentStock };
-  }).filter(item => 
-    item.currentStock.lt(item.nivelMinimo)
-  ).map(item => ({
-    id: item.id,
-    nome: item.nome,
-    unidade: item.unidade,
-    nivelMinimo: item.nivelMinimo.toNumber(),
-    currentStock: item.currentStock.toNumber(),
-  })).slice(0, 5);
-}
+  return lowStockItems;
+});
 
-export async function fetchRecentActivity(subdomain: string) {
-  const tenantPrisma = getTenantPrismaClient(subdomain);
+const _fetchRecentActivity = withTenantPrisma(async (tenantPrisma) => {
   const recentObras = await tenantPrisma.obra.findMany({
     orderBy: { updatedAt: 'desc' },
     take: 10,
@@ -77,15 +101,53 @@ export async function fetchRecentActivity(subdomain: string) {
     description: `Obra "${obra.nome}" atualizada para ${obra.status.replace('_', ' ').toLowerCase()}.`,
     timestamp: obra.updatedAt.toISOString(),
   }));
-}
+});
 
-export async function fetchDashboardOverview(subdomain: string) {
-  const [deadlines, overruns, lowStock, feed] = await Promise.all([
-    fetchUpcomingDeadlines(subdomain),
-    fetchBudgetOverruns(subdomain),
-    fetchLowStockItems(subdomain),
-    fetchRecentActivity(subdomain),
-  ]);
+const _fetchProjectPerformance = withTenantPrisma(async (tenantPrisma) => {
+  const obras = await tenantPrisma.obra.findMany({
+    where: { status: { notIn: ['CONCLUIDA', 'CANCELADA'] } },
+  });
+  console.log('OBRAS:', obras);
 
-  return { deadlines, overruns, lowStock, feed };
-}
+  const performanceData = obras.map(obra => {
+    console.log(`\n--- Calculando performance para: ${obra.nome} ---`);
+    const earnedValue = obra.progressPercentage * obra.orcamentoTotal.toNumber();
+    const actualCost = obra.currentCost.toNumber();
+
+    const totalDuration = obra.dataPrevistaFim.getTime() - obra.dataInicio.getTime();
+    const elapsedDuration = new Date().getTime() - obra.dataInicio.getTime();
+    const plannedProgress = totalDuration > 0 ? Math.min(1, elapsedDuration / totalDuration) : 0;
+    const plannedValue = plannedProgress * obra.orcamentoTotal.toNumber();
+
+    const cpi = actualCost > 0 ? earnedValue / actualCost : 1;
+    const spi = plannedValue > 0 ? earnedValue / plannedValue : 1;
+
+    console.log({ earnedValue, actualCost, plannedValue, cpi, spi });
+
+    const performanceItem = {
+      id: obra.id,
+      nome: obra.nome,
+      cpi,
+      spi,
+      combinedScore: (cpi + spi) / 2,
+    };
+    console.log('PERFORMANCE ITEM:', performanceItem);
+    return performanceItem;
+  });
+
+  performanceData.sort((a, b) => b.combinedScore - a.combinedScore);
+
+  const bestPerformers = performanceData.slice(0, 5);
+  const worstPerformers = performanceData.slice(-5).reverse();
+
+  return { bestPerformers, worstPerformers };
+});
+
+
+// --- Funções Exportadas e Cacheadas ---
+
+export const fetchUpcomingDeadlines = cache(_fetchUpcomingDeadlines, ['dashboard-deadlines'], { tags: ['dashboard-overview'] });
+export const fetchBudgetOverruns = cache(_fetchBudgetOverruns, ['dashboard-overruns'], { tags: ['dashboard-overview'] });
+export const fetchLowStockItems = cache(_fetchLowStockItems, ['dashboard-low-stock'], { tags: ['dashboard-overview'] });
+export const fetchRecentActivity = cache(_fetchRecentActivity, ['dashboard-feed'], { tags: ['dashboard-overview'] });
+export const fetchProjectPerformance = cache(_fetchProjectPerformance, ['project-performance'], { tags: ['dashboard-overview'] });

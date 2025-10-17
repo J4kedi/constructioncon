@@ -1,10 +1,11 @@
 'use server';
 
 import { getTenantPrismaClient } from '@/app/lib/prisma';
-import { CatalogoItemSchema, EstoqueEntradaSchema, EstoqueSaidaSchema } from '@/app/lib/definitions';
-import { executeFormAction, FormState } from '@/app/lib/action-handler';
+import { CatalogoItemSchema, EstoqueEntradaSchema, EstoqueSaidaSchema, FormState } from '@/app/lib/definitions';
+import { executeFormAction } from '@/app/lib/action-handler';
 import { findCompany } from '@/app/lib/data/tenant';
 import { TipoMovimento } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 export async function createCatalogoItem(prevState: FormState, formData: FormData) {
   return executeFormAction({
@@ -62,9 +63,8 @@ export async function createEntradaEstoque(prevState: FormState, formData: FormD
             descricao: `Compra de material: ${itemCatalogo.nome}`,
             valor: custoTotal,
             categoria: 'MATERIAL',
-            approverId: context.user!.id, // O próprio usuário que registra a entrada aprova a despesa
+            approverId: context.user!.id,
             supplierId: data.supplierId,
-            // obraId fica nulo, pois é uma despesa geral de estoque
           },
         });
       });
@@ -81,26 +81,28 @@ export async function createSaidaEstoque(prevState: FormState, formData: FormDat
     requires: ['subdomain', 'user'],
     logic: async (data, context) => {
       const tenantPrisma = getTenantPrismaClient(context.subdomain!);
-      
-      const stockSoma = await tenantPrisma.estoqueMovimento.aggregate({
-        where: { catalogoItemId: data.catalogoItemId },
-        _sum: { quantidade: true },
-      });
-      const sum = stockSoma._sum.quantidade;
-      const quantidadeAtual = sum ? sum.toNumber() : 0;
 
-      if (quantidadeAtual < data.quantidade) {
-        throw new Error('Estoque insuficiente para realizar a saída.');
-      }
+      await tenantPrisma.$transaction(async (tx) => {
+        const stockSoma = await tx.estoqueMovimento.aggregate({
+          where: { catalogoItemId: data.catalogoItemId },
+          _sum: { quantidade: true },
+        });
+        
+        const quantidadeAtual = stockSoma._sum.quantidade ?? new Decimal(0);
 
-      await tenantPrisma.estoqueMovimento.create({
-        data: {
-          catalogoItemId: data.catalogoItemId,
-          quantidade: -data.quantidade, // Saídas são registradas como valores negativos
-          obraDestinoId: data.obraDestinoId,
-          tipo: TipoMovimento.SAIDA,
-          usuarioId: context.user!.id,
-        },
+        if (quantidadeAtual.lt(data.quantidade)) {
+          throw new Error('Estoque insuficiente para realizar a saída.');
+        }
+
+        await tx.estoqueMovimento.create({
+          data: {
+            catalogoItemId: data.catalogoItemId,
+            quantidade: new Decimal(data.quantidade).negated(),
+            obraDestinoId: data.obraDestinoId,
+            tipo: TipoMovimento.SAIDA,
+            usuarioId: context.user!.id,
+          },
+        });
       });
     },
     revalidatePath: '/dashboard/estoque',

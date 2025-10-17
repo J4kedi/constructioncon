@@ -1,4 +1,4 @@
-'use client'; // Error components must be Client Components
+'use client';
 
 import { useEffect } from 'react';
 import { Button } from '@/app/ui/components/Button';
@@ -11,7 +11,6 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Opcional: Logar o erro em um serviço de monitoramento
     console.error(error);
   }, [error]);
 

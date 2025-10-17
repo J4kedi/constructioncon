@@ -36,9 +36,6 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const { subdomain } = resolvedParams;
 
-    if (!subdomain) {
-      return NextResponse.json({ error: 'Subdomínio é obrigatório.' }, { status: 400 });
-    }
 
     const tenant = await getCachedTenantData(subdomain);
 

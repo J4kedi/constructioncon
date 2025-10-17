@@ -35,7 +35,7 @@ export default function FinancialHistoryChart({ data }: FinancialHistoryChartPro
   }
 
   return (
-    <div style={{ width: '100%', height: 400 }}>
+    <div className="w-full h-96">
       <ResponsiveContainer>
         <AreaChart
           data={data}

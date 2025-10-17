@@ -6,29 +6,6 @@ import { getAllTenants } from './tenant';
 
 const ITEMS_PER_PAGE = 8;
 
-export async function fetchFilteredUsers(subdomain: string, query: string, currentPage: number) {
-  try {
-    const tenantPrisma = getTenantPrismaClient(subdomain);
-    const userQueryBuilder = new UserQueryBuilder();
-    const queryArgs = userQueryBuilder
-      .withSearch(query)
-      .withPage(currentPage)
-      .build();
-
-    const [users, totalCount] = await tenantPrisma.$transaction([
-      tenantPrisma.user.findMany(queryArgs),
-      tenantPrisma.user.count({ where: queryArgs.where }),
-    ]);
-
-    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-    return { users, totalPages };
-
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch filtered users.');
-  }
-}
-
 export async function getUserByCredentials(email, password, subdomain) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
   try {
@@ -119,7 +96,7 @@ async function fetchUsersFromTenant(tenant, query) {
       ],
     } : {};
 
-    const users = await tenantPrisma.user.findMany({ where });
+    const users = await tenantPrisma.user.findMany();
     return users.map(u => ({ ...u, companyName: tenant.name }));
   } catch (error) {
     console.error(`Failed to fetch users for tenant ${tenant.subdomain}:`, error);
@@ -153,7 +130,7 @@ export async function fetchGlobalUsersTotalPages(query: string) {
           { email: { contains: query, mode: 'insensitive' } },
         ],
       } : {};
-      const count = await tenantPrisma.user.count({ where });
+      const count = await tenantPrisma.user.count();
       totalCount += count;
     } catch (error) {
       console.error(`Failed to count users for tenant ${tenant.subdomain}:`, error);

@@ -1,76 +1,81 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useActionState, useEffect, useRef } from 'react';
 import { createEntradaEstoque } from '@/app/actions/estoque.actions.ts';
 import { FormState } from '@/app/lib/action-handler';
-import type { CatalogoItem, Supplier } from '@prisma/client';
+import type { Supplier } from '@prisma/client';
+import { toast } from 'sonner';
+import { Button } from '@/app/ui/components/Button';
+import InputField from '@/app/ui/components/InputField';
+import SelectField from '@/app/ui/components/SelectField';
+import { Package, Hash, Truck } from 'lucide-react';
+import { PlainCatalogoItem } from './CreateEntradaButton';
 
 interface CreateEntradaFormProps {
-  catalogoItens: CatalogoItem[];
+  catalogoItens: PlainCatalogoItem[];
   suppliers: Supplier[];
   onClose?: () => void;
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button type="submit" disabled={pending} className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:bg-gray-400">
-      {pending ? 'Registrando Entrada...' : 'Registrar Entrada'}
-    </button>
-  );
-}
-
 export default function CreateEntradaForm({ catalogoItens, suppliers, onClose }: CreateEntradaFormProps) {
-  const initialState: FormState = { errors: {}, message: null };
+  const initialState: FormState = { errors: {}, message: null, success: false };
   const [state, dispatch] = useActionState(createEntradaEstoque, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state.success) {
+      toast.success(state.message || 'Entrada registrada com sucesso!');
       if (onClose) onClose();
     }
-  }, [state.success, onClose]);
+    if (state.message && !state.success) {
+      toast.error(state.message);
+    }
+  }, [state, onClose]);
 
   return (
-    <form action={dispatch} className="space-y-4">
-      
-      <div>
-        <label htmlFor="catalogoItemId" className="mb-2 block text-sm font-medium text-text">Item do Catálogo</label>
-        <select id="catalogoItemId" name="catalogoItemId" required className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm">
-          <option value="" disabled>Selecione um item</option>
-          {catalogoItens.map((item) => (
-            <option key={item.id} value={item.id}>{item.nome}</option>
-          ))}
-        </select>
-        {state.errors?.catalogoItemId && <p className="mt-1 text-xs text-red-500">{state.errors.catalogoItemId[0]}</p>}
-      </div>
+    <form ref={formRef} action={dispatch} className="space-y-4">
+      <SelectField
+        id="catalogoItemId"
+        name="catalogoItemId"
+        label="Item do Catálogo"
+        Icon={Package}
+        required
+        errors={state.errors?.catalogoItemId}
+      >
+        <option value="">Selecione um item</option>
+        {catalogoItens.map((item) => (
+          <option key={item.id} value={item.id}>{item.nome}</option>
+        ))}
+      </SelectField>
 
-      <div>
-        <label htmlFor="quantidade" className="mb-2 block text-sm font-medium text-text">Quantidade</label>
-        <input id="quantidade" name="quantidade" type="number" step="0.01" required className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm" />
-        {state.errors?.quantidade && <p className="mt-1 text-xs text-red-500">{state.errors.quantidade[0]}</p>}
-      </div>
+      <InputField
+        id="quantidade"
+        name="quantidade"
+        label="Quantidade"
+        Icon={Hash}
+        type="number"
+        step="0.01"
+        required
+        errors={state.errors?.quantidade}
+      />
 
-      <div>
-        <label htmlFor="supplierId" className="mb-2 block text-sm font-medium text-text">Fornecedor</label>
-        <select id="supplierId" name="supplierId" required className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm">
-          <option value="" disabled>Selecione um fornecedor</option>
-          {suppliers.map((supplier) => (
-            <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
-          ))}
-        </select>
-        {state.errors?.supplierId && <p className="mt-1 text-xs text-red-500">{state.errors.supplierId[0]}</p>}
-      </div>
-
-      {state.message && !state.success && (
-        <div className="text-sm text-red-500">
-          <p>{state.message}</p>
-        </div>
-      )}
+      <SelectField
+        id="supplierId"
+        name="supplierId"
+        label="Fornecedor"
+        Icon={Truck}
+        required
+        errors={state.errors?.supplierId}
+      >
+        <option value="">Selecione um fornecedor</option>
+        {suppliers.map((supplier) => (
+          <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
+        ))}
+      </SelectField>
 
       <div className="mt-6 flex justify-end gap-4">
-        <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-text rounded-md">Cancelar</button>
-        <SubmitButton />
+        <Button variant="outline" type="button" onClick={onClose}>Cancelar</Button>
+        <Button type="submit">Registrar Entrada</Button>
       </div>
     </form>
   );

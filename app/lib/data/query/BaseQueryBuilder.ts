@@ -1,11 +1,4 @@
-import { Prisma } from '@prisma/client';
-
-type PrismaQueryArgs = {
-    where?: object;
-    orderBy?: object | object[];
-    take?: number;
-    skip?: number;
-};
+import type { PrismaQueryArgs } from '@/app/lib/definitions';
 
 export class BasePrismaQueryBuilder<T extends PrismaQueryArgs> {
     protected query: T;

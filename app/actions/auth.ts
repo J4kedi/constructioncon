@@ -9,9 +9,9 @@ import { headers } from 'next/headers';
 import NextAuth, { AuthError } from 'next-auth';
 import { authConfig } from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
-import { LoginState, UserRegistrationSchema } from '@/app/lib/definitions';
+import { LoginState, UserRegistrationSchema, ChangePasswordSchema, FormState } from '@/app/lib/definitions';
 import { getRequestContext } from '@/app/lib/server-utils';
-import { executeFormAction, FormState } from '@/app/lib/action-handler';
+import { executeFormAction } from '@/app/lib/action-handler';
 
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -53,12 +53,42 @@ export const { auth, signIn, signOut } = NextAuth({
 
 // --- Server Actions ---
 
+export async function changePassword(prevState: FormState, formData: FormData): Promise<FormState> {
+  return executeFormAction({
+    formData,
+    schema: ChangePasswordSchema,
+    logic: async (data, context) => {
+      const session = await auth();
+      if (!session?.user?.id) {
+        throw new Error("Usuário não autenticado.");
+      }
+      const tenantPrisma = getTenantPrismaClient(context.subdomain);
+      const user = await tenantPrisma.user.findUnique({ where: { id: session.user.id } });
+
+      if (!user) {
+        throw new Error("Usuário não encontrado.");
+      }
+
+      const { oldPassword, newPassword } = data;
+
+      const passwordsMatch = await bcrypt.compare(oldPassword, user.password!);
+      if (!passwordsMatch) {
+        throw new Error("A senha antiga está incorreta.");
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await tenantPrisma.user.update({
+        where: { id: session.user.id },
+        data: { password: hashedPassword },
+      });
+    },
+    successMessage: 'Senha alterada com sucesso!',
+  });
+}
+
 export async function registerUser(prevState: FormState, formData: FormData): Promise<FormState> {
     const { subdomain } = await getRequestContext();
 
-    if (!subdomain) {
-        return { message: 'Acesso inválido. Não foi possível identificar a empresa.', success: false };
-    }
 
     return executeFormAction({
         formData,

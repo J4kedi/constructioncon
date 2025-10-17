@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import React, { useActionState, useEffect } from 'react';
 import { updateObra } from '@/app/actions/obra.actions';
 import { FormState } from '@/app/lib/action-handler';
 import { PlainObra } from '@/app/lib/definitions';
+import { toast } from 'sonner';
 
 interface EditObraFormProps {
   obra: PlainObra;
+  onClose: () => void;
 }
 
 // Helper para formatar a data para o input 'date'
@@ -25,9 +27,19 @@ const formatDateForInput = (dateStr: string): string => {
   return '';
 };
 
-export default function EditObraForm({ obra }: EditObraFormProps) {
-  const initialState: FormState = { errors: {}, message: null };
+export default function EditObraForm({ obra, onClose }: EditObraFormProps) {
+  const initialState: FormState = { errors: {}, message: null, success: false };
   const [state, dispatch] = useActionState(updateObra, initialState);
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success(state.message || 'Obra atualizada com sucesso!');
+      onClose();
+    }
+    if (state.message && !state.success) {
+      toast.error(state.message);
+    }
+  }, [state, onClose]);
 
   return (
     <form action={dispatch}>

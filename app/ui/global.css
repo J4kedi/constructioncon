@@ -16,8 +16,6 @@
   --color-success-foreground: #f8fafc; /* slate-50 */
   --color-warning: #f59e0b; /* amber-500 */
   --color-warning-foreground: #f8fafc; /* slate-50 */
-  --color-white: #363131;
-  --color-white-foreground: #000;
 }
 
 @layer theme {
@@ -36,8 +34,6 @@
       --color-success-foreground: #f0fdf4; /* green-50 */
       --color-warning: #b45309; /* amber-700 */
       --color-warning-foreground: #fffbeb; /* amber-50 */
-      --color-white: #363131;
-      --color-white-foreground: #000;
     }
   }
 }

@@ -173,6 +173,7 @@ export const obras: ObraSeed[] = [
     status: StatusObra.EM_ANDAMENTO,
     companyId: companys[0].id,
     endCustomerId: null,
+    type: 'RESIDENCIAL'
   },
   {
     id: 'obra-araucaria',
@@ -187,6 +188,7 @@ export const obras: ObraSeed[] = [
     status: StatusObra.EM_ANDAMENTO,
     companyId: companys[1].id,
     endCustomerId: null,
+    type: 'RESIDENCIAL'
   },
   {
     id: 'obra-praia',
@@ -201,6 +203,7 @@ export const obras: ObraSeed[] = [
     status: StatusObra.PLANEJAMENTO,
     companyId: companys[2].id,
     endCustomerId: users[3].id,
+    type: 'RESIDENCIAL'
   },
 ];
 

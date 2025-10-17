@@ -4,10 +4,10 @@ import UsersTable from "@/app/ui/dashboard/super-admin/users-table";
 import { roboto } from "@/app/ui/fonts";
 import type { User } from '@prisma/client';
 
-type UserWithCompany = User & { companyName: string };
+import type { GlobalUserView } from '@/app/lib/definitions';
 
 interface GlobalUsersPageContentProps {
-  users: UserWithCompany[];
+  users: GlobalUserView[];
   totalPages: number;
 }
 

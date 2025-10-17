@@ -7,10 +7,13 @@ class SeedPublicScript extends BaseScript {
   }
 
   protected async run(): Promise<void> {
-    await this.prisma.feature.createMany({
-      data: ALL_FEATURES,
-      skipDuplicates: true,
-    });
+    for (const feature of ALL_FEATURES) {
+      await this.prisma.feature.upsert({
+        where: { key: feature.key },
+        update: feature,
+        create: feature,
+      });
+    }
   }
 }
 

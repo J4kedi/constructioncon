@@ -1,85 +1,98 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
-import { createCatalogoItem } from '@/app/actions/estoque.actions.ts';
+import { useActionState, useEffect, useRef } from 'react';
+import { createCatalogoItem } from '@/app/actions/estoque.actions';
 import { FormState } from '@/app/lib/action-handler';
 import { UnidadeMedida } from '@prisma/client';
+import { toast } from 'sonner';
+import { Button } from '@/app/ui/components/Button';
+import InputField from '@/app/ui/components/InputField';
+import SelectField from '@/app/ui/components/SelectField';
+import { Package, Text, List, Tag, DollarSign, AlertTriangle } from 'lucide-react';
 
 interface CreateItemFormProps {
   onClose?: () => void;
 }
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button type="submit" disabled={pending} className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:bg-gray-400">
-      {pending ? 'Criando Item...' : 'Criar Item'}
-    </button>
-  );
-}
-
 export default function CreateItemForm({ onClose }: CreateItemFormProps) {
-  const initialState: FormState = { errors: {}, message: null };
+  const initialState: FormState = { errors: {}, message: null, success: false };
   const [state, dispatch] = useActionState(createCatalogoItem, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (state.success) {
+      toast.success(state.message || 'Item criado com sucesso!');
       if (onClose) onClose();
     }
-  }, [state.success, onClose]);
+    if (state.message && !state.success) {
+      toast.error(state.message);
+    }
+  }, [state, onClose]);
 
   return (
-    <form action={dispatch} className="space-y-4">
-      <div>
-        <label htmlFor="nome" className="mb-2 block text-sm font-medium text-text">Nome do Item</label>
-        <input id="nome" name="nome" type="text" required className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm" />
-        {state.errors?.nome && <p className="mt-1 text-xs text-red-500">{state.errors.nome[0]}</p>}
-      </div>
-
-      <div>
-        <label htmlFor="descricao" className="mb-2 block text-sm font-medium text-text">Descrição</label>
-        <textarea id="descricao" name="descricao" rows={3} className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm"></textarea>
-      </div>
-
+    <form ref={formRef} action={dispatch} className="space-y-4">
+      <InputField
+        id="nome"
+        name="nome"
+        label="Nome do Item"
+        Icon={Package}
+        required
+        errors={state.errors?.nome}
+      />
+      <InputField
+        id="descricao"
+        name="descricao"
+        label="Descrição (Opcional)"
+        Icon={Text}
+        errors={state.errors?.descricao}
+      />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label htmlFor="unidade" className="mb-2 block text-sm font-medium text-text">Unidade de Medida</label>
-          <select id="unidade" name="unidade" required className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm">
-            {Object.values(UnidadeMedida).map((unidade) => (
-              <option key={unidade} value={unidade}>{unidade}</option>
-            ))}
-          </select>
-          {state.errors?.unidade && <p className="mt-1 text-xs text-red-500">{state.errors.unidade[0]}</p>}
-        </div>
-        <div>
-          <label htmlFor="categoria" className="mb-2 block text-sm font-medium text-text">Categoria</label>
-          <input id="categoria" name="categoria" type="text" className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm" />
-        </div>
+        <SelectField
+          id="unidade"
+          name="unidade"
+          label="Unidade de Medida"
+          Icon={List}
+          required
+          errors={state.errors?.unidade}
+        >
+          {Object.values(UnidadeMedida).map((unidade) => (
+            <option key={unidade} value={unidade}>{unidade}</option>
+          ))}
+        </SelectField>
+        <InputField
+          id="categoria"
+          name="categoria"
+          label="Categoria (Opcional)"
+          Icon={Tag}
+          errors={state.errors?.categoria}
+        />
       </div>
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label htmlFor="custoUnitario" className="mb-2 block text-sm font-medium text-text">Custo Unitário (R$)</label>
-          <input id="custoUnitario" name="custoUnitario" type="number" step="0.01" required defaultValue={0} className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm" />
-          {state.errors?.custoUnitario && <p className="mt-1 text-xs text-red-500">{state.errors.custoUnitario[0]}</p>}
-        </div>
-        <div>
-          <label htmlFor="nivelMinimo" className="mb-2 block text-sm font-medium text-text">Nível Mínimo de Estoque</label>
-          <input id="nivelMinimo" name="nivelMinimo" type="number" required defaultValue={0} className="block w-full rounded-md border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 py-2 px-3 text-sm" />
-          {state.errors?.nivelMinimo && <p className="mt-1 text-xs text-red-500">{state.errors.nivelMinimo[0]}</p>}
-        </div>
+        <InputField
+          id="custoUnitario"
+          name="custoUnitario"
+          label="Custo Unitário (R$)"
+          Icon={DollarSign}
+          type="number"
+          step="0.01"
+          required
+          defaultValue={0}
+          errors={state.errors?.custoUnitario}
+        />
+        <InputField
+          id="nivelMinimo"
+          name="nivelMinimo"
+          label="Nível Mínimo de Estoque"
+          Icon={AlertTriangle}
+          type="number"
+          required
+          defaultValue={0}
+          errors={state.errors?.nivelMinimo}
+        />
       </div>
-
-      {state.message && !state.success && (
-        <div className="text-sm text-red-500">
-          <p>{state.message}</p>
-        </div>
-      )}
-
       <div className="mt-6 flex justify-end gap-4">
-        <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-text rounded-md">Cancelar</button>
-        <SubmitButton />
+        <Button variant="outline" type="button" onClick={onClose}>Cancelar</Button>
+        <Button type="submit">Criar Item</Button>
       </div>
     </form>
   );

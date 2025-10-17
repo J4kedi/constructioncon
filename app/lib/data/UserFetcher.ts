@@ -1,10 +1,15 @@
 import { BaseDataFetcher } from './BaseDataFetcher';
-import { Prisma } from '@prisma/client';
+import type { UserWithCompany, PlainUser } from '@/app/lib/definitions';
 import { UserQueryBuilder } from './query/UserQueryBuilder';
 
-type UserWithCompany = Prisma.UserGetPayload<{ include: { company: true } }>;
+export class UserFetcher extends BaseDataFetcher<PlainUser | UserWithCompany> {
+  private includeCompany: boolean;
 
-export class UserFetcher extends BaseDataFetcher<UserWithCompany> {
+  constructor(subdomain: string, options: { includeCompany?: boolean } = {}) {
+    super(subdomain);
+    this.includeCompany = options.includeCompany || false;
+  }
+
   protected getModelName(): string {
     return 'user';
   }
@@ -14,6 +19,9 @@ export class UserFetcher extends BaseDataFetcher<UserWithCompany> {
   }
 
   protected getIncludeArgs(): object {
-    return { include: { company: true } };
+    if (this.includeCompany) {
+      return { include: { company: true } };
+    }
+    return {};
   }
 }

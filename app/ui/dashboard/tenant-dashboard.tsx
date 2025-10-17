@@ -1,13 +1,9 @@
-import CardWrapper from "@/app/ui/dashboard/cards";
+import CardWrapper from "@/app/ui/dashboard/CardWrapper";
 import { roboto } from "@/app/ui/fonts";
 import { CardsSkeleton, LatestInvoicesSkeleton, RevenueChartSkeleton } from "@/app/ui/components/skeletons";
 import { Suspense } from "react";
 
 export default async function TenantDashboard({ subdomain }: { subdomain: string }) {
-
-    if (!subdomain) {
-        return <p className="text-red-500">Erro: Tenant não pôde ser identificado. Verifique o subdomínio.</p>;
-    }
 
     return (
         <main>
