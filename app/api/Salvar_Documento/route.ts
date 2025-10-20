@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/app/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/app/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(novo, { status: 201 });
   } catch (error) {
-    console.error("Erro ao salvar documento:", error);
-    return NextResponse.json({ error: 'Erro interno ao salvar documento' }, { status: 500 });
+    console.error("[v1] Erro ao salvar documento:", error);
+    return NextResponse.json({ error: "Erro interno ao salvar documento" }, { status: 500 });
   }
 }
