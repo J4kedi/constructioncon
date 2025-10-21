@@ -364,5 +364,14 @@ model Atividade_Cronograma {
   createdAt    DateTime @default(now())
 }
 
+model Documento {
+  id         Int      @id @default(autoincrement())
+  tipo       String
+  autor      String
+  conteudo   String
+  dataEmissao DateTime
+  anexos     String[] // Postgres text[]
+  criadoEm   DateTime @default(now())
+}
 
 

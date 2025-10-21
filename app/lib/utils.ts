@@ -1,6 +1,13 @@
 
 import type { Obra } from '@prisma/client';
 import type { PlainObra } from './definitions';
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+
+export function cn(...inputs: any[]) {
+  return twMerge(clsx(inputs));
+}
 
 export const formatCurrency = (amount: number) => {
   return (amount).toLocaleString('pt-BR', {
