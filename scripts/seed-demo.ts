@@ -1,6 +1,6 @@
 import { getTenantPrismaClient, getPublicPrismaClient } from '../app/lib/prisma.ts';
 import { PrismaClient } from '@prisma/client';
-import { companys, users, suppliers, addresses, obras, etapas, despesas, receitas, catalogoItens, estoqueMovimentos, documents, workLogs } from '../app/lib/placeholder-data.ts';
+import { companys, users, suppliers, addresses, obras, etapas, contasPagar, contasReceber, catalogoItens, estoqueMovimentos, documents, workLogs } from '../app/lib/placeholder-data.ts';
 import { ALL_FEATURES, DEFAULT_FEATURE_KEYS } from '../app/lib/features.ts';
 import bcrypt from 'bcrypt';
 import { execSync } from 'child_process';
@@ -96,8 +96,8 @@ async function seedTenantData(tenantName: keyof typeof tenantToCompany, prisma: 
     await tx.catalogoItem.deleteMany({});
     await tx.workLog.deleteMany({});
     await tx.document.deleteMany({});
-    await tx.receita.deleteMany({});
-    await tx.despesa.deleteMany({});
+    await tx.contaReceber.deleteMany({});
+    await tx.contaPagar.deleteMany({});
     await tx.etapa.deleteMany({});
     await tx.obra.deleteMany({});
     await tx.address.deleteMany({});
@@ -121,11 +121,11 @@ async function seedTenantData(tenantName: keyof typeof tenantToCompany, prisma: 
     const companyObras = obras.filter((o) => o.companyId === company.id);
     const companyCatalogo = catalogoItens.filter((i) => i.companyId === company.id);
     const companyMovimentos = estoqueMovimentos.filter(m => companyCatalogo.some(c => c.id === m.catalogoItemId));
-    const companyDespesas = despesas.filter((d) => companyObras.some((o) => o.id === d.obraId));
-    const companySuppliers = suppliers.filter(s => companyDespesas.some(d => d.supplierId === s.id) || companyMovimentos.some(m => m.supplierId === s.id));
+    const companyContasPagar = contasPagar.filter((d) => companyObras.some((o) => o.id === d.obraId));
+    const companySuppliers = suppliers.filter(s => companyContasPagar.some(d => d.supplierId === s.id) || companyMovimentos.some(m => m.supplierId === s.id));
     const companyAddresses = addresses.filter(a => a.companyId === company.id || companySuppliers.some(s => s.id === a.supplierId));
     const companyEtapas = etapas.filter((e) => companyObras.some((o) => o.id === e.obraId));
-    const companyReceitas = receitas.filter((r) => companyObras.some((o) => o.id === r.obraId));
+    const companyContasReceber = contasReceber.filter((r) => companyObras.some((o) => o.id === r.obraId));
     const companyDocuments = documents.filter((d) => companyObras.some((o) => o.id === d.obraId));
     const companyWorkLogs = workLogs.filter((w) => companyObras.some((o) => o.id === w.obraId));
 
@@ -134,8 +134,8 @@ async function seedTenantData(tenantName: keyof typeof tenantToCompany, prisma: 
     await tx.address.createMany({ data: companyAddresses, skipDuplicates: true });
     await tx.obra.createMany({ data: companyObras, skipDuplicates: true });
     await tx.etapa.createMany({ data: companyEtapas, skipDuplicates: true });
-    await tx.despesa.createMany({ data: companyDespesas, skipDuplicates: true });
-    await tx.receita.createMany({ data: companyReceitas, skipDuplicates: true });
+    await tx.contaPagar.createMany({ data: companyContasPagar, skipDuplicates: true });
+    await tx.contaReceber.createMany({ data: companyContasReceber, skipDuplicates: true });
     await tx.document.createMany({ data: companyDocuments, skipDuplicates: true });
     await tx.workLog.createMany({ data: companyWorkLogs, skipDuplicates: true });
     await tx.catalogoItem.createMany({ data: companyCatalogo, skipDuplicates: true });
@@ -149,7 +149,12 @@ async function main() {
   console.log('Iniciando o seed completo do ambiente de demonstração...');
 
   console.log('\n--- Etapa 1: Populando schema public (Features) ---');
-  await publicPrisma.feature.createMany({ data: ALL_FEATURES, skipDuplicates: true });
+  const featuresToCreate = ALL_FEATURES.map(feature => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { parentKey, ...featureData } = feature as any;
+    return featureData;
+  });
+  await publicPrisma.feature.createMany({ data: featuresToCreate, skipDuplicates: true });
   console.log(`✅ ${ALL_FEATURES.length} features garantidas no schema public.`);
 
   console.log('\n--- Etapa 2: Provisionando e populando cada tenant de demonstração ---');

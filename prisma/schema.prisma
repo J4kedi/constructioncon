@@ -51,12 +51,27 @@ enum CategoriaDespesa {
   OUTROS
 }
 
+enum StatusContaPagar {
+  A_PAGAR
+  PAGO
+  VENCIDO
+}
+
+enum StatusContaReceber {
+  A_RECEBER
+  RECEBIDO
+  VENCIDO
+}
+
 enum DocumentType {
   PLANTA_BAIXA
   ALVARA
   ART // Anotação de Responsabilidade Técnica
   MEMORIAL_DESCRITIVO
   CONTRATO
+  NOTA_FISCAL_SERVICO
+  NOTA_FISCAL_PRODUTO
+  BOLETO
   OUTRO
 }
 
@@ -102,6 +117,10 @@ model Feature {
   href        String   @default("")
   icon        String   @default("")
 
+  parentId    String?
+  parent      Feature? @relation("FeatureHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Feature[] @relation("FeatureHierarchy")
+
   tenants     Tenant[]
 }
 
@@ -139,7 +158,7 @@ model User {
 
   obrasComoCliente       Obra[]
   etapasResponsaveis     Etapa[]            @relation("ResponsibleForEtapas")
-  despesasAprovadas      Despesa[]          @relation("ApprovedDespesas")
+  contasPagarAprovadas   ContaPagar[]       @relation("ApprovedDespesas")
   diariosDeObra          WorkLog[]
   movimentacoesDeEstoque EstoqueMovimento[]
 }
@@ -166,8 +185,8 @@ model Obra {
   endCustomer        User?      @relation(fields: [endCustomerId], references: [id], onDelete: SetNull)
 
   etapas                 Etapa[]
-  despesas               Despesa[]
-  receitas               Receita[]
+  contasPagar            ContaPagar[]
+  contasReceber          ContaReceber[]
   workLogs               WorkLog[]
   documents              Document[]
   movimentacoesDeEstoque EstoqueMovimento[]
@@ -197,43 +216,52 @@ model Etapa {
   @@index([status])
 }
 
-model Despesa {
-  id          String           @id @default(cuid())
-  descricao   String
-  valor       Decimal
-  categoria   CategoriaDespesa
-  data        DateTime         @default(now())
-  invoiceUrl  String?
+model ContaPagar {
+  id             String           @id @default(cuid())
+  fornecedor     String
+  valor          Decimal
+  categoria      CategoriaDespesa
+  dataEmissao    DateTime         @default(now())
+  dataVencimento DateTime
+  anexoUrl       String?
+  status         StatusContaPagar @default(A_PAGAR)
 
-  obraId      String?
-  obra        Obra?             @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  obraId         String?
+  obra           Obra?            @relation(fields: [obraId], references: [id], onDelete: Cascade)
 
-  approverId  String?
-  approver    User?            @relation("ApprovedDespesas", fields: [approverId], references: [id], onDelete: SetNull)
+  approverId     String?
+  approver       User?            @relation("ApprovedDespesas", fields: [approverId], references: [id], onDelete: SetNull)
 
-  supplierId  String?
-  supplier    Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierId     String?
+  supplier       Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  documents      Document[]
 }
 
-model Receita {
-  id        String   @id @default(cuid())
-  descricao String
-  valor     Decimal
-  data      DateTime @default(now())
+model ContaReceber {
+  id             String             @id @default(cuid())
+  cliente        String
+  descricao      String
+  valor          Decimal
+  dataEmissao    DateTime           @default(now())
+  dataVencimento DateTime
+  status         StatusContaReceber @default(A_RECEBER)
 
-  obraId    String
-  obra      Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  obraId         String
+  obra           Obra               @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  documents      Document[]
 }
 
 model Supplier {
-  id        String    @id @default(cuid())
-  name      String
-  cnpj      String?   @unique
-  phone     String?
-  email     String?
+  id                  String             @id @default(cuid())
+  name                String
+  cnpj                String?            @unique
+  phone               String?
+  email               String?
 
-  despesas  Despesa[]
-  addresses Address[]
+  contasPagar         ContaPagar[]
+  addresses           Address[]
   movimentosDeEstoque EstoqueMovimento[]
 }
 
@@ -261,6 +289,12 @@ model Document {
 
   obraId     String
   obra       Obra         @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  contaPagarId   String?
+  contaPagar     ContaPagar?  @relation(fields: [contaPagarId], references: [id], onDelete: SetNull)
+
+  contaReceberId String?
+  contaReceber   ContaReceber?@relation(fields: [contaReceberId], references: [id], onDelete: SetNull)
 }
 
 model Address {

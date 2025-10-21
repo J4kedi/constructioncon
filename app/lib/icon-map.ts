@@ -10,6 +10,9 @@ import {
     Building2,
     TerminalSquare,
     Server,
+    TrendingDown,
+    TrendingUp,
+    AreaChart,
 } from 'lucide-react';
 
 export const ICON_MAP: Record<string, LucideIcon> = {
@@ -23,4 +26,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
     'Building2': Building2,
     'TerminalSquare': TerminalSquare,
     'Server': Server,
+    'TrendingDown': TrendingDown,
+    'TrendingUp': TrendingUp,
+    'AreaChart': AreaChart,
 };

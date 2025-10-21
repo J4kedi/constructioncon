@@ -6,22 +6,27 @@ import { useDebouncedCallback } from 'use-debounce';
 
 type SearchProps = {
   placeholder: string;
+  onSearchChange?: (term: string) => void;
 };
 
-export default function Search({ placeholder }: SearchProps) {
+export default function Search({ placeholder, onSearchChange }: SearchProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
 
   const handleSearch = useDebouncedCallback((term: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', '1');
-    if (term) {
-      params.set('query', term);
+    if (onSearchChange) {
+      onSearchChange(term);
     } else {
-      params.delete('query');
+      const params = new URLSearchParams(searchParams);
+      params.set('page', '1');
+      if (term) {
+        params.set('query', term);
+      } else {
+        params.delete('query');
+      }
+      replace(`${pathname}?${params.toString()}`);
     }
-    replace(`${pathname}?${params.toString()}`);
   }, 300);
 
   return (
@@ -36,7 +41,7 @@ export default function Search({ placeholder }: SearchProps) {
         onChange={(e) => {
           handleSearch(e.target.value);
         }}
-        defaultValue={searchParams.get('query') || ''}
+        defaultValue={onSearchChange ? undefined : searchParams.get('query') || ''}
       />
       <SearchIcon className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-text/70 peer-focus:text-primary" />
     </div>

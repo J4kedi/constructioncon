@@ -1,5 +1,6 @@
 import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export async function fetchObrasStatus(subdomain: string) {
   const tenantPrisma = getTenantPrismaClient(subdomain);
@@ -72,35 +73,170 @@ export async function fetchFinancialHistory(subdomain: string) {
 export async function fetchRecentTransactions(subdomain: string, limit: number = 10) {
     const tenantPrisma = getTenantPrismaClient(subdomain);
 
-    const despesas = await tenantPrisma.despesa.findMany({
+    const despesas = await tenantPrisma.contaPagar.findMany({
         take: limit,
-        orderBy: { data: 'desc' },
+        orderBy: { dataEmissao: 'desc' },
         select: {
             id: true,
-            descricao: true,
+            fornecedor: true,
             valor: true,
             categoria: true,
-            data: true,
+            dataEmissao: true,
             obra: { select: { nome: true } }
         }
     });
 
-    const receitas = await tenantPrisma.receita.findMany({
+    const receitas = await tenantPrisma.contaReceber.findMany({
         take: limit,
-        orderBy: { data: 'desc' },
+        orderBy: { dataEmissao: 'desc' },
         select: {
             id: true,
-            descricao: true,
+            cliente: true,
             valor: true,
-            data: true,
+            dataEmissao: true,
             obra: { select: { nome: true } }
         }
     });
 
     const transactions = [
-        ...despesas.map(d => ({ ...d, valor: d.valor.toNumber(), tipo: 'DESPESA' as const })),
-        ...receitas.map(r => ({ ...r, valor: r.valor.toNumber(), tipo: 'RECEITA' as const, categoria: 'N/A' }))
+        ...despesas.map(d => ({ id: d.id, descricao: d.fornecedor, valor: d.valor.toNumber(), data: d.dataEmissao, tipo: 'DESPESA' as const, categoria: d.categoria, obra: d.obra })),
+        ...receitas.map(r => ({ id: r.id, descricao: r.cliente, valor: r.valor.toNumber(), data: r.dataEmissao, tipo: 'RECEITA' as const, categoria: 'N/A', obra: r.obra }))
     ];
 
     return transactions.sort((a, b) => b.data.getTime() - a.data.getTime()).slice(0, limit);
+}
+
+export async function fetchContasAPagar(subdomain: string) {
+  noStore();
+  const prisma = getTenantPrismaClient(subdomain);
+
+  try {
+    const contas = await prisma.contaPagar.findMany({
+      orderBy: {
+        dataVencimento: 'asc',
+      },
+    });
+    return contas;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch contas a pagar.');
+  }
+}
+
+export async function fetchContasAReceber(subdomain: string) {
+  noStore();
+  const prisma = getTenantPrismaClient(subdomain);
+
+  try {
+    const contas = await prisma.contaReceber.findMany({
+      orderBy: {
+        dataVencimento: 'asc',
+      },
+    });
+    return contas;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch contas a receber.');
+  }
+}
+
+export async function fetchCashFlowData(subdomain: string) {
+  noStore();
+  const prisma = getTenantPrismaClient(subdomain);
+
+  try {
+    const contasAPagar = await prisma.contaPagar.findMany({
+      where: { status: 'A_PAGAR' },
+      select: { dataVencimento: true, valor: true },
+    });
+
+    const contasAReceber = await prisma.contaReceber.findMany({
+      where: { status: 'A_RECEBER' },
+      select: { dataVencimento: true, valor: true },
+    });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const projectionEndDate = new Date(today);
+    projectionEndDate.setDate(today.getDate() + 90);
+
+    const dailyMovements = new Map<string, { entradas: Decimal; saidas: Decimal }>();
+
+    contasAReceber.forEach(c => {
+      if (c.dataVencimento >= today && c.dataVencimento <= projectionEndDate) {
+        const dateStr = c.dataVencimento.toISOString().split('T')[0];
+        const day = dailyMovements.get(dateStr) ?? { entradas: new Decimal(0), saidas: new Decimal(0) };
+        day.entradas = day.entradas.add(c.valor);
+        dailyMovements.set(dateStr, day);
+      }
+    });
+
+    contasAPagar.forEach(c => {
+      if (c.dataVencimento >= today && c.dataVencimento <= projectionEndDate) {
+        const dateStr = c.dataVencimento.toISOString().split('T')[0];
+        const day = dailyMovements.get(dateStr) ?? { entradas: new Decimal(0), saidas: new Decimal(0) };
+        day.saidas = day.saidas.add(c.valor);
+        dailyMovements.set(dateStr, day);
+      }
+    });
+
+    const sortedDates = Array.from(dailyMovements.keys()).sort();
+    let saldoAcumulado = new Decimal(0);
+
+    const cashFlowProjection = sortedDates.map(dateStr => {
+      const day = dailyMovements.get(dateStr)!;
+      const saldoDoDia = day.entradas.sub(day.saidas);
+      saldoAcumulado = saldoAcumulado.add(saldoDoDia);
+      return {
+        date: dateStr,
+        entradas: day.entradas.toNumber(),
+        saidas: day.saidas.toNumber(),
+        saldoProjetado: saldoAcumulado.toNumber(),
+      };
+    });
+
+    return cashFlowProjection;
+
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch cash flow data.');
+  }
+}
+
+export async function fetchDocumentos(subdomain: string, query?: string) {
+  noStore();
+  const prisma = getTenantPrismaClient(subdomain);
+
+  try {
+    const documentos = await prisma.document.findMany({
+      where: {
+        type: {
+          in: ['NOTA_FISCAL_SERVICO', 'NOTA_FISCAL_PRODUTO', 'BOLETO'],
+        },
+        OR: query ? [
+          { name: { contains: query, mode: 'insensitive' } },
+          { obra: { nome: { contains: query, mode: 'insensitive' } } },
+          { contaPagar: { supplier: { name: { contains: query, mode: 'insensitive' } } } },
+          { contaReceber: { cliente: { contains: query, mode: 'insensitive' } } },
+        ] : undefined,
+      },
+      include: {
+        obra: true,
+        contaPagar: {
+          include: {
+            supplier: true,
+          },
+        },
+        contaReceber: true,
+      },
+      orderBy: {
+        uploadedAt: 'desc',
+      },
+    });
+    return documentos;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch documentos.');
+  }
 }

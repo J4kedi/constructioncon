@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UnidadeMedida, StatusObra, ObraType, CategoriaDespesa, UserRole } from "@prisma/client";
+import { UnidadeMedida, StatusObra, ObraType, CategoriaDespesa, UserRole, DocumentType } from "@prisma/client";
 import type { User, CatalogoItem, Obra, Prisma } from '@prisma/client';
 import { ReactNode } from "react";
 
@@ -192,6 +192,7 @@ export const AddDespesaSchema = z.object({
 import type { LucideIcon } from 'lucide-react';
 
 export type NavLinkData = {
+    children: any;
     name: string;
     href: string;
     featureKey: string;
@@ -229,3 +230,12 @@ export interface Recurso {
   nomeMaterial?: string;
   nomeEquipamento?: string;
 }
+
+export const DocumentoSchema = z.object({
+  name: z.string().min(1, 'Nome do documento é obrigatório.'),
+  url: z.string().url('URL inválida.'),
+  type: z.nativeEnum(DocumentType),
+  obraId: z.string().min(1, 'A obra é obrigatória.'),
+  contaPagarId: z.string().optional(),
+  contaReceberId: z.string().optional(),
+});

@@ -301,3 +301,32 @@ export function OverviewPieChartSkeleton() {
 		</div>
 	);
 }
+
+export function DocumentosTableSkeleton() {
+  const docCells = [
+    { type: 'text', width: 'w-32' },
+    { type: 'badge' },
+    { type: 'text', width: 'w-24' },
+    { type: 'text', width: 'w-24' },
+    { type: 'text', width: 'w-20' },
+  ] as const;
+
+  return (
+    <div className={`${shimmer} relative w-full overflow-hidden`}>
+      <table className="min-w-full text-text">
+        <thead className="rounded-lg text-left text-sm font-normal">
+          <tr>
+            <th scope="col" className="px-4 py-5 font-medium sm:pl-6">Nome</th>
+            <th scope="col" className="px-3 py-5 font-medium">Tipo</th>
+            <th scope="col" className="px-3 py-5 font-medium">Fornecedor/Cliente</th>
+            <th scope="col" className="px-3 py-5 font-medium">Obra</th>
+            <th scope="col" className="px-4 py-5 font-medium">Data de Upload</th>
+          </tr>
+        </thead>
+        <tbody className="bg-background">
+          {Array.from({ length: 6 }).map((_, i) => <GenericTableRowSkeleton key={i} cells={docCells} />)}
+        </tbody>
+      </table>
+    </div>
+  );
+}

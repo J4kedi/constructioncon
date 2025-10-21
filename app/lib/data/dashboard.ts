@@ -12,7 +12,7 @@ async function _fetchDashboardData(subdomain: string) {
       where: { status: { not: 'CANCELADA' } },
     }),
     // 2. Custos Totais
-    tenantPrisma.despesa.aggregate({
+    tenantPrisma.contaPagar.aggregate({
       _sum: { valor: true },
     }),
     // 3. Obras Ativas

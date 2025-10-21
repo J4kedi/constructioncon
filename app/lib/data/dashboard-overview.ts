@@ -107,7 +107,6 @@ const _fetchProjectPerformance = withTenantPrisma(async (tenantPrisma) => {
   const obras = await tenantPrisma.obra.findMany({
     where: { status: { notIn: ['CONCLUIDA', 'CANCELADA'] } },
   });
-  console.log('OBRAS:', obras);
 
   const performanceData = obras.map(obra => {
     console.log(`\n--- Calculando performance para: ${obra.nome} ---`);

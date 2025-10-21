@@ -18,3 +18,22 @@ export async function fetchObraById(id: string, subdomain: string) {
         return null;
     }
 }
+
+export async function fetchAllObrasSimple(subdomain: string) {
+    try {
+        const tenantPrisma = getTenantPrismaClient(subdomain);
+        const obras = await tenantPrisma.obra.findMany({
+            select: {
+                id: true,
+                nome: true,
+            },
+            orderBy: {
+                nome: 'asc',
+            },
+        });
+        return obras;
+    } catch (error) {
+        console.error('Database Error em fetchAllObrasSimple:', error);
+        return [];
+    }
+}

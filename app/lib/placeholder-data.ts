@@ -5,7 +5,9 @@ import {
   CategoriaDespesa,
   UnidadeMedida,
   DocumentType,
-  TipoMovimento
+  TipoMovimento,
+  StatusContaPagar,
+  StatusContaReceber
 } from '@prisma/client';
 import type {
   Company,
@@ -14,8 +16,8 @@ import type {
   Etapa,
   Address,
   Supplier,
-  Despesa,
-  Receita,
+  ContaPagar,
+  ContaReceber,
   CatalogoItem,
   EstoqueMovimento,
   Document,
@@ -31,8 +33,8 @@ type ObraSeed = Omit<Obra, 'createdAt' | 'updatedAt'>;
 type EtapaSeed = Omit<Etapa, 'progressPercentage'>;
 type CatalogoItemSeed = Omit<CatalogoItem, 'createdAt' | 'updatedAt'>;
 type EstoqueMovimentoSeed = Omit<EstoqueMovimento, 'data'>;
-type DespesaSeed = Omit<Despesa, 'data'>;
-type ReceitaSeed = Omit<Receita, 'data'>;
+type ContaPagarSeed = Omit<ContaPagar, 'dataEmissao'>;
+type ContaReceberSeed = Omit<ContaReceber, 'dataEmissao'>;
 type DocumentSeed = Omit<Document, 'uploadedAt'>;
 
 export const companys: CompanySeed[] = [
@@ -222,24 +224,29 @@ export const etapas: EtapaSeed[] = [
   },
 ];
 
-export const despesas: DespesaSeed[] = [
+export const contasPagar: ContaPagarSeed[] = [
   {
     id: 'desp-cimento-araucaria',
-    descricao: 'Compra de 500 sacos de cimento',
+    fornecedor: 'Cimento Forte S.A.',
     valor: new Decimal(15000.00),
     categoria: CategoriaDespesa.MATERIAL,
-    invoiceUrl: '/invoices/inv-001.pdf',
+    dataVencimento: new Date('2024-03-15T00:00:00.000Z'),
+    anexoUrl: '/invoices/inv-001.pdf',
+    status: StatusContaPagar.PAGO,
     obraId: obras[1].id,
     approverId: users[2].id,
     supplierId: suppliers[0].id,
   },
 ];
 
-export const receitas: ReceitaSeed[] = [
+export const contasReceber: ContaReceberSeed[] = [
   {
     id: 'rec-parcela1-araucaria',
-    descricao: 'Primeira parcela do pagamento - Família Silva',
+    cliente: 'Família Silva',
+    descricao: 'Primeira parcela do pagamento',
     valor: new Decimal('250000.00'),
+    dataVencimento: new Date('2023-09-01T00:00:00.000Z'),
+    status: StatusContaReceber.RECEBIDO,
     obraId: obras[1].id,
   },
 ];
