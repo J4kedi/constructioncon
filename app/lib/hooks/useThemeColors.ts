@@ -2,24 +2,33 @@
 
 import { useState, useEffect } from 'react';
 
-const getColor = (variableName: string) => {
-  if (typeof window === 'undefined') return '';
-  return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
-};
-
 export function useThemeColors() {
   const [colors, setColors] = useState({
-    primary: '',
-    destructive: '',
-    success: '',
+    primary: '#000000',
+    text: '#000000',
+    background: '#ffffff',
+    border: '#e5e7eb',
+    muted: '#9ca3af',
+    success: '#22c55e',
+    warning: '#f59e0b',
+    destructive: '#ef4444',
   });
 
   useEffect(() => {
-    const primary = getColor('--primary');
-    const destructive = getColor('--destructive');
-    const success = getColor('--success');
+    const root = window.document.documentElement;
+    const style = getComputedStyle(root);
 
-    setColors({ primary, destructive, success });
+    setColors({
+      primary: style.getPropertyValue('--color-primary').trim(),
+      text: style.getPropertyValue('--color-text').trim(),
+      background: style.getPropertyValue('--color-background').trim(),
+      border: style.getPropertyValue('--color-secondary').trim(),
+      muted: style.getPropertyValue('--color-accent').trim(),
+      success: style.getPropertyValue('--color-success').trim(),
+      warning: style.getPropertyValue('--color-warning').trim(),
+      destructive: style.getPropertyValue('--color-destructive').trim(),
+    });
+
   }, []);
 
   return colors;

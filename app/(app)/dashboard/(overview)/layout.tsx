@@ -1,6 +1,7 @@
 import { getRequestContext } from '@/app/lib/server-utils';
 import { UserRole } from '@prisma/client';
 import SuperAdminDashboard from '@/app/ui/dashboard/super-admin-dashboard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/ui/components/Card';
 
 export default async function OverviewLayout({
   summary,
@@ -30,24 +31,43 @@ export default async function OverviewLayout({
     <>
       <h1 className="text-3xl font-bold text-text mb-6">Acompanhamento Geral</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div className="space-y-6">
         {summary}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        
         {performance}
-      </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Prazos e Riscos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {deadlines}
+                {overruns}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Atividade Recente</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {feed}
+              </CardContent>
+            </Card>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {deadlines}
-          {overruns}
-          {feed}
-        </div>
-
-        <div className="space-y-6">
-          {status}
-          {stock}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Status Operacional</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {status}
+                {stock}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </>

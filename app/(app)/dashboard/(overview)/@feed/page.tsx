@@ -1,31 +1,24 @@
-import { headers } from 'next/headers';
-import { fetchRecentActivity } from '@/app/lib/data/dashboard-overview';
-import RecentActivityFeed from '@/app/ui/dashboard/(overview)/RecentActivityFeed';
 import { Suspense } from 'react';
-import { OverviewCardSkeleton } from '@/app/ui/components/skeletons';
-
-async function Feed() {
-	const headerList = await headers();
-	const subdomain = headerList.get('x-tenant-subdomain');
-
-	if (!subdomain) {
-		return null;
-	}
-
-	const activities = await fetchRecentActivity(subdomain);
-
-	return (
-		<div className="bg-background border border-secondary/20 rounded-lg p-6">
-			<h2 className="text-xl font-bold text-text mb-4">Atividade Recente</h2>
-			<RecentActivityFeed activities={activities} />
-		</div>
-	);
-}
+import { getRequestContext } from '@/app/lib/server-utils';
+import { fetchRecentTransactions } from '@/app/lib/data/financeiro';
+import ActivityFeed from '@/app/ui/dashboard/financeiro/ActivityFeed';
+import { TransactionsTableSkeleton } from '@/app/ui/components/skeletons';
 
 export default async function FeedPage() {
-	return (
-		<Suspense fallback={<OverviewCardSkeleton />}>
-			<Feed />
-		</Suspense>
-	);
+    const { subdomain } = await getRequestContext();
+
+    if (!subdomain) {
+        return null;
+    }
+
+    const recentTransactions = await fetchRecentTransactions(subdomain);
+
+    return (
+        <Suspense fallback={<TransactionsTableSkeleton />}>
+            <div className="bg-background border border-secondary/20 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-text mb-4">Atividade Recente</h2>
+                <ActivityFeed transactions={recentTransactions} />
+            </div>
+        </Suspense>
+    );
 }

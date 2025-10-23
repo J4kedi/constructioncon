@@ -2,6 +2,10 @@ import { fetchProjectPerformance } from '@/app/lib/data/dashboard-overview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/ui/components/Card';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { getRequestContext } from '@/app/lib/server-utils';
+import { getFinancialHistoryAction } from '@/app/actions/financeiro.actions';
+import FinancialHistoryChart from '@/app/ui/dashboard/financeiro/FinancialHistoryChart';
+import { Suspense } from 'react';
+import { ChartSkeleton } from '@/app/ui/components/skeletons';
 
 interface PerformanceItemProps {
   nome: string;
@@ -10,7 +14,10 @@ interface PerformanceItemProps {
 }
 
 const PerformanceItem = ({ nome, cpi, spi }: PerformanceItemProps) => (
-  <li className="flex justify-between items-center py-2 border-b border-secondary/20 last:border-none">
+  <li 
+    className="flex justify-between items-center py-2 border-b border-secondary/20 last:border-none"
+    title={`Projeto: ${nome} | CPI: ${cpi.toFixed(2)}, SPI: ${spi.toFixed(2)}`}
+  >
     <span className="text-sm font-medium text-text/90 truncate">{nome}</span>
     <div className="flex items-center space-x-4">
       <span className={`text-sm font-semibold ${cpi >= 1 ? 'text-success' : 'text-destructive'}`}>
@@ -57,6 +64,8 @@ async function Performance() {
     );
 }
 
-export default async function Page() {
+export default async function PerformancePage() {
     return <Performance />;
 }
+
+

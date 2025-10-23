@@ -78,7 +78,7 @@ export async function fetchRecentTransactions(subdomain: string, limit: number =
         orderBy: { dataEmissao: 'desc' },
         select: {
             id: true,
-            fornecedor: true,
+            supplier: { select: { name: true } },
             valor: true,
             categoria: true,
             dataEmissao: true,
@@ -99,7 +99,7 @@ export async function fetchRecentTransactions(subdomain: string, limit: number =
     });
 
     const transactions = [
-        ...despesas.map(d => ({ id: d.id, descricao: d.fornecedor, valor: d.valor.toNumber(), data: d.dataEmissao, tipo: 'DESPESA' as const, categoria: d.categoria, obra: d.obra })),
+        ...despesas.map(d => ({ id: d.id, descricao: d.supplier?.name ?? 'Fornecedor não informado', valor: d.valor.toNumber(), data: d.dataEmissao, tipo: 'DESPESA' as const, categoria: d.categoria, obra: d.obra })),
         ...receitas.map(r => ({ id: r.id, descricao: r.cliente, valor: r.valor.toNumber(), data: r.dataEmissao, tipo: 'RECEITA' as const, categoria: 'N/A', obra: r.obra }))
     ];
 
@@ -155,11 +155,15 @@ export async function fetchCashFlowData(subdomain: string) {
       select: { dataVencimento: true, valor: true },
     });
 
+    console.log('--- DEBUG: Contas Buscadas ---', { contasAPagar, contasAReceber });
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const projectionEndDate = new Date(today);
     projectionEndDate.setDate(today.getDate() + 90);
+
+    console.log('--- DEBUG: Período de Projeção ---', { today, projectionEndDate });
 
     const dailyMovements = new Map<string, { entradas: Decimal; saidas: Decimal }>();
 
@@ -180,6 +184,8 @@ export async function fetchCashFlowData(subdomain: string) {
         dailyMovements.set(dateStr, day);
       }
     });
+
+    console.log('--- DEBUG: Movimentações Diárias Agrupadas ---', Object.fromEntries(dailyMovements));
 
     const sortedDates = Array.from(dailyMovements.keys()).sort();
     let saldoAcumulado = new Decimal(0);

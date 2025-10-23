@@ -1,35 +1,32 @@
-import { headers } from 'next/headers';
-import { fetchDashboardData } from '@/app/lib/data/dashboard';
 import { Suspense } from 'react';
-import { Card } from '@/app/ui/dashboard/cards';
-import { formatCurrency } from '@/app/lib/utils';
-import { DollarSign, TrendingUp, Briefcase, Users } from 'lucide-react';
+import { getRequestContext } from '@/app/lib/server-utils';
+import { fetchObrasEmAndamentoCount, fetchProximaContaPagar } from '@/app/lib/data/dashboard';
+import { formatDate } from '@/app/lib/utils';
+import KeyKPIsCard, { KPI } from '@/app/ui/dashboard/financeiro/KeyKPIsCard';
 import { CardsSkeleton } from '@/app/ui/components/skeletons';
 
-async function Summary() {
-	const headerList = await headers();
-	const subdomain = headerList.get('x-tenant-subdomain');
-
-	if (!subdomain) {
-		return null;
-	}
-
-	const data = await fetchDashboardData(subdomain);
-
-	return (
-        <>
-            <Card title="Faturamento Total" value={formatCurrency(data.faturamento)} icon={<DollarSign className="h-5 w-5 text-primary" />} />
-            <Card title="Lucro Bruto" value={formatCurrency(data.lucroBruto)} icon={<TrendingUp className="h-5 w-5 text-primary" />} />
-            <Card title="Obras Ativas" value={data.activeObrasCount} icon={<Briefcase className="h-5 w-5 text-primary" />} />
-            <Card title="Usuários" value={data.usersCount} icon={<Users className="h-5 w-5 text-primary" />} />
-        </>
-    );
-}
-
 export default async function SummaryPage() {
-	return (
-		<Suspense fallback={<CardsSkeleton />}>
-			<Summary />
-		</Suspense>
-	);
+    const { subdomain } = await getRequestContext();
+
+    if (!subdomain) {
+        return null;
+    }
+
+    const [obrasCount, proximaConta] = await Promise.all([
+        fetchObrasEmAndamentoCount(subdomain),
+        fetchProximaContaPagar(subdomain),
+    ]);
+    
+    const kpis: KPI = {
+        obrasEmAndamento: obrasCount,
+        tarefasAtrasadas: 5, // Simulado
+        proximaConta: proximaConta ? { valor: proximaConta.valor.toNumber(), data: formatDate(proximaConta.dataVencimento, 'dd/MM') } : null,
+        saldoAtual: 125340.50, // Simulado
+    };
+
+    return (
+        <Suspense fallback={<CardsSkeleton />}>
+            <KeyKPIsCard kpis={kpis} />
+        </Suspense>
+    );
 }

@@ -2,6 +2,7 @@
 
 import { StatusObra } from '@prisma/client';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { useThemeColors } from '@/app/lib/hooks/useThemeColors';
 
 interface ChartData {
   name: string;
@@ -11,14 +12,6 @@ interface ChartData {
 interface ObrasStatusPieChartProps {
   data: ChartData[];
 }
-
-const COLORS: Record<StatusObra | string, string> = {
-    PLANEJAMENTO: '#3b82f6',
-    EM_ANDAMENTO: '#f59e0b',
-    CONCLUIDA: '#22c55e',
-    PAUSADA: '#6b7280',
-    CANCELADA: '#ef4444',
-};
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
@@ -34,6 +27,16 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 };
 
 export default function ObrasStatusPieChart({ data }: ObrasStatusPieChartProps) {
+  const themeColors = useThemeColors();
+
+  const COLORS: Record<StatusObra | string, string> = {
+    PLANEJAMENTO: themeColors.primary,
+    EM_ANDAMENTO: themeColors.warning,
+    CONCLUIDA: themeColors.success,
+    PAUSADA: themeColors.muted,
+    CANCELADA: themeColors.destructive,
+  };
+
   if (!data || data.length === 0) {
     return <p className="text-center text-text/70">Sem dados de status de obras para exibir.</p>;
   }
