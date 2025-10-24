@@ -363,7 +363,20 @@ model Atividade_Cronograma {
   duracaoDias  Int
   createdAt    DateTime @default(now())
 }
+model Documento {
+  id           Int      @id @default(autoincrement())
+  tipo         String
+  autor        String
+  conteudo     String
+  dataEmissao  DateTime
+  anexos       Json
+  projetoId    Int?
+  enviado      Boolean  @default(false)
+  projeto      Projeto? @relation(fields: [projetoId], references: [id])
+}
 
-
-
-
+model Projeto {
+  id         Int         @id @default(autoincrement())
+  nome       String
+  documentos Documento[]
+}

@@ -16,7 +16,7 @@ interface Documento {
   dataEmissao: string;
   anexos: { name: string; url: string }[];
   projetoId?: number | null;
-  enviado?: boolean; 
+  enviado?: boolean;
 }
 
 interface Projeto {
@@ -37,22 +37,24 @@ export default function DocumentosDashboard() {
   const [erroAnexo, setErroAnexo] = useState<string | null>(null);
 
   useEffect(() => {
-    const docsSalvos = localStorage.getItem('documentos');
-    if (docsSalvos) setDocumentos(JSON.parse(docsSalvos));
+    async function carregarDados() {
+      try {
+        const resProjetos = await fetch('app/api/projeto');
+        const projetosApi = await resProjetos.json();
+        setProjetos(projetosApi);
 
-    // simulação de projetos já cadastrados
-    setProjetos([
-      { id: 1, nome: 'Projeto Alpha' },
-      { id: 2, nome: 'Projeto Beta' },
-    ]);
+        const resDocs = await fetch('/api/documentos');
+        const docsApi = await resDocs.json();
+        setDocumentos(docsApi);
+      } catch {
+        toast({ title: 'Erro', description: 'Falha ao carregar dados da API.', variant: 'destructive' });
+      }
+    }
+
+    carregarDados();
   }, []);
 
-  function salvarDocumentos(novosDocs: Documento[]) {
-    localStorage.setItem('documentos', JSON.stringify(novosDocs));
-    setDocumentos(novosDocs);
-  }
-
-  function handleSalvar() {
+  async function handleSalvar() {
     if (!tipo || !autor || !conteudo || !dataEmissao) {
       toast({
         title: 'Campos obrigatórios',
@@ -62,28 +64,71 @@ export default function DocumentosDashboard() {
       return;
     }
 
-    const novoDoc: Documento = {
-      id: idEditando ?? Date.now(),
-      tipo,
-      autor,
-      conteudo,
-      dataEmissao: new Date(dataEmissao).toISOString(),
-      anexos: anexos ? Array.from(anexos).map(file => ({
-        name: file.name,
-        url: URL.createObjectURL(file),
-      })) : [],
-      projetoId: null,
-    };
-
-    if (idEditando) {
-      salvarDocumentos(documentos.map((d) => (d.id === idEditando ? novoDoc : d)));
-      toast({ title: 'Sucesso!', description: 'Documento atualizado com sucesso!' });
-    } else {
-      salvarDocumentos([...documentos, novoDoc]);
-      toast({ title: 'Sucesso!', description: 'Documento adicionado com sucesso!' });
+    const formData = new FormData();
+    formData.append('tipo', tipo);
+    formData.append('autor', autor);
+    formData.append('conteudo', conteudo);
+    formData.append('dataEmissao', new Date(dataEmissao).toISOString());
+    formData.append('enviado', 'false');
+    if (anexos) {
+      Array.from(anexos).forEach(file => formData.append('anexos', file));
     }
 
-    limparFormulario();
+    try {
+      const url = idEditando ? `app/api/documentos/${idEditando}` : 'app/api/documentos';
+      const method = idEditando ? 'PUT' : 'POST';
+
+      const res = await fetch(url, { method, body: formData });
+      const doc = await res.json();
+
+      const atualizados = idEditando
+        ? documentos.map(d => (d.id === idEditando ? doc : d))
+        : [...documentos, doc];
+
+      setDocumentos(atualizados);
+      toast({ title: 'Sucesso!', description: idEditando ? 'Documento atualizado!' : 'Documento criado!' });
+      limparFormulario();
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao salvar documento.', variant: 'destructive' });
+    }
+  }
+
+  async function handleExcluir(id: number, tipo: string) {
+    if (!confirm(`Deseja realmente excluir o documento "${tipo}"?`)) return;
+
+    try {
+      await fetch(`app/api/documentos/${id}`, { method: 'DELETE' });
+      setDocumentos(documentos.filter(d => d.id !== id));
+      toast({ title: 'Documento excluído', description: 'Removido com sucesso.' });
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao excluir documento.', variant: 'destructive' });
+    }
+  }
+
+  async function selecionarProjeto(docId: number, projetoId: number) {
+    try {
+      const formData = new FormData();
+      formData.append('projetoId', projetoId.toString());
+
+      const res = await fetch(`app/api/documentos/${docId}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      const atualizado = await res.json();
+      setDocumentos(documentos.map(d => (d.id === docId ? atualizado : d)));
+    } catch {
+      toast({ title: 'Erro', description: 'Falha ao vincular projeto.', variant: 'destructive' });
+    }
+  }
+
+  function preencherFormulario(doc: Documento) {
+    setIdEditando(doc.id);
+    setTipo(doc.tipo);
+    setAutor(doc.autor);
+    setConteudo(doc.conteudo);
+    setDataEmissao(doc.dataEmissao.split('T')[0]);
+    setShowForm(true);
   }
 
   function limparFormulario() {
@@ -95,33 +140,6 @@ export default function DocumentosDashboard() {
     setAnexos(null);
     setErroAnexo(null);
     setShowForm(false);
-  }
-
-  function preencherFormulario(doc: Documento) {
-    setIdEditando(doc.id);
-    setTipo(doc.tipo);
-    setAutor(doc.autor);
-    setConteudo(doc.conteudo);
-    setDataEmissao(doc.dataEmissao);
-    setShowForm(true);
-  }
-
-  function handleExcluir(id: number, tipo: string) {
-    if (confirm(`Deseja realmente excluir o documento "${tipo}"?`)) {
-      salvarDocumentos(documentos.filter((d) => d.id !== id));
-      toast({ title: 'Documento excluído', description: 'O documento foi removido com sucesso.' });
-    }
-  }
-
-  function selecionarProjeto(docId: number, projetoId: number) {
-    setDocumentos(documentos.map(d =>
-      d.id === docId ? { ...d, projetoId } : d
-    ));
-  }
-
-  function enviarDocumento(docId: number) {
-    setDocumentos(documentos.filter(d => d.id !== docId));
-    toast({ title: 'Documento enviado', description: 'O documento foi vinculado e removido da lista.' });
   }
 
   function handleAnexosChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -147,8 +165,6 @@ export default function DocumentosDashboard() {
   return (
     <div className="min-h-screen p-6 bg-background text-foreground">
       <div className="max-w-5xl mx-auto space-y-6">
-
-        {/* ✅ Header removido */}
         <h1 className="text-2xl font-bold mb-6">Gerenciar Documentos</h1>
 
         {documentos.length > 0 && (
@@ -203,9 +219,6 @@ export default function DocumentosDashboard() {
                       <Button variant="destructive" size="icon" onClick={() => handleExcluir(doc.id, doc.tipo)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="default" onClick={() => enviarDocumento(doc.id)}>
-                        Enviar
-                      </Button>
                     </div>
                   </li>
                 ))}
@@ -217,13 +230,11 @@ export default function DocumentosDashboard() {
         {!showForm && (
           <div className="flex justify-center">
             <Button onClick={() => setShowForm(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Documento
-            </Button>
-          </div>
+              <Plus className="w-4 h-4" /> Adicionar Documento </Button>
+              </div>
         )}
 
-        {showForm && (
+          {showForm && (
           <Card>
             <CardHeader>
               <CardTitle>{idEditando ? 'Editar Documento' : 'Adicionar Documento'}</CardTitle>
@@ -231,7 +242,7 @@ export default function DocumentosDashboard() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="tipo">Tipo</Label>
-                                <Input id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} />
+                <Input id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="autor">Autor</Label>
