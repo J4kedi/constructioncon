@@ -103,34 +103,36 @@ const _fetchRecentActivity = withTenantPrisma(async (tenantPrisma) => {
   }));
 });
 
+import { Decimal } from '@prisma/client/runtime/library';
+
 const _fetchProjectPerformance = withTenantPrisma(async (tenantPrisma) => {
   const obras = await tenantPrisma.obra.findMany({
     where: { status: { notIn: ['CONCLUIDA', 'CANCELADA'] } },
   });
 
   const performanceData = obras.map(obra => {
-    console.log(`\n--- Calculando performance para: ${obra.nome} ---`);
-    const earnedValue = obra.progressPercentage * obra.orcamentoTotal.toNumber();
-    const actualCost = obra.currentCost.toNumber();
+    const orcamentoTotal = new Decimal(obra.orcamentoTotal);
+    const actualCost = new Decimal(obra.currentCost);
+    const progressPercentage = new Decimal(obra.progressPercentage);
+
+    const earnedValue = orcamentoTotal.mul(progressPercentage);
 
     const totalDuration = obra.dataPrevistaFim.getTime() - obra.dataInicio.getTime();
     const elapsedDuration = new Date().getTime() - obra.dataInicio.getTime();
     const plannedProgress = totalDuration > 0 ? Math.min(1, elapsedDuration / totalDuration) : 0;
-    const plannedValue = plannedProgress * obra.orcamentoTotal.toNumber();
+    const plannedProgressDecimal = new Decimal(plannedProgress);
+    const plannedValue = orcamentoTotal.mul(plannedProgressDecimal);
 
-    const cpi = actualCost > 0 ? earnedValue / actualCost : 1;
-    const spi = plannedValue > 0 ? earnedValue / plannedValue : 1;
-
-    console.log({ earnedValue, actualCost, plannedValue, cpi, spi });
+    const cpi = actualCost.isZero() ? new Decimal(1) : earnedValue.div(actualCost);
+    const spi = plannedValue.isZero() ? new Decimal(1) : earnedValue.div(plannedValue);
 
     const performanceItem = {
       id: obra.id,
       nome: obra.nome,
-      cpi,
-      spi,
-      combinedScore: (cpi + spi) / 2,
+      cpi: cpi.toNumber(),
+      spi: spi.toNumber(),
+      combinedScore: cpi.add(spi).div(2).toNumber(),
     };
-    console.log('PERFORMANCE ITEM:', performanceItem);
     return performanceItem;
   });
 

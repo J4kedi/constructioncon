@@ -12,6 +12,7 @@ const ContaReceberSchema = z.object({
   dataVencimento: z.string().min(1, 'Data de vencimento é obrigatória.'),
   valor: z.coerce.number().positive('O valor deve ser positivo.'),
   status: z.enum(['A_RECEBER', 'RECEBIDO', 'VENCIDO']),
+  file: z.any().optional(),
 });
 
 export async function createContaReceber(
@@ -22,10 +23,12 @@ export async function createContaReceber(
     schema: ContaReceberSchema,
     formData,
     logic: async (data, context) => {
+      const { file, ...rest } = data;
       const prisma = getTenantPrismaClient(context.subdomain);
       await prisma.contaReceber.create({
         data: {
-          ...data,
+          ...rest,
+          anexoUrl: '/docs/placeholder.pdf', // Placeholder
           dataVencimento: new Date(data.dataVencimento),
         },
       });

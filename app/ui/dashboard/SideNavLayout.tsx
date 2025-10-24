@@ -53,20 +53,26 @@ const NavGroup = ({ link, isCollapsed }: { link: NavLinkData, isCollapsed: boole
                             </div>
                             <ChevronDown className={clsx('h-5 w-5 transition-transform', { 'rotate-180': isOpen })} />
                         </button>
-                        {isOpen && (
-                            <ul className="mt-1 pl-6 border-l-2 border-primary/20">
-                                {availableChildren.map(child => {
-                                    const ChildIcon = ICON_MAP[child.icon];
-                                    if (!ChildIcon) return null;
-                                    return (
-                                        <li key={child.name} className="py-1">
-                                            <NavLink href={child.href} icon={ChildIcon} name={child.name} isCollapsed={isCollapsed} />
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        )}
-                    </div>
+                                                {isOpen && (
+                                                    <ul 
+                                                      className="mt-1 pl-6 border-l-2 border-primary/20 overflow-hidden transition-all duration-300 ease-in-out"
+                                                      data-state={isOpen ? 'open' : 'closed'}
+                                                    >
+                                                        {availableChildren.map((child, index) => {
+                                                            const ChildIcon = ICON_MAP[child.icon];
+                                                            if (!ChildIcon) return null;
+                                                            return (
+                                                                <li 
+                                                                  key={child.name} 
+                                                                  className="py-1 transition-opacity duration-300 ease-in-out"
+                                                                  style={{ transitionDelay: `${index * 50}ms`, opacity: isOpen ? 1 : 0 }}
+                                                                >
+                                                                    <NavLink href={child.href} icon={ChildIcon} name={child.name} isCollapsed={isCollapsed} />
+                                                                </li>
+                                                            );
+                                                        })}
+                                                    </ul>
+                                                )}                    </div>
                 );
             };
             
@@ -155,7 +161,7 @@ const NavGroup = ({ link, isCollapsed }: { link: NavLinkData, isCollapsed: boole
                         </div>
             
                         <div className="p-4 border-t border-secondary/20">
-                            <UserProfile user={user} isCollapsed={isCollapsed} />
+                            <UserProfile user={user} isCollapsed={isCollapsed} onClick={() => setIsPersonalizationModalOpen(true)} />
                             <SignOutButton isCollapsed={isCollapsed} />
                         </div>
                     </aside>

@@ -8,10 +8,12 @@ import { getRequestContext } from '@/app/lib/server-utils';
 
 export default async function ContasAReceberPage() {
   const { subdomain } = await getRequestContext();
-  const [contas, obras] = await Promise.all([
+  const [rawContas, obras] = await Promise.all([
     fetchContasAReceber(subdomain!),
     fetchAllObrasSimple(subdomain!),
   ]);
+
+  const contas = rawContas;
 
   return (
     <ContasAReceberClientPage

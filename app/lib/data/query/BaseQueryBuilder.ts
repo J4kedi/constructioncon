@@ -1,31 +1,27 @@
-import type { PrismaQueryArgs } from '@/app/lib/definitions';
+import { Prisma } from '@prisma/client';
 
-export class BasePrismaQueryBuilder<T extends PrismaQueryArgs> {
+export abstract class BasePrismaQueryBuilder<T extends { where?: any; orderBy?: any; skip?: number; take?: number }> {
     protected query: T;
     protected itemsPerPage: number;
 
-    constructor(initialQuery: Partial<T>, itemsPerPage: number = 10) {
+    constructor(initialQuery: T, itemsPerPage: number = 10) {
+        this.query = initialQuery;
         this.itemsPerPage = itemsPerPage;
-        this.query = {
-            ...initialQuery,
-            where: initialQuery.where ?? {},
-            orderBy: initialQuery.orderBy,
-            take: this.itemsPerPage,
-            skip: initialQuery.skip ?? 0,
-        } as T;
-    }
-
-    sortBy(field?: string): this {
-        if (field) {
-            const [fieldName, direction] = field.split(':');
-            const dir = direction === 'desc' ? 'desc' : 'asc';
-            this.query.orderBy = { [fieldName]: dir } as T['orderBy'];
-        }
-        return this;
     }
 
     withPage(page: number = 1): this {
         this.query.skip = (page - 1) * this.itemsPerPage;
+        this.query.take = this.itemsPerPage;
+        return this;
+    }
+
+    sortBy(sort?: string): this {
+        if (sort) {
+            const [field, order] = sort.split('-');
+            if (field && order) {
+                this.query.orderBy = { [field]: order };
+            }
+        }
         return this;
     }
 
@@ -33,7 +29,5 @@ export class BasePrismaQueryBuilder<T extends PrismaQueryArgs> {
         return this.query;
     }
 
-    buildWhere() {
-        return this.query.where;
-    }
+    abstract withSearch(query?: string): this;
 }

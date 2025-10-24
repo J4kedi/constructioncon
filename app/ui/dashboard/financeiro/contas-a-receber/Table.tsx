@@ -6,21 +6,15 @@ import type { ContaReceber } from '@prisma/client';
 export default function ContasAReceberTable({ data: contas }: { data: ContaReceber[] }) {
   const headers = ['Cliente', 'Vencimento', 'Valor', 'Status'];
 
-  const renderRow = (conta: ContaReceber) => (
-    <tr key={conta.id} className="w-full py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
-      <td className="whitespace-nowrap px-3 py-3">{conta.cliente}</td>
-      <td className="whitespace-nowrap px-3 py-3">{formatDate(conta.dataVencimento)}</td>
-      <td className="whitespace-nowrap px-3 py-3">{formatCurrency(conta.valor)}</td>
-      <td className="whitespace-nowrap px-3 py-3">
-        <StatusBadge type="contaStatus" value={conta.status} />
-      </td>
-      <td className="whitespace-nowrap py-3 pl-6 pr-3">
-        <div className="flex justify-end gap-3">
-          {/* Ações rápidas aqui */}
-        </div>
-      </td>
-    </tr>
-  );
+  const renderCells = (conta: ContaReceber): React.ReactNode[] => [
+    conta.cliente,
+    formatDate(conta.dataVencimento),
+    formatCurrency(conta.valor),
+    <StatusBadge type="contaStatus" value={conta.status} />,
+    <div className="flex justify-end gap-3">
+      {/* Ações rápidas aqui */}
+    </div>
+  ];
 
-  return <Table headers={headers} data={contas} renderRow={renderRow} />;
+  return <Table headers={headers} data={contas} renderCells={renderCells} />;
 }

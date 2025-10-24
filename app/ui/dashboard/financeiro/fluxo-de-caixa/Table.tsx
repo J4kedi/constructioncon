@@ -1,7 +1,6 @@
 'use client';
 
 import { formatCurrency, formatDate } from '@/app/lib/utils';
-import Table from '@/app/ui/components/Table';
 
 interface CashFlowData {
   date: string;
@@ -13,14 +12,29 @@ interface CashFlowData {
 export function CashFlowTable({ data }: { data: CashFlowData[] }) {
   const headers = ['Data', 'Entradas', 'Saídas', 'Saldo Projetado'];
 
-  const renderRow = (item: CashFlowData) => (
-    <tr key={item.date} className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
-      <td className="whitespace-nowrap px-3 py-3">{formatDate(item.date)}</td>
-      <td className="whitespace-nowrap px-3 py-3 text-green-500">{formatCurrency(item.entradas)}</td>
-      <td className="whitespace-nowrap px-3 py-3 text-red-500">{formatCurrency(item.saidas)}</td>
-      <td className="whitespace-nowrap px-3 py-3 font-medium">{formatCurrency(item.saldoProjetado)}</td>
-    </tr>
+  return (
+    <div className="w-full overflow-x-auto">
+      <table className="min-w-full text-text">
+        <thead className="text-left text-sm font-normal">
+          <tr>
+            {headers.map((header, index) => (
+              <th scope="col" key={index} className={`px-4 py-3 font-medium ${index === 0 ? 'sm:pl-6' : ''}`}>
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-background">
+          {data.map((item) => (
+            <tr key={item.date} className="w-full border-b border-secondary/20 py-3 text-sm last-of-type:border-none">
+              <td className="whitespace-nowrap px-4 py-3 sm:pl-6">{formatDate(item.date, 'dd/MM/yyyy')}</td>
+              <td className="whitespace-nowrap px-4 py-3 text-success">{formatCurrency(item.entradas)}</td>
+              <td className="whitespace-nowrap px-4 py-3 text-destructive">{formatCurrency(item.saidas)}</td>
+              <td className="whitespace-nowrap px-4 py-3 font-medium">{formatCurrency(item.saldoProjetado)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
-
-  return <Table headers={headers} data={data} renderRow={renderRow} />;
 }

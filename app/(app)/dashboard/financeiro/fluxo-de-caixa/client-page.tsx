@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import PageHeader from '@/app/ui/components/PageHeader';
 import { CashFlowChart } from '@/app/ui/dashboard/financeiro/fluxo-de-caixa/Chart';
 import { CashFlowTable } from '@/app/ui/dashboard/financeiro/fluxo-de-caixa/Table';
 import SelectField from '@/app/ui/components/SelectField';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/ui/components/Card';
+import PageHeader from '@/app/ui/components/PageHeader';
 
 interface CashFlowData {
   date: string;
@@ -37,22 +37,25 @@ export default function FluxoDeCaixaClientPage({ data }: FluxoDeCaixaClientPageP
     return data.filter(item => new Date(item.date) <= endDate);
   }, [data, period]);
 
+  const periodSelector = (
+    <div className="w-[200px]">
+      <SelectField
+        id="period"
+        name="period"
+        value={period}
+        onChange={(e) => setPeriod(e.target.value)}
+      >
+        {periodOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+      </SelectField>
+    </div>
+  );
+
   return (
     <div className="w-full">
       <PageHeader
         title="Fluxo de Caixa"
-        description="Visão preditiva de entradas e saídas para as próximas semanas."
-      >
-        <div className="w-[180px]">
-          <SelectField
-            id="period"
-            name="period"
-            value={period}
-            onValueChange={setPeriod}
-            options={periodOptions}
-          />
-        </div>
-      </PageHeader>
+        actionButtons={periodSelector}
+      />
 
       <div className="mt-8">
         <Card>
@@ -70,7 +73,7 @@ export default function FluxoDeCaixaClientPage({ data }: FluxoDeCaixaClientPageP
           <CardHeader>
             <CardTitle>Detalhes da Projeção</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <CashFlowTable data={filteredData} />
           </CardContent>
         </Card>
@@ -78,3 +81,4 @@ export default function FluxoDeCaixaClientPage({ data }: FluxoDeCaixaClientPageP
     </div>
   );
 }
+

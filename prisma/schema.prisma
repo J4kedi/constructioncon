@@ -246,6 +246,7 @@ model ContaReceber {
   dataEmissao    DateTime           @default(now())
   dataVencimento DateTime
   status         StatusContaReceber @default(A_RECEBER)
+  anexoUrl       String?
 
   obraId         String
   obra           Obra               @relation(fields: [obraId], references: [id], onDelete: Cascade)

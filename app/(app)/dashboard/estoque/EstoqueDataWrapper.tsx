@@ -41,6 +41,17 @@ export default async function EstoqueDataWrapper({ query }: { query: string }) {
     quantidadeAtual: item.currentStock,
   }));
 
+  const serializableEstoqueItems = estoqueItems.map(item => {
+    const valorTotal = new Decimal(item.custoUnitario).times(new Decimal(item.quantidadeAtual));
+    return {
+      ...item,
+      custoUnitario: item.custoUnitario.toNumber(),
+      nivelMinimo: item.nivelMinimo.toNumber(),
+      quantidadeAtual: item.quantidadeAtual.toNumber(),
+      valorTotal: valorTotal.toNumber(),
+    };
+  });
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -62,7 +73,7 @@ export default async function EstoqueDataWrapper({ query }: { query: string }) {
       </div>
 
       <div className="mt-6">
-        <EstoqueTable items={estoqueItems.map(item => ({...item, custoUnitario: item.custoUnitario.toNumber(), nivelMinimo: item.nivelMinimo.toNumber(), quantidadeAtual: item.quantidadeAtual.toNumber()}))} />
+        <EstoqueTable items={serializableEstoqueItems} />
       </div>
 
       {lowStockItems.length > 0 && (

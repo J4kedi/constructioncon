@@ -5,15 +5,17 @@ import { getTenantPrismaClient } from '@/app/lib/prisma';
 import { executeFormAction } from '@/app/lib/action-handler';
 import type { FormState } from '@/app/lib/definitions';
 
+import { CategoriaDespesa } from '@prisma/client';
+
 const ContaPagarSchema = z.object({
-  fornecedor: z.string().min(1, 'Fornecedor é obrigatório.'),
+  supplierId: z.string().min(1, 'Fornecedor é obrigatório.'),
   dataEmissao: z.string().min(1, 'Data de emissão é obrigatória.'),
   dataVencimento: z.string().min(1, 'Data de vencimento é obrigatória.'),
   valor: z.coerce.number().positive('O valor deve ser positivo.'),
   obraId: z.string().optional(),
-  categoria: z.string().optional(),
+  categoria: z.nativeEnum(CategoriaDespesa, { error: "Categoria inválida." }),
   status: z.enum(['A_PAGAR', 'PAGO', 'VENCIDO']),
-  anexoUrl: z.string().url().optional().or(z.literal('')),
+  file: z.any().optional(),
 });
 
 export async function createContaPagar(
@@ -24,10 +26,19 @@ export async function createContaPagar(
     schema: ContaPagarSchema,
     formData,
     logic: async (data, context) => {
+      const { file, ...rest } = data;
       const prisma = getTenantPrismaClient(context.subdomain);
+      const supplier = await prisma.supplier.findUnique({ where: { id: data.supplierId } });
+
+      if (!supplier) {
+        throw new Error('Fornecedor não encontrado. A operação foi cancelada.');
+      }
+
       await prisma.contaPagar.create({
         data: {
-          ...data,
+          ...rest,
+          fornecedor: supplier.name,
+          anexoUrl: '/docs/placeholder.pdf', // Placeholder
           dataEmissao: new Date(data.dataEmissao),
           dataVencimento: new Date(data.dataVencimento),
         },
