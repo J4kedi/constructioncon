@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
 import { getRequestContext } from '@/app/lib/server-utils';
 import { fetchAllObrasSimple } from '@/app/lib/data/obra';
-import { fetchContasAPagar, fetchContasAReceber, fetchRecentTransactions, fetchFinancialHistory } from '@/app/lib/data/financeiro';
-import { fetchObrasEmAndamentoCount, fetchProximaContaPagar } from '@/app/lib/data/dashboard';
-import { formatDate } from '@/app/lib/utils';
+import { fetchContasAPagar, fetchContasAReceber, fetchRecentTransactions, fetchFinancialHistory, fetchSaldoAtual, fetchTarefasAtrasadasCount } from '@/app/lib/data/financeiro';
+import { fetchObrasEmAndamentoCount, fetchContasProximasDoVencimentoCount } from '@/app/lib/data/dashboard';
+import { formatCurrency, formatDate } from '@/app/lib/utils';
 
 import PageHeader from '@/app/ui/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/ui/components/Card';
@@ -18,19 +18,21 @@ export default async function Page() {
   const { subdomain } = await getRequestContext();
   if (!subdomain) return <p>Subdomínio não encontrado.</p>;
 
-  const [obras, recentTransactions, historyData, obrasCount, proximaConta] = await Promise.all([
+  const [obras, recentTransactions, historyData, obrasCount, contasProximasCount, saldoAtual, tarefasAtrasadas] = await Promise.all([
     fetchAllObrasSimple(subdomain),
     fetchRecentTransactions(subdomain),
     fetchFinancialHistory(subdomain),
     fetchObrasEmAndamentoCount(subdomain),
-    fetchProximaContaPagar(subdomain),
+    fetchContasProximasDoVencimentoCount(subdomain),
+    fetchSaldoAtual(subdomain),
+    fetchTarefasAtrasadasCount(subdomain),
   ]);
 
   const kpis: KPI = {
     obrasEmAndamento: obrasCount,
-    tarefasAtrasadas: 5, // Simulado
-    proximaConta: proximaConta ? { valor: proximaConta.valor.toNumber(), data: formatDate(proximaConta.dataVencimento, 'dd/MM') } : null,
-    saldoAtual: 125340.50, // Simulado
+    tarefasAtrasadas: tarefasAtrasadas,
+    contasProximas: contasProximasCount,
+    saldoAtual: formatCurrency(saldoAtual),
   };
 
   return (

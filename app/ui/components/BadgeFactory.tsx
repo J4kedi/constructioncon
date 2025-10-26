@@ -1,7 +1,7 @@
 
 'use client';
 
-import { UserRole } from '@prisma/client';
+import { UserRole, StatusContaPagar, StatusContaReceber } from '@prisma/client';
 import { Badge, badgeVariants } from '@/app/ui/components/Badge';
 import { type VariantProps } from 'class-variance-authority';
 
@@ -39,6 +39,36 @@ const badgeConfig = {
         return {
             variant: isIncome ? 'success' : 'destructive',
             label: isIncome ? 'Receita' : 'Despesa',
+        };
+    },
+    contaStatus: (value: StatusContaPagar | StatusContaReceber): BadgeConfig => {
+        const statusVariantMap: Record<StatusContaPagar | StatusContaReceber, BadgeVariant> = {
+            PAGO: 'success',
+            RECEBIDO: 'success',
+            A_PAGAR: 'warning',
+            A_RECEBER: 'warning',
+            VENCIDO: 'destructive',
+        };
+        return {
+            variant: statusVariantMap[value] || 'default',
+            label: value.replace('_', ' '),
+        };
+    },
+    documentType: (value: DocumentType): BadgeConfig => {
+        const typeVariantMap: Record<DocumentType, BadgeVariant> = {
+            PLANTA_BAIXA: 'default',
+            ALVARA: 'default',
+            ART: 'secondary',
+            MEMORIAL_DESCRITIVO: 'outline',
+            CONTRATO: 'secondary',
+            NOTA_FISCAL_SERVICO: 'success',
+            NOTA_FISCAL_PRODUTO: 'success',
+            BOLETO: 'warning',
+            OUTRO: 'outline',
+        };
+        return {
+            variant: typeVariantMap[value] || 'outline',
+            label: value.replace('_', ' '),
         };
     },
 };

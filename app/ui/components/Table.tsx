@@ -3,11 +3,11 @@ import React from 'react';
 interface TableProps<T> {
   headers: string[];
   data: T[];
-  renderRow: (item: T, index: number) => React.ReactNode;
+  renderCells: (item: T) => React.ReactNode[];
   hasActions?: boolean;
 }
 
-export default function Table<T>({ headers, data, renderRow, hasActions = true }: TableProps<T>) {
+export default function Table<T>({ headers, data, renderCells, hasActions = true }: TableProps<T>) {
   return (
     <div className="w-full">
       <div className="flow-root">
@@ -30,7 +30,18 @@ export default function Table<T>({ headers, data, renderRow, hasActions = true }
                   </tr>
                 </thead>
                 <tbody className="bg-background">
-                  {data.map(renderRow)}
+                  {data.map((item, index) => (
+                    <tr 
+                      key={(item as any).id || index} 
+                      className="w-full border-b border-secondary/20 py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
+                    >
+                      {renderCells(item).map((cell, cellIndex) => (
+                        <td key={cellIndex} className="whitespace-nowrap px-3 py-3">
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

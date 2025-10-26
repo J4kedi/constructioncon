@@ -1,0 +1,6 @@
+feat: Implementação de novas funcionalidades e melhorias
+
+- Adicionado sistema de hierarquia de funcionalidades para controle de acesso dinâmico.
+- Implementado o módulo financeiro base, incluindo contas a pagar e a receber.
+- Adicionado suporte para gerenciamento de documentos fiscais.
+- Realizadas melhorias no sistema de contas a receber.

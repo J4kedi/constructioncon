@@ -25,6 +25,13 @@ export default NextAuth(authConfig).auth(async (req) => {
   }
 
   if (isOnDashboard && isLoggedIn) {
+    const isAtDashboardRoot = nextUrl.pathname === '/dashboard';
+    const isAdmin = userRole === UserRole.COMPANY_ADMIN || userRole === UserRole.SUPER_ADMIN;
+
+    if (!isAdmin && !isAtDashboardRoot) {
+      return NextResponse.redirect(new URL('/dashboard', nextUrl));
+    }
+
     const path = nextUrl.pathname;
     const protectedRoute = Object.keys(protectedRoutes).find(r => path.startsWith(r));
 

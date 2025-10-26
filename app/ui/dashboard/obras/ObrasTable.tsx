@@ -18,40 +18,24 @@ export default function ObrasTable({ obras: initialObras }: ObrasTableProps) {
 
     const headers = ['Nome da Obra', 'Tipo', 'Cliente', 'Status', 'Data de Início', 'Orçamento'];
 
-    const renderRow = (obra: PlainObra) => (
-        <tr key={obra.id} className="w-full border-b border-secondary/20 py-3 text-sm last-of-type:border-none">
-            <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                <p className="font-semibold">{obra.nome}</p>
-            </td>
-            <td className="whitespace-nowrap px-3 py-3">
-                {obra.type}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3">
-                {obra.endCustomerName}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3">
-                <StatusSelect obraId={obra.id} currentStatus={obra.status} />
-            </td>
-            <td className="whitespace-nowrap px-4 py-3">
-                {obra.dataInicio} 
-            </td>
-            <td className="whitespace-nowrap px-4 py-3">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(obra.orcamentoTotal)}
-            </td>
-            <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                <div className="flex justify-end gap-3">
-                    <button onClick={() => modalState.openModal(obra)} className="rounded-md p-2 hover:bg-secondary/20 cursor-pointer">
-                        <Pencil className="w-4" />
-                    </button>
-                    <DeleteObra id={obra.id} onSuccess={() => handleDelete(obra.id)} />
-                </div>
-            </td>
-        </tr>
-    );
+    const renderCells = (obra: PlainObra): React.ReactNode[] => [
+        <p className="font-semibold">{obra.nome}</p>,
+        obra.type,
+        obra.endCustomerName,
+        <StatusSelect obraId={obra.id} currentStatus={obra.status} />,
+        obra.dataInicio,
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(obra.orcamentoTotal),
+        <div className="flex justify-end gap-3">
+            <button onClick={() => modalState.openModal(obra)} className="rounded-md p-2 hover:bg-secondary/20 cursor-pointer">
+                <Pencil className="w-4" />
+            </button>
+            <DeleteObra id={obra.id} onSuccess={() => handleDelete(obra.id)} />
+        </div>
+    ];
 
     return (
         <>
-            <Table headers={headers} data={obras} renderRow={renderRow} hasActions={true} />
+            <Table headers={headers} data={obras} renderCells={renderCells} hasActions={true} />
             {modalState.selectedItem && (
                 <Modal isOpen={modalState.isOpen} onClose={modalState.closeModal} title={`Editar Obra: ${modalState.selectedItem.nome}`}>
                     <EditObraForm obra={modalState.selectedItem} onClose={modalState.closeModal} />

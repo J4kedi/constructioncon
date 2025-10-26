@@ -246,3 +246,38 @@ export async function fetchDocumentos(subdomain: string, query?: string) {
     throw new Error('Failed to fetch documentos.');
   }
 }
+
+export async function fetchSaldoAtual(subdomain: string): Promise<Decimal> {
+  const tenantPrisma = getTenantPrismaClient(subdomain);
+
+  const [totalRecebido, totalPago] = await Promise.all([
+    tenantPrisma.contaReceber.aggregate({
+      _sum: { valor: true },
+      where: { status: 'RECEBIDO' },
+    }),
+    tenantPrisma.contaPagar.aggregate({
+      _sum: { valor: true },
+      where: { status: 'PAGO' },
+    }),
+  ]);
+
+  const saldo = new Decimal(totalRecebido._sum.valor || 0).minus(
+    new Decimal(totalPago._sum.valor || 0)
+  );
+
+  return saldo;
+}
+
+export async function fetchTarefasAtrasadasCount(subdomain: string): Promise<number> {
+  const tenantPrisma = getTenantPrismaClient(subdomain);
+  const today = new Date();
+
+  const count = await tenantPrisma.etapa.count({
+    where: {
+      dataFimPrevista: { lt: today },
+      status: { not: 'CONCLUIDA' },
+    },
+  });
+
+  return count;
+}

@@ -4,9 +4,9 @@ import type { User, CatalogoItem, Obra, Prisma } from '@prisma/client';
 import { ReactNode } from "react";
 
 export type CardProps = {
-    title: string;
-    value: number | string;
-    icon: ReactNode;
+  title: string;
+  value: string | number;
+  iconName: string;
 };
 
 export type LowStockItem = {
@@ -233,9 +233,7 @@ export interface Recurso {
 
 export const DocumentoSchema = z.object({
   name: z.string().min(1, 'Nome do documento é obrigatório.'),
-  url: z.string().url('URL inválida.'),
-  type: z.nativeEnum(DocumentType),
+  file: z.any(),
+  type: z.nativeEnum(DocumentType, { error: 'Tipo de documento inválido.' }),
   obraId: z.string().min(1, 'A obra é obrigatória.'),
-  contaPagarId: z.string().optional(),
-  contaReceberId: z.string().optional(),
 });

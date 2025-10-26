@@ -13,11 +13,14 @@ import { LoginState, UserRegistrationSchema, ChangePasswordSchema, FormState } f
 import { getRequestContext } from '@/app/lib/server-utils';
 import { executeFormAction } from '@/app/lib/action-handler';
 
+import { rateLimiter } from '@/app/lib/rate-limiter';
+
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
       async authorize(credentials) {
+        const ip = rateLimiter.getIp(await headers());
         const parsedCredentials = z
           .object({
             email: z.email(),
@@ -32,18 +35,24 @@ export const { auth, signIn, signOut } = NextAuth({
           const targetSubdomain = subdomain || 'admin';
 
           const user = await getUserByCredentials(email, password, targetSubdomain);
-          if (!user) return null;
+          if (!user) {
+            rateLimiter.recordFailure(ip);
+            return null;
+          }
 
           if (!subdomain && user.role !== 'SUPER_ADMIN') {
-            console.log('Attempted main domain login without SUPER_ADMIN role.');
+            rateLimiter.recordFailure(ip);
             return null;
           }
 
           const passwordsMatch = await bcrypt.compare(password, user.password);
-          if (passwordsMatch) return user;
+          if (passwordsMatch) {
+            rateLimiter.clear(ip);
+            return user;
+          }
         }
         
-        console.log('Invalid credentials provided.');
+        rateLimiter.recordFailure(ip);
         return null;
       },
     }),
@@ -128,8 +137,15 @@ export async function authenticate(
   prevState: LoginState | undefined,
   formData: FormData,
 ): Promise<LoginState> {
+  const requestHeaders = await headers();
+  const ip = rateLimiter.getIp(requestHeaders);
   const { subdomain } = await getRequestContext();
-  const host = (await headers()).get('host');
+  const host = requestHeaders.get('host');
+
+  const checkResult = rateLimiter.check(ip);
+  if (!checkResult.success) {
+    return { error: checkResult.error };
+  }
 
   try {
     if (subdomain) {

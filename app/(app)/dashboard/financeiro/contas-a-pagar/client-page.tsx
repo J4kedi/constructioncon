@@ -5,14 +5,15 @@ import PageHeader from '@/app/ui/components/PageHeader';
 import { Button } from '@/app/ui/components/Button';
 import { Plus } from 'lucide-react';
 import CreateContaPagarForm from '@/app/ui/dashboard/financeiro/contas-a-pagar/CreateContaPagarForm';
-import type { Obra } from '@prisma/client';
+import type { Obra, Supplier } from '@prisma/client';
 
 interface ContasAPagarClientPageProps {
   table: ReactNode;
   obras: Pick<Obra, 'id' | 'nome'>[];
+  suppliers: Pick<Supplier, 'id' | 'name'>[];
 }
 
-export default function ContasAPagarClientPage({ table, obras }: ContasAPagarClientPageProps) {
+export default function ContasAPagarClientPage({ table, obras, suppliers }: ContasAPagarClientPageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -34,6 +35,7 @@ export default function ContasAPagarClientPage({ table, obras }: ContasAPagarCli
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         obras={obras} 
+        suppliers={suppliers}
       />
     </div>
   );
