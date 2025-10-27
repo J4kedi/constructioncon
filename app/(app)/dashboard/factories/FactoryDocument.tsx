@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/app/ui/components/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/ui/components/Card';
 import { Input } from '@/app/ui/components/Input';
@@ -32,263 +32,120 @@ export default function DocumentosDashboard() {
   const [autor, setAutor] = useState('');
   const [conteudo, setConteudo] = useState('');
   const [dataEmissao, setDataEmissao] = useState('');
-  const [idEditando, setIdEditando] = useState<number | null>(null);
   const [anexos, setAnexos] = useState<FileList | null>(null);
-  const [erroAnexo, setErroAnexo] = useState<string | null>(null);
+  const [idEditando, setIdEditando] = useState<number | null>(null);
 
   useEffect(() => {
-    async function carregarDados() {
-      try {
-        const resProjetos = await fetch('app/api/projeto');
-        const projetosApi = await resProjetos.json();
-        setProjetos(projetosApi);
+    fetch('/api/documentos')
+      .then(res => res.json())
+      .then(setDocumentos);
 
-        const resDocs = await fetch('/api/documentos');
-        const docsApi = await resDocs.json();
-        setDocumentos(docsApi);
-      } catch {
-        toast({ title: 'Erro', description: 'Falha ao carregar dados da API.', variant: 'destructive' });
-      }
-    }
-
-    carregarDados();
+    fetch('/api/projetos')
+      .then(res => res.json())
+      .then(setProjetos);
   }, []);
 
   async function handleSalvar() {
     if (!tipo || !autor || !conteudo || !dataEmissao) {
-      toast({
-        title: 'Campos obrigatórios',
-        description: 'Preencha todos os campos.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Campos obrigatórios', description: 'Preencha todos os campos.', variant: 'destructive' });
       return;
     }
 
-    const formData = new FormData();
-    formData.append('tipo', tipo);
-    formData.append('autor', autor);
-    formData.append('conteudo', conteudo);
-    formData.append('dataEmissao', new Date(dataEmissao).toISOString());
-    formData.append('enviado', 'false');
-    if (anexos) {
-      Array.from(anexos).forEach(file => formData.append('anexos', file));
-    }
+    const anexosArray = anexos ? Array.from(anexos).map(file => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+    })) : [];
 
-    try {
-      const url = idEditando ? `app/api/documentos/${idEditando}` : 'app/api/documentos';
-      const method = idEditando ? 'PUT' : 'POST';
+    const novoDoc = {
+      tipo,
+      autor,
+      conteudo,
+      dataEmissao,
+      anexos: anexosArray,
+      projetoId: null,
+    };
 
-      const res = await fetch(url, { method, body: formData });
-      const doc = await res.json();
+    await fetch('/api/documentos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(novoDoc),
+    });
 
-      const atualizados = idEditando
-        ? documentos.map(d => (d.id === idEditando ? doc : d))
-        : [...documentos, doc];
-
-      setDocumentos(atualizados);
-      toast({ title: 'Sucesso!', description: idEditando ? 'Documento atualizado!' : 'Documento criado!' });
-      limparFormulario();
-    } catch {
-      toast({ title: 'Erro', description: 'Falha ao salvar documento.', variant: 'destructive' });
-    }
-  }
-
-  async function handleExcluir(id: number, tipo: string) {
-    if (!confirm(`Deseja realmente excluir o documento "${tipo}"?`)) return;
-
-    try {
-      await fetch(`app/api/documentos/${id}`, { method: 'DELETE' });
-      setDocumentos(documentos.filter(d => d.id !== id));
-      toast({ title: 'Documento excluído', description: 'Removido com sucesso.' });
-    } catch {
-      toast({ title: 'Erro', description: 'Falha ao excluir documento.', variant: 'destructive' });
-    }
-  }
-
-  async function selecionarProjeto(docId: number, projetoId: number) {
-    try {
-      const formData = new FormData();
-      formData.append('projetoId', projetoId.toString());
-
-      const res = await fetch(`app/api/documentos/${docId}`, {
-        method: 'PUT',
-        body: formData,
-      });
-
-      const atualizado = await res.json();
-      setDocumentos(documentos.map(d => (d.id === docId ? atualizado : d)));
-    } catch {
-      toast({ title: 'Erro', description: 'Falha ao vincular projeto.', variant: 'destructive' });
-    }
-  }
-
-  function preencherFormulario(doc: Documento) {
-    setIdEditando(doc.id);
-    setTipo(doc.tipo);
-    setAutor(doc.autor);
-    setConteudo(doc.conteudo);
-    setDataEmissao(doc.dataEmissao.split('T')[0]);
-    setShowForm(true);
-  }
-
-  function limparFormulario() {
-    setIdEditando(null);
+    toast({ title: 'Documento salvo', description: 'Documento criado com sucesso!' });
+    setShowForm(false);
     setTipo('');
     setAutor('');
     setConteudo('');
     setDataEmissao('');
     setAnexos(null);
-    setErroAnexo(null);
-    setShowForm(false);
-  }
 
-  function handleAnexosChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const arquivos = event.target.files;
-    if (!arquivos) return;
-
-    const validos = Array.from(arquivos).filter((file) => {
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      return ext && ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'].includes(ext);
-    });
-
-    if (validos.length !== arquivos.length) {
-      setErroAnexo('Só são aceitos arquivos PDF, Word, Excel ou imagens (PNG, JPG).');
-      setAnexos(null);
-    } else {
-      setErroAnexo(null);
-      const dt = new DataTransfer();
-      validos.forEach((f) => dt.items.add(f));
-      setAnexos(dt.files);
-    }
+    const res = await fetch('/api/documentos');
+    setDocumentos(await res.json());
   }
 
   return (
-    <div className="min-h-screen p-6 bg-background text-foreground">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold mb-6">Gerenciar Documentos</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Documentos</h1>
 
-        {documentos.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Documentos Cadastrados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {documentos.map(doc => (
-                  <li key={doc.id} className="p-4 border rounded-lg flex flex-col gap-2">
-                    <div>
-                      <p className="font-semibold">{doc.tipo}</p>
-                      <p className="text-sm opacity-70">Autor: {doc.autor}</p>
-                      <p className="text-sm opacity-70">Data: {doc.dataEmissao}</p>
-                      <p className="text-sm opacity-70">Conteúdo: {doc.conteudo}</p>
-                    </div>
-
-                    {doc.anexos.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium">Anexos:</p>
-                        <ul className="list-disc list-inside text-sm">
-                          {doc.anexos.map((arquivo, i) => (
-                            <li key={i}>
-                              <a href={arquivo.url} download={arquivo.name} className="text-primary underline">
-                                {arquivo.name}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 items-center">
-                      {doc.projetoId ? (
-                        <p className="text-sm">Projeto: {doc.projetoId}</p>
-                      ) : (
-                        <select
-                          defaultValue=""
-                          onChange={e => selecionarProjeto(doc.id, Number(e.target.value))}
-                          className="border rounded p-1"
-                        >
-                          <option value="" disabled>Selecionar projeto</option>
-                          {projetos.map(p => (
-                            <option key={p.id} value={p.id}>{p.nome}</option>
-                          ))}
-                        </select>
-                      )}
-                      <Button variant="outline" size="icon" onClick={() => preencherFormulario(doc)}>
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon" onClick={() => handleExcluir(doc.id, doc.tipo)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </li>
+      {documentos.map(doc => (
+        <Card key={doc.id}>
+          <CardHeader>
+            <CardTitle>{doc.tipo}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p><strong>Autor:</strong> {doc.autor}</p>
+            <p><strong>Conteúdo:</strong> {doc.conteudo}</p>
+            <p><strong>Data:</strong> {new Date(doc.dataEmissao).toLocaleDateString()}</p>
+            {doc.anexos?.length > 0 && (
+              <ul>
+                {doc.anexos.map((a, i) => (
+                  <li key={i}><a href={a.url} download>{a.name}</a></li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
+      ))}
 
-        {!showForm && (
-          <div className="flex justify-center">
-            <Button onClick={() => setShowForm(true)} className="gap-2">
-              <Plus className="w-4 h-4" /> Adicionar Documento </Button>
-              </div>
-        )}
+      {!showForm && (
+        <Button onClick={() => setShowForm(true)} className="mt-4">
+          <Plus className="w-4 h-4 mr-2" /> Novo Documento
+        </Button>
+      )}
 
-          {showForm && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{idEditando ? 'Editar Documento' : 'Adicionar Documento'}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="tipo">Tipo</Label>
-                <Input id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="autor">Autor</Label>
-                <Input id="autor" value={autor} onChange={(e) => setAutor(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="conteudo">Conteúdo</Label>
-                <Input id="conteudo" value={conteudo} onChange={(e) => setConteudo(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dataEmissao">Data de Emissão</Label>
-                <Input
-                  type="date"
-                  id="dataEmissao"
-                  value={dataEmissao}
-                  onChange={(e) => setDataEmissao(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="anexos">Anexos</Label>
-                <Input
-                  id="anexos"
-                  type="file"
-                  multiple
-                  onChange={handleAnexosChange}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0
-                             file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                />
-                {erroAnexo && (
-                  <p className="text-sm text-destructive">{erroAnexo}</p>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={handleSalvar}>
-                  {idEditando ? 'Atualizar' : 'Salvar'}
-                </Button>
-                <Button variant="outline" onClick={limparFormulario}>
-                  <X className="w-4 h-4 mr-1" /> Cancelar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {showForm && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Adicionar Documento</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Tipo</Label>
+              <Input value={tipo} onChange={e => setTipo(e.target.value)} />
+            </div>
+            <div>
+              <Label>Autor</Label>
+              <Input value={autor} onChange={e => setAutor(e.target.value)} />
+            </div>
+            <div>
+              <Label>Conteúdo</Label>
+              <Input value={conteudo} onChange={e => setConteudo(e.target.value)} />
+            </div>
+            <div>
+              <Label>Data de Emissão</Label>
+              <Input type="date" value={dataEmissao} onChange={e => setDataEmissao(e.target.value)} />
+            </div>
+            <div>
+              <Label>Anexos</Label>
+              <Input type="file" multiple onChange={e => setAnexos(e.target.files)} />
+            </div>
+            <Button onClick={handleSalvar}>Salvar</Button>
+            <Button variant="outline" onClick={() => setShowForm(false)}>
+              <X className="w-4 h-4 mr-1" /> Cancelar
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
